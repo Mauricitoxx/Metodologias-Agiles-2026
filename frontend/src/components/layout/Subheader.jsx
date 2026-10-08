@@ -7,20 +7,19 @@ export const Subheader = () => {
 
   const getSectionTitle = () => {
     switch (currentTab) {
+      case 'inventario':
       case 'catalogo':
         return 'GESTOR DE INVENTARIO';
       case 'staff':
       case 'admin':
         return 'GESTOR DE STAFF';
       default:
-        return 'PANEL ADMINISTRATIVO';
+        return 'ADMIN CENTRAL';
     }
   };
 
   const handleBack = () => {
-    if (currentTab !== 'catalogo') {
-      setCurrentTab('catalogo');
-    }
+    setCurrentTab('hub');
   };
 
   return (

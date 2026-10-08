@@ -4,7 +4,7 @@ import { AdminContext } from './adminContextInstance';
 
 export const AdminProvider = ({ children }) => {
   const [data, setData] = useState(() => storage.get());
-  const [currentTab, setCurrentTab] = useState('catalogo'); // 'catalogo' | 'buffet' | 'eventos' | 'admin'
+  const [currentTab, setCurrentTab] = useState('hub'); // 'hub' | 'inventario' | 'staff'
   const [catalogSubTab, setCatalogSubTab] = useState('boardgames'); // 'boardgames' | 'comics' | 'cards'
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('todos'); // 'todos' | 'disponibles' | 'en_mesa' | 'baja'
@@ -138,7 +138,7 @@ export const AdminProvider = ({ children }) => {
     setModalState({
       isOpen: true,
       mode: 'create',
-      entityType: entityType || (currentTab === 'catalogo' ? catalogSubTab : currentTab),
+      entityType: entityType || (currentTab === 'staff' ? 'admins' : catalogSubTab),
       item: null
     });
   };

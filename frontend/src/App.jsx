@@ -5,7 +5,7 @@ import { AdminProvider } from './context/AdminContext';
 import { useAdmin } from './context/useAdmin';
 import { Header } from './components/layout/Header';
 import { Subheader } from './components/layout/Subheader';
-import { BottomNav } from './components/layout/BottomNav';
+import { AdminHubView } from './views/AdminHubView';
 import { CatalogView } from './views/CatalogView';
 import { AdminUsersView } from './views/AdminUsersView';
 import { ItemDetailModal } from './components/modals/ItemDetailModal';
@@ -24,35 +24,24 @@ const AdminDashboard = () => {
     notification
   } = useAdmin();
 
-  const renderActiveView = () => {
-    switch (currentTab) {
-      case 'catalogo':
-        return <CatalogView />;
-      case 'staff':
-      case 'admin':
-        return <AdminUsersView />;
-      default:
-        return <CatalogView />;
-    }
-  };
+  const isHub = currentTab === 'hub';
 
   return (
     <div className="app-container">
       {/* 1. Encabezado de Marca & Usuario */}
       <Header />
 
-      {/* 2. Sub-encabezado con Breadcrumbs */}
-      <Subheader />
+      {/* 2. Sub-encabezado con botón de volver solo cuando no estamos en el Hub */}
+      {!isHub && <Subheader />}
 
-      {/* 3. Contenido Principal del Módulo Activo */}
+      {/* 3. Contenido Principal */}
       <main className="main-content">
-        {renderActiveView()}
+        {isHub && <AdminHubView />}
+        {(currentTab === 'inventario' || currentTab === 'catalogo') && <CatalogView />}
+        {(currentTab === 'staff' || currentTab === 'admin') && <AdminUsersView />}
       </main>
 
-      {/* 4. Barra de Navegación Inferior (4 Accesos) */}
-      <BottomNav />
-
-      {/* 5. Modales Operativos */}
+      {/* 4. Modales Operativos */}
       <ItemDetailModal
         isOpen={modalState.isOpen && modalState.mode === 'detail'}
         onClose={closeModal}
@@ -86,7 +75,7 @@ const AdminDashboard = () => {
         onConfirm={toggleBajaItem}
       />
 
-      {/* 6. Notificaciones Toast */}
+      {/* 5. Notificaciones Toast */}
       {notification && (
         <div className={`toast-notification ${notification.type || ''}`}>
           <span>{notification.message}</span>
