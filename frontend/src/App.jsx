@@ -7,7 +7,7 @@ import { AdminProvider } from './context/AdminContext';
 import { useAdmin } from './context/useAdmin';
 import { Header } from './components/layout/Header';
 import { Subheader } from './components/layout/Subheader';
-import { AdminHubView } from './views/AdminHubView';
+import { AdminView } from './views/AdminView';
 import { CatalogView } from './views/CatalogView';
 import { AdminUsersView } from './views/AdminUsersView';
 import { LoginView } from './views/LoginView';
@@ -64,11 +64,11 @@ const AdminDashboard = () => {
               element={session ? <Navigate to="/admin" replace /> : <LoginView />}
             />
 
-            {/* Admin Central Hub */}
+            {/* Ruta /admin (reservada para implementación del equipo) */}
             <Route
               path="/admin"
               element={
-                !session ? <Navigate to="/login" replace /> : <AdminHubView />
+                !session ? <Navigate to="/login" replace /> : <AdminView />
               }
             />
 
