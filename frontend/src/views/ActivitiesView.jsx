@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Search, Plus, CalendarDays, ArrowDownWideNarrow, ArrowUpNarrowWide, RefreshCw } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
 import { ActivityCard } from '../components/cards/ActivityCard';
+import { ActivityFormView } from './ActivityFormView';
 import { activityService, activityTypeService } from '../services/activityService';
 import { ACTIVITY_STATUSES } from '../utils/activity';
 
@@ -21,8 +22,7 @@ export const ActivitiesView = () => {
   const [estado, setEstado] = useState('');
   const [order, setOrder] = useState('asc');
 
-  // Wired to the form (step 8) and the confirmation modals (step 9)
-  const [, setFormState] = useState(null);
+  const [formState, setFormState] = useState(null);
   const [, setPendingAction] = useState(null);
 
   useEffect(() => {
@@ -58,6 +58,31 @@ export const ActivitiesView = () => {
   const { activities, error: loadError } = result;
   const loading = result.key !== requestKey;
   const reload = () => setReloadKey((key) => key + 1);
+
+  const closeForm = useCallback(() => setFormState(null), []);
+
+  const handleSaved = (activity, edited) => {
+    showToast(edited ? `Actividad "${activity.nombre}" actualizada` : `Actividad "${activity.nombre}" creada`);
+    setFormState(null);
+    reload();
+  };
+
+  const handleTypeCreated = (type) => {
+    setTypes((prev) => [...prev, type].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')));
+    showToast(`Tipo "${type.nombre}" agregado`);
+  };
+
+  if (formState) {
+    return (
+      <ActivityFormView
+        activity={formState.activity}
+        types={types}
+        onTypeCreated={handleTypeCreated}
+        onClose={closeForm}
+        onSaved={handleSaved}
+      />
+    );
+  }
   const hasFilters = Boolean(search || tipoId || estado);
 
   return (

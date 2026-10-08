@@ -82,3 +82,61 @@
 [data-theme='dark'] .activity-btn-cancel {
   color: #fbbf24;
 }
+
+.activity-type-row {
+  display: flex;
+  gap: 6px;
+}
+
+.activity-type-row .form-select,
+.activity-type-row .form-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-type-row + .activity-type-row {
+  margin-top: 6px;
+}
+
+.activity-type-row button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.activity-form-hint {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.activity-image-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.cover-preview svg {
+  color: var(--brand-blue);
+}
+
+.entity-form-view .form-input.is-invalid,
+.entity-form-view .form-select.is-invalid,
+.entity-form-view .form-textarea.is-invalid {
+  border-color: #dc2626;
+  background-color: #fef2f2;
+}
+
+[data-theme='dark'] .entity-form-view .is-invalid {
+  background-color: #2a1215;
+}
+
+.entity-form-view .form-row-2 > .form-group {
+  min-width: 0;
+}
+
+.entity-form-view .form-row-2 .form-input,
+.entity-form-view .form-row-2 .form-select {
+  width: 100%;
+}
