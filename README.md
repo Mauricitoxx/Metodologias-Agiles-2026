@@ -56,14 +56,13 @@ El producto se organiza en cinco módulos funcionales:
 
 ## Stack tecnológico
 
-| Área                 | Tecnología   |
-| -------------------- | ------------ |
-| Aplicación móvil     | React Native |
-| Framework            | Expo         |
-| Backend              | FastAPI      |
-| ORM                  | SQLAlchemy   |
-| Base de datos        | PostgreSQL   |
-| Control de versiones | Git          |
+| Área                 | Tecnología                                              |
+| -------------------- | ------------------------------------------------------- |
+| Frontend             | React.js (Vite)                                         |
+| Backend              | Python + FastAPI                                        |
+| ORM                  | SQLAlchemy (migraciones con Alembic)                    |
+| Base de datos        | SQLite en desarrollo local; luego se migrará (PostgreSQL) |
+| Control de versiones | Git + GitHub                                            |
 
 ## Arquitectura general
 
@@ -71,9 +70,9 @@ El sistema se plantea siguiendo una arquitectura cliente-servidor:
 
 ```text
 ┌──────────────────────┐
-│   React Native       │
-│       + Expo         │
-│  Aplicación móvil    │
+│      React.js        │
+│       + Vite         │
+│      Frontend        │
 └──────────┬───────────┘
            │ HTTP / API REST
            ▼
@@ -84,8 +83,8 @@ El sistema se plantea siguiendo una arquitectura cliente-servidor:
            │ SQLAlchemy
            ▼
 ┌──────────────────────┐
-│     PostgreSQL       │
-│   Base de datos      │
+│  SQLite (local) →    │
+│  PostgreSQL (luego)  │
 └──────────────────────┘
 ```
 
@@ -111,17 +110,19 @@ El modelo completo y sus relaciones se encuentran documentados dentro del trello
 
 ## Organización del proyecto
 
-La estructura definitiva ira evolucionando con los sprints. Una organización esperada es:
+La estructura irá evolucionando con los sprints. Actualmente:
 
 ```text
 .
-├── backend/
-│   ├── app/
+├── backend/              # API FastAPI (ver backend/README.md)
+│   ├── app/              # Código: rutas, modelos, esquemas, servicios
+│   ├── alembic/          # Migraciones de la base
+│   ├── tests/
 │   ├── requirements.txt
-│   └── ...
+│   └── .env.example
 │
-├── frontend/
-│   ├── app/
+├── frontend/             # React + Vite (ver frontend/README.md)
+│   ├── src/
 │   ├── package.json
 │   └── ...
 │
@@ -136,13 +137,13 @@ La estructura definitiva ira evolucionando con los sprints. Una organización es
 
 ### Requisitos previos
 
-Para ejecutar el proyecto localmente se requiere, como mínimo:
+Para ejecutar el proyecto localmente se requiere:
 
 - Git
-- Node.js y npm
-- Expo
-- Python 3
-- PostgreSQL
+- Python 3.11 o superior
+- Node.js 20.19+ o 22.12+ y npm
+
+No hace falta instalar un motor de base de datos: en desarrollo se usa SQLite, que viene con Python.
 
 ### 1. Clonar el repositorio
 
@@ -153,55 +154,45 @@ cd Metodologias-Agiles-2026
 
 ### 2. Backend
 
-Ingresar al directorio del backend:
+Desde la raíz del proyecto (comandos para Windows PowerShell; en macOS/Linux el venv se activa con `source venv/bin/activate` y el `.env` se copia con `cp`):
 
 ```bash
 cd backend
-```
-
-Crear un entorno virtual:
-
-```bash
 python -m venv venv
-```
-
-Activarlo en Windows:
-
-```bash
 venv\Scripts\activate
-```
-
-Instalar las dependencias:
-
-```bash
 pip install -r requirements.txt
-```
-
-Ejecutar la API:
-
-```bash
+Copy-Item .env.example .env
+alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
-> Los nombres de módulos y archivos pueden variar durante la configuración inicial del backend.
+La API queda en http://127.0.0.1:8000 y su documentación interactiva en http://127.0.0.1:8000/docs.
+
+La guía completa (variables de entorno, estructura, cómo agregar un módulo, migraciones, tests y problemas comunes) está en [backend/README.md](backend/README.md).
 
 ### 3. Frontend
 
-Desde la raíz del proyecto:
+En otra terminal, desde la raíz del proyecto:
 
 ```bash
 cd frontend
 npm install
-npx expo start
+npm run dev
 ```
 
-Expo permitirá iniciar la aplicación en un emulador o dispositivo compatible.
+La aplicación queda en http://localhost:5173. Más detalles en [frontend/README.md](frontend/README.md).
 
 ### 4. Base de datos
 
-El backend utiliza PostgreSQL como motor de base de datos.
+- En desarrollo local se usa **SQLite**: la base es el archivo `backend/frikioteca.db`, que se crea con `alembic upgrade head` y no se sube a git.
+- La conexión se configura con la variable `DATABASE_URL` del archivo `backend/.env`. Para migrar a otra base (por ejemplo PostgreSQL) alcanza con cambiar esa URL y volver a correr `alembic upgrade head`.
+- Los cambios en la estructura de la base se versionan con **Alembic** (`backend/alembic/versions/`). Después de cada `git pull`, correr `alembic upgrade head` para tener la base al día.
 
-La configuración de conexión deberá establecerse mediante variables de entorno een el archivo .env.
+### 5. Flujo de trabajo con Git
+
+1. Partir siempre de `main` actualizado: `git checkout main` y `git pull`.
+2. Crear una rama por tarea: `git checkout -b feat/<modulo-o-tarea>` (por ejemplo `feat/juegos`).
+3. Al terminar, subir la rama y abrir un Pull Request hacia `main`.
 
 ## Gestión ágil
 

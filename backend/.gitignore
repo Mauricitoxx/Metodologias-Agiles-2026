@@ -1,0 +1,14 @@
+# Entorno virtual
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Variables de entorno (usar .env.example como plantilla)
+.env
+
+# Base de datos local
+*.db
