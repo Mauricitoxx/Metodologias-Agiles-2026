@@ -1,16 +1,30 @@
-# React + Vite
+# La Frikioteca — Administración
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Frontend React y Vite con las cinco pantallas de la referencia: inicio de sesión, panel central, inventario, formulario de entidad y gestión de staff.
 
-Currently, two official plugins are available:
+## Ejecutar
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```sh
+npm install
+npm run dev
+```
 
-## React Compiler
+## Cuenta de demostración
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Correo: `admin@frikioteca.demo`
+- Contraseña: `Frikio2026!`
 
-## Expanding the Oxlint configuration
+El inicio de sesión es una demostración de interfaz, no una protección de acceso. La sesión se conserva en `sessionStorage`. Las entidades y miembros se guardan en `localStorage` de este navegador. No se almacenan contraseñas de staff; la clave temporal es una vista previa para una futura integración.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Inventario permite buscar, filtrar, registrar, editar, consultar fichas, dar de baja y reactivar juegos, cómics, cartas y buffet. El formulario valida SKU único y cantidad de jugadores, selecciona complejidad y carga imágenes PNG, JPG o WebP hasta 5 MB. Las portadas se reducen para el almacenamiento local.
+
+Staff permite alta, edición, selección de avatar y rol, búsqueda de activos, baja y reactivación. Se conserva al menos un Superadministrador activo.
+
+Para producción faltan el servidor, la base de datos, autenticación y autorización de roles, envío de credenciales y recuperación de contraseña.
+
+## Verificación
+
+```sh
+npm run build
+npm run lint
+```
