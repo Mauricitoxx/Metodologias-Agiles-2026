@@ -1,8 +1,15 @@
 import { Sun, Moon, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAdmin } from '../../context/useAdmin';
 
 export const Header = () => {
+  const navigate = useNavigate();
   const { theme, toggleTheme, currentUser, session, logout } = useAdmin();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <header className="app-header">
@@ -26,7 +33,11 @@ export const Header = () => {
           {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
         </button>
 
-        {session && <button className="logout-button" onClick={logout}><LogOut size={14} /> Cerrar sesión</button>}
+        {session && (
+          <button className="logout-button" onClick={handleLogout}>
+            <LogOut size={14} /> Cerrar sesión
+          </button>
+        )}
         <div className="user-avatar-wrapper" title={`${currentUser.name} (${currentUser.role})`}>
           <img
             src={currentUser.avatar}

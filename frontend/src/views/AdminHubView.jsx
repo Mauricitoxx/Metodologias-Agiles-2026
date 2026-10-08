@@ -1,9 +1,9 @@
 import React from 'react';
 import { Shield, Package, IdCard, ArrowRight, ShieldCheck } from 'lucide-react';
-import { useAdmin } from '../context/useAdmin';
+import { useNavigate } from 'react-router-dom';
 
 export const AdminHubView = () => {
-  const { setCurrentTab } = useAdmin();
+  const navigate = useNavigate();
 
   return (
     <div className="admin-hub-container">
@@ -44,7 +44,7 @@ export const AdminHubView = () => {
 
           <button
             className="admin-hub-action-btn btn-inventario"
-            onClick={() => setCurrentTab('inventario')}
+            onClick={() => navigate('/admin/inventario')}
           >
             <span>Gestionar Inventario</span>
             <ArrowRight size={18} strokeWidth={2.5} />
@@ -71,7 +71,7 @@ export const AdminHubView = () => {
 
           <button
             className="admin-hub-action-btn btn-staff"
-            onClick={() => setCurrentTab('staff')}
+            onClick={() => navigate('/admin/staff')}
           >
             <span>Gestionar staff</span>
             <ArrowRight size={18} strokeWidth={2.5} />

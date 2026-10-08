@@ -1,25 +1,23 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { useAdmin } from '../../context/useAdmin';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export const Subheader = () => {
-  const { currentTab, setCurrentTab } = useAdmin();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const getSectionTitle = () => {
-    switch (currentTab) {
-      case 'inventario':
-      case 'catalogo':
-        return 'GESTOR DE INVENTARIO';
-      case 'staff':
-      case 'admin':
-        return 'GESTOR DE STAFF';
-      default:
-        return 'ADMIN CENTRAL';
+    if (location.pathname.includes('/staff')) {
+      return 'GESTOR DE STAFF';
     }
+    if (location.pathname.includes('/inventario') || location.pathname.includes('/catalogo')) {
+      return 'GESTOR DE INVENTARIO';
+    }
+    return 'ADMIN CENTRAL';
   };
 
   const handleBack = () => {
-    setCurrentTab('hub');
+    navigate('/admin');
   };
 
   return (
@@ -27,7 +25,7 @@ export const Subheader = () => {
       <button 
         className="back-btn" 
         onClick={handleBack}
-        title="Volver al catálogo"
+        title="Volver a Admin Central"
         aria-label="Atrás"
       >
         <ArrowLeft size={18} strokeWidth={2.5} />
