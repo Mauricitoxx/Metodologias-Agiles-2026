@@ -1,0 +1,111 @@
+:root {
+  /* Stitch Design Tokens - La Frikioteca */
+  --primary-yellow: #f5b800;
+  --primary-yellow-hover: #e0a700;
+  --primary-yellow-light: #fff8db;
+  
+  --brand-blue: #0b1e36;
+  --brand-blue-hover: #071526;
+  --brand-blue-light: #e8f0fe;
+  --brand-accent-blue: #0284c7;
+  
+  /* Status Colors */
+  --status-available-bg: #d1fae5;
+  --status-available-text: #065f46;
+  --status-available-border: #a7f3d0;
+  
+  --status-inuse-bg: #dbeafe;
+  --status-inuse-text: #1e40af;
+  --status-inuse-border: #bfdbfe;
+  
+  --status-repair-bg: #fee2e2;
+  --status-repair-text: #991b1b;
+  --status-repair-border: #fecaca;
+  
+  --status-baja-bg: #f3f4f6;
+  --status-baja-text: #4b5563;
+  --status-baja-border: #e5e7eb;
+
+  /* Surfaces & Neutrals (Light Mode Default) */
+  --bg-app: #f4f5f7;
+  --bg-card: #ffffff;
+  --bg-card-secondary: #f8fafc;
+  --bg-input: #ffffff;
+  --border-color: #0b1e36;
+  --border-subtle: #e2e8f0;
+  --text-main: #0b1e36;
+  --text-muted: #64748b;
+  --text-inverse: #ffffff;
+  
+  /* Shadows & Radius */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+  --shadow-retro: 3px 3px 0px #0b1e36;
+  --shadow-retro-sm: 2px 2px 0px #0b1e36;
+  --shadow-retro-hover: 1px 1px 0px #0b1e36;
+  --shadow-soft: 0 4px 12px rgba(11, 30, 54, 0.06);
+
+  /* Typography */
+  --font-family: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+[data-theme='dark'] {
+  --bg-app: #090e17;
+  --bg-card: #111a28;
+  --bg-card-secondary: #172336;
+  --bg-input: #172336;
+  --border-color: #2a3d58;
+  --border-subtle: #1e2e42;
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-inverse: #0b1e36;
+  
+  --shadow-retro: 3px 3px 0px #000000;
+  --shadow-retro-sm: 2px 2px 0px #000000;
+  --shadow-retro-hover: 1px 1px 0px #000000;
+}
+
+/* Global Reset & Mobile Container */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: #1e293b;
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Mobile Frame Container centered like Stitch view */
+.app-container {
+  width: 100%;
+  max-width: 440px;
+  min-height: 100vh;
+  background-color: var(--bg-app);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 74px; /* Space for Bottom Navigation */
+}
+
+@media (min-width: 768px) {
+  .app-container {
+    margin: 20px auto;
+    min-height: calc(100vh - 40px);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 2px solid var(--border-color);
+  }
+}

@@ -1,122 +1,110 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import React from 'react';
+import './styles/theme.css';
+import './styles/admin.css';
+import { AdminProvider } from './context/AdminContext';
+import { useAdmin } from './context/useAdmin';
+import { Header } from './components/layout/Header';
+import { Subheader } from './components/layout/Subheader';
+import { BottomNav } from './components/layout/BottomNav';
+import { CatalogView } from './views/CatalogView';
+import { BuffetView } from './views/BuffetView';
+import { EventsView } from './views/EventsView';
+import { AdminUsersView } from './views/AdminUsersView';
+import { ItemDetailModal } from './components/modals/ItemDetailModal';
+import { ItemFormModal } from './components/modals/ItemFormModal';
+import { ConfirmBajaModal } from './components/modals/ConfirmBajaModal';
 
-function App() {
-  const [count, setCount] = useState(0)
+const AdminDashboard = () => {
+  const {
+    currentTab,
+    modalState,
+    closeModal,
+    addItem,
+    updateItem,
+    toggleBajaItem,
+    openEditModal,
+    notification
+  } = useAdmin();
+
+  const renderActiveView = () => {
+    switch (currentTab) {
+      case 'catalogo':
+        return <CatalogView />;
+      case 'buffet':
+        return <BuffetView />;
+      case 'eventos':
+        return <EventsView />;
+      case 'admin':
+        return <AdminUsersView />;
+      default:
+        return <CatalogView />;
+    }
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app-container">
+      {/* 1. Encabezado de Marca & Usuario */}
+      <Header />
 
-      <div className="ticks"></div>
+      {/* 2. Sub-encabezado con Breadcrumbs */}
+      <Subheader />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      {/* 3. Contenido Principal del Módulo Activo */}
+      <main className="main-content">
+        {renderActiveView()}
+      </main>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      {/* 4. Barra de Navegación Inferior (4 Accesos) */}
+      <BottomNav />
+
+      {/* 5. Modales Operativos */}
+      <ItemDetailModal
+        isOpen={modalState.isOpen && modalState.mode === 'detail'}
+        onClose={closeModal}
+        item={modalState.item}
+        entityType={modalState.entityType}
+        onEdit={openEditModal}
+        onToggleBaja={toggleBajaItem}
+      />
+
+      <ItemFormModal
+        key={`${modalState.mode}-${modalState.item?.id || 'new'}-${modalState.entityType}`}
+        isOpen={modalState.isOpen && (modalState.mode === 'create' || modalState.mode === 'edit')}
+        onClose={closeModal}
+        mode={modalState.mode}
+        entityType={modalState.entityType}
+        initialItem={modalState.item}
+        onSave={(type, itemData) => {
+          if (modalState.mode === 'edit') {
+            updateItem(type, itemData);
+          } else {
+            addItem(type, itemData);
+          }
+        }}
+      />
+
+      <ConfirmBajaModal
+        isOpen={modalState.isOpen && modalState.mode === 'confirm_baja'}
+        onClose={closeModal}
+        item={modalState.item}
+        entityType={modalState.entityType}
+        onConfirm={toggleBajaItem}
+      />
+
+      {/* 6. Notificaciones Toast */}
+      {notification && (
+        <div className={`toast-notification ${notification.type || ''}`}>
+          <span>{notification.message}</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default function App() {
+  return (
+    <AdminProvider>
+      <AdminDashboard />
+    </AdminProvider>
+  );
 }
-
-export default App
