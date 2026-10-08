@@ -1,18 +1,10 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Save, Plus, X, CalendarDays } from 'lucide-react';
 import { activityService, activityTypeService } from '../services/activityService';
-import { ACTIVITY_FREQUENCIES, ACTIVITY_STATUSES } from '../utils/activity';
+import { ACTIVITY_FREQUENCIES, ACTIVITY_STATUSES, toInputDateTime, toInputValue } from '../utils/activity';
 
 const EDITABLE_STATUSES = ['activa', 'inactiva'];
 const KEEP_STATUS = '';
-
-// <input type="datetime-local"> works with "YYYY-MM-DDTHH:mm" in local time
-const toInputDateTime = (value) => (value ? value.slice(0, 16) : '');
-const nowForInput = () => {
-  const now = new Date();
-  const pad = (number) => String(number).padStart(2, '0');
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-};
 
 const isWebUrl = (value) => {
   try {
@@ -88,6 +80,7 @@ export function ActivityFormView({ activity, types, onTypeCreated, onClose, onSa
   const [saving, setSaving] = useState(false);
   const [newType, setNewType] = useState(null); // null = hidden, string = input value
   const [imageFailed, setImageFailed] = useState(false);
+  const [minDate] = useState(() => toInputValue(new Date()));
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -269,7 +262,7 @@ export function ActivityFormView({ activity, types, onTypeCreated, onClose, onSa
             <input
               type="datetime-local"
               className={`form-input ${invalid('fecha_hora')}`}
-              min={dateChanged ? nowForInput() : undefined}
+              min={dateChanged ? minDate : undefined}
               {...fieldProps('fecha_hora')}
             />
             {fieldError('fecha_hora')}

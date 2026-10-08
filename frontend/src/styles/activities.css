@@ -140,3 +140,27 @@
 .entity-form-view .form-row-2 .form-select {
   width: 100%;
 }
+
+.alert-circle-icon.warning {
+  color: #b45309;
+}
+
+.alert-circle-icon.info {
+  color: #0284c7;
+}
+
+.btn-confirm-warning {
+  background-color: #f59e0b;
+  color: #0b1e36;
+}
+
+.btn-confirm-info {
+  background-color: #00509d;
+  color: #ffffff;
+}
+
+.confirm-message {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-main);
+}

@@ -35,5 +35,11 @@ export const formatDuration = (minutes) => {
   return rest ? `${hours} h ${rest} min` : `${hours} h`;
 };
 
-// Date the activity actually takes place: the postponed one if it exists
 export const effectiveDate = (activity) => activity.fecha_hora_postergada || activity.fecha_hora;
+
+const pad = (number) => String(number).padStart(2, '0');
+
+export const toInputValue = (date) =>
+  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+
+export const toInputDateTime = (value) => (value ? value.slice(0, 16) : '');

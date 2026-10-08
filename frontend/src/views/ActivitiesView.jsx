@@ -2,11 +2,18 @@ import { useCallback, useEffect, useState } from 'react';
 import { Search, Plus, CalendarDays, ArrowDownWideNarrow, ArrowUpNarrowWide, RefreshCw } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
 import { ActivityCard } from '../components/cards/ActivityCard';
+import { ActivityActionModal } from '../components/modals/ActivityActionModal';
 import { ActivityFormView } from './ActivityFormView';
 import { activityService, activityTypeService } from '../services/activityService';
 import { ACTIVITY_STATUSES } from '../utils/activity';
 
 const SEARCH_DEBOUNCE_MS = 300;
+
+const ACTION_TOASTS = {
+  cancel: (activity) => [`Actividad "${activity.nombre}" cancelada`, 'warning'],
+  delete: (activity) => [`Actividad "${activity.nombre}" eliminada`, 'warning'],
+  postpone: (activity) => [`Actividad "${activity.nombre}" postergada`, 'success']
+};
 
 export const ActivitiesView = () => {
   const { showToast } = useAdmin();
@@ -23,7 +30,7 @@ export const ActivitiesView = () => {
   const [order, setOrder] = useState('asc');
 
   const [formState, setFormState] = useState(null);
-  const [, setPendingAction] = useState(null);
+  const [pendingAction, setPendingAction] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setSearch(searchInput.trim()), SEARCH_DEBOUNCE_MS);
@@ -64,6 +71,14 @@ export const ActivitiesView = () => {
   const handleSaved = (activity, edited) => {
     showToast(edited ? `Actividad "${activity.nombre}" actualizada` : `Actividad "${activity.nombre}" creada`);
     setFormState(null);
+    reload();
+  };
+
+  const closeAction = useCallback(() => setPendingAction(null), []);
+
+  const handleActionDone = (type, activity) => {
+    showToast(...ACTION_TOASTS[type](activity));
+    setPendingAction(null);
     reload();
   };
 
@@ -201,6 +216,15 @@ export const ActivitiesView = () => {
           ))
         )}
       </div>
+
+      {pendingAction && (
+        <ActivityActionModal
+          action={pendingAction.type}
+          activity={pendingAction.activity}
+          onClose={closeAction}
+          onDone={handleActionDone}
+        />
+      )}
     </div>
   );
 };
