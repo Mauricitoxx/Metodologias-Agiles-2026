@@ -30,6 +30,23 @@ export const StatusBadge = ({ status, text, tableNumber }) => {
       label = label || 'Activo';
       className += ' status-disponible';
       break;
+    // Estados de las actividades
+    case 'activa':
+      label = label || 'Activa';
+      className += ' status-disponible';
+      break;
+    case 'postergada':
+      label = label || 'Postergada';
+      className += ' status-en-mesa';
+      break;
+    case 'cancelada':
+      label = label || 'Cancelada';
+      className += ' status-reparacion';
+      break;
+    case 'inactiva':
+      label = label || 'Inactiva';
+      className += ' status-baja';
+      break;
     default:
       label = label || status;
   }

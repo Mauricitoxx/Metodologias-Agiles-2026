@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Package, IdCard, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Shield, Package, IdCard, ArrowRight, ShieldCheck, CalendarDays } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const AdminHubView = () => {
@@ -22,7 +22,7 @@ export const AdminHubView = () => {
         </p>
       </div>
 
-      {/* 3. Las 2 Tarjetas Principales */}
+      {/* 3. Tarjetas Principales */}
       <div className="admin-hub-cards-stack">
         {/* Tarjeta 1: INVENTARIO */}
         <div className="admin-hub-card">
@@ -77,6 +77,32 @@ export const AdminHubView = () => {
             <ArrowRight size={18} strokeWidth={2.5} />
           </button>
         </div>
+
+        <div className="admin-hub-card">
+          <div className="admin-hub-card-top">
+            <div className="admin-hub-icon-square icon-actividades">
+              <CalendarDays size={26} strokeWidth={2.2} />
+            </div>
+            <div className="admin-hub-card-info">
+              <h3 className="admin-hub-card-title">ACTIVIDADES</h3>
+              <p className="admin-hub-card-desc">
+                Cargá talleres, torneos y eventos, y mantené el cronograma al día.
+              </p>
+            </div>
+          </div>
+
+          <div className="admin-hub-card-tags tags-actividades">
+            TALLERES • TORNEOS • EVENTOS
+          </div>
+
+          <button
+            className="admin-hub-action-btn btn-actividades"
+            onClick={() => navigate('/admin/actividades')}
+          >
+            <span>Gestionar actividades</span>
+            <ArrowRight size={18} strokeWidth={2.5} />
+          </button>
+        </div>
       </div>
 
       {/* 4. Caja Informativa Inferior */}
@@ -85,7 +111,7 @@ export const AdminHubView = () => {
         <p className="notice-text">
           Área exclusiva para administradores.
           <br />
-          Tus permisos se aplican en ambas gestiones.
+          Tus permisos se aplican en todas las gestiones.
         </p>
       </div>
     </div>

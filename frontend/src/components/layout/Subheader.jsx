@@ -10,6 +10,9 @@ export const Subheader = () => {
     if (location.pathname.includes('/staff')) {
       return 'GESTOR DE STAFF';
     }
+    if (location.pathname.includes('/actividades')) {
+      return 'GESTOR DE ACTIVIDADES';
+    }
     if (location.pathname.includes('/inventario') || location.pathname.includes('/catalogo')) {
       return 'GESTOR DE INVENTARIO';
     }

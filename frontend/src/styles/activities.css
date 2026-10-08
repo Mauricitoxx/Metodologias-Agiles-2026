@@ -1,0 +1,84 @@
+
+.icon-actividades {
+  background-color: #ffe4e6;
+  color: #be123c;
+  box-shadow: var(--shadow-retro-sm);
+}
+
+[data-theme='dark'] .icon-actividades {
+  background-color: #3b0d1a;
+  color: #fb7185;
+}
+
+.tags-actividades {
+  color: #be123c;
+}
+
+[data-theme='dark'] .tags-actividades {
+  color: #fb7185;
+}
+
+.btn-actividades {
+  background-color: #be123c;
+  color: #ffffff;
+}
+
+.btn-actividades:hover {
+  background-color: #9f1239;
+}
+
+/* List filters */
+.activity-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.activity-order-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-full);
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.activity-retry {
+  margin: 8px auto 0;
+}
+
+/* Card */
+.activity-title {
+  overflow-wrap: anywhere;
+}
+
+.activity-original-date {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.activity-cancelada .activity-title {
+  text-decoration: line-through;
+}
+
+.activity-inactiva {
+  opacity: 0.65;
+  background-color: var(--bg-card-secondary);
+}
+
+.activity-card .card-actions-bar .btn-card-action:disabled {
+  opacity: 0.4;
+}
+
+.activity-btn-cancel {
+  flex: 0 0 44px;
+  color: #b45309;
+}
+
+[data-theme='dark'] .activity-btn-cancel {
+  color: #fbbf24;
+}

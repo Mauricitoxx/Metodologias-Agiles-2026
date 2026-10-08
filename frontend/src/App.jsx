@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './styles/theme.css';
 import './styles/admin.css';
 import './styles/screens.css';
+import './styles/activities.css';
 import { AdminProvider } from './context/AdminContext';
 import { useAdmin } from './context/useAdmin';
 import { Header } from './components/layout/Header';
@@ -10,6 +11,7 @@ import { Subheader } from './components/layout/Subheader';
 import { AdminHubView } from './views/AdminHubView';
 import { CatalogView } from './views/CatalogView';
 import { AdminUsersView } from './views/AdminUsersView';
+import { ActivitiesView } from './views/ActivitiesView';
 import { LoginView } from './views/LoginView';
 import { EntityFormView } from './views/EntityFormView';
 import { ItemDetailModal } from './components/modals/ItemDetailModal';
@@ -37,7 +39,8 @@ const AdminDashboard = () => {
     !isEntityForm &&
     (location.pathname === '/admin/inventario' ||
       location.pathname === '/admin/catalogo' ||
-      location.pathname === '/admin/staff');
+      location.pathname === '/admin/staff' ||
+      location.pathname === '/admin/actividades');
 
   return (
     <div className="app-container">
@@ -69,6 +72,9 @@ const AdminDashboard = () => {
 
             {/* Gestor de Staff */}
             <Route path="/admin/staff" element={<AdminUsersView />} />
+
+            {/* Gestor de Actividades */}
+            <Route path="/admin/actividades" element={<ActivitiesView />} />
 
             {/* Redirección por defecto a /admin */}
             <Route path="/" element={<Navigate to="/admin" replace />} />
