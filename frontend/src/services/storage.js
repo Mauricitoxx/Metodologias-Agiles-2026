@@ -190,50 +190,6 @@ export const INITIAL_DATA = {
       image: 'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=400&q=80'
     }
   ],
-  events: [
-    {
-      id: 'ev-001',
-      code: '#EV-001',
-      title: 'Torneo Nocturno de Catan 2026',
-      date: '2026-10-15',
-      time: '19:30 hs',
-      fee: '$4.000',
-      maxSlots: 16,
-      bookedSlots: 12,
-      category: 'Torneo de Juegos',
-      status: 'programado', // programado, en_curso, finalizado, cancelado
-      reward: 'Juego Catan Plus + Consumición gratis',
-      description: 'Torneo suizo a 3 rondas clasificatorias con mesa final. Premios a los mejores 3.'
-    },
-    {
-      id: 'ev-002',
-      code: '#EV-002',
-      title: 'Noche de Rol: Dungeons & Dragons 5e',
-      date: '2026-10-18',
-      time: '20:00 hs',
-      fee: '$3.500',
-      maxSlots: 10,
-      bookedSlots: 10,
-      category: 'Rol & Campañas',
-      status: 'programado',
-      reward: 'Set de dados poliédricos + Ficha oficial',
-      description: 'One-shot para principiantes y veteranos guiado por Master invitado.'
-    },
-    {
-      id: 'ev-003',
-      code: '#EV-003',
-      title: 'Taller de Pintura de Miniaturas Warhammer',
-      date: '2026-10-22',
-      time: '18:00 hs',
-      fee: '$5.000',
-      maxSlots: 8,
-      bookedSlots: 4,
-      category: 'Talleres',
-      status: 'programado',
-      reward: 'Miniatura pintada para llevar',
-      description: 'Aprende técnicas de pincel seco, sombreado y degradados. Incluye todos los materiales.'
-    }
-  ],
   admins: [
     {
       id: 'usr-001',

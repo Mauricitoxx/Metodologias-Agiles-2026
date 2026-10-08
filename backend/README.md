@@ -286,6 +286,47 @@ Commitear el modelo, esquema, servicio, ruta, test, **la migración** y los dos 
 
 ---
 
+## Módulos implementados
+
+### Actividades (HU-15 y HU-16)
+
+| Capa      | Archivos                                                                 |
+| --------- | ------------------------------------------------------------------------ |
+| Modelos   | `models/actividad.py` (`Actividad`), `models/tipo_actividad.py` (`TipoActividad`) |
+| Esquemas  | `schemas/actividad.py`, `schemas/tipo_actividad.py`                      |
+| Servicios | `services/activity.py`, `services/activity_type.py`, `services/recurrence.py` |
+| Rutas     | `api/routes/activities.py`, `api/routes/activity_types.py`               |
+| Tests     | `tests/test_activities.py`, `tests/test_activity_types.py`, `tests/test_recurrence.py` |
+
+**Endpoints**
+
+| Método | Ruta                                  | Acceso  | Descripción                                             |
+| ------ | ------------------------------------- | ------- | ------------------------------------------------------- |
+| GET    | `/api/activities/schedule`            | Público | Cronograma: próximas actividades (`search`, `tipo_id`)  |
+| GET    | `/api/activities/schedule/{id}`       | Público | Detalle (404 si está inactiva)                          |
+| GET    | `/api/activities`                     | Admin   | Listado completo (`search`, `tipo_id`, `estado`, `order=asc\|desc`) |
+| GET    | `/api/activities/{id}`                | Admin   | Detalle                                                 |
+| POST   | `/api/activities`                     | Admin   | Alta                                                    |
+| PUT    | `/api/activities/{id}`                | Admin   | Modificación (si no se envía `estado`, se conserva)     |
+| PATCH  | `/api/activities/{id}/cancel`         | Admin   | Cancelar                                                |
+| PATCH  | `/api/activities/{id}/postpone`       | Admin   | Postergar (`fecha_hora_postergada`)                     |
+| DELETE | `/api/activities/{id}`                | Admin   | Eliminación física                                      |
+| GET    | `/api/activity-types`                 | Público | Tipos de actividad                                      |
+| POST   | `/api/activity-types`                 | Admin   | Nuevo tipo (nombre único, sin distinguir mayúsculas)    |
+
+**Reglas de negocio**
+
+- Todos los campos son obligatorios; la fecha debe ser futura al crear, y al editar solo si se cambia.
+- Estados: `activa`, `inactiva` (se eligen en el formulario), `cancelada` y `postergada` (solo con sus acciones).
+- Al postergar se conserva la fecha original y la nueva queda en `fecha_hora_postergada`; las listas ordenan por la fecha efectiva.
+- El cronograma público oculta las `inactiva` y las que ya terminaron; las `cancelada` se muestran para que el cliente lo vea.
+- **Recurrentes:** antes de cada lectura, las actividades `semanal`/`quincenal` terminadas pasan a la próxima fecha (mismo día y hora) y las `mensual` al mismo N-ésimo día de la semana del mes siguiente (el 5.º pasa a ser el último). Una postergada vuelve a su día habitual; las canceladas no se mueven.
+- Los errores 422 propios (`services/errors.py`) usan el mismo formato que los de validación de FastAPI, así el frontend los muestra en el campo correspondiente.
+
+> ⚠ **Pendiente (HU-01):** los endpoints de admin dependen de `require_admin` (`app/api/deps.py`), que por ahora deja pasar todo. Cuando exista el login, solo hay que implementar esa función.
+
+---
+
 ## Migraciones
 
 Alembic guarda cada cambio de la base como un archivo en `alembic/versions/`. Así todos tienen la misma estructura de base sin borrarla ni recrearla a mano.

@@ -74,7 +74,6 @@ export const AdminProvider = ({ children }) => {
       comics: '#MC-',
       cards: '#TCG-',
       buffet: '#BF-',
-      events: '#EV-',
       admins: '#USR-'
     };
 

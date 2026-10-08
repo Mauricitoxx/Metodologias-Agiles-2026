@@ -22,10 +22,6 @@ export const StatusBadge = ({ status, text, tableNumber }) => {
       label = label || (status === 'inactivo' ? 'Inactivo' : 'Baja');
       className += ' status-baja';
       break;
-    case 'programado':
-      label = label || 'Programado';
-      className += ' status-en-mesa';
-      break;
     case 'activo':
       label = label || 'Activo';
       className += ' status-disponible';

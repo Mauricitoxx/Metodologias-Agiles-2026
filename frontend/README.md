@@ -9,6 +9,18 @@ npm install
 npm run dev
 ```
 
+## Conexión con el backend
+
+El módulo de **Actividades** (`/admin/actividades`) consume la API del backend; el resto de los módulos todavía usa datos de prueba en `localStorage`.
+
+La URL de la API se configura con `VITE_API_URL` (por defecto `http://127.0.0.1:8000/api`). Para cambiarla, copiar `.env.example` como `.env.local` (no se sube a git) y reiniciar `npm run dev`. El backend tiene que estar levantado (ver `backend/README.md`).
+
+| Archivo                          | Para qué sirve                                                   |
+| -------------------------------- | ---------------------------------------------------------------- |
+| `src/services/api.js`            | Cliente `fetch`: errores como `ApiError` con mensajes por campo   |
+| `src/services/activityService.js`| Llamadas a `/activities` y `/activity-types`                      |
+| `src/utils/activity.js`          | Etiquetas y formato de fechas (usar `toInputValue` para `datetime-local`, nunca `toISOString`) |
+
 ## Cuenta de demostración
 
 - Correo: `admin@frikioteca.demo`
