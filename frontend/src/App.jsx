@@ -19,7 +19,6 @@ import { ConfirmBajaModal } from './components/modals/ConfirmBajaModal';
 const AdminDashboard = () => {
   const location = useLocation();
   const {
-    session,
     modalState,
     closeModal,
     addItem,
@@ -30,13 +29,11 @@ const AdminDashboard = () => {
   } = useAdmin();
 
   const isEntityForm =
-    session &&
     modalState.isOpen &&
     ['create', 'edit'].includes(modalState.mode) &&
     ['boardgames', 'comics', 'cards', 'buffet'].includes(modalState.entityType);
 
   const isSubheaderRoute =
-    session &&
     !isEntityForm &&
     (location.pathname === '/admin/inventario' ||
       location.pathname === '/admin/catalogo' ||
@@ -44,7 +41,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="app-container">
-      {/* 1. Header con identidad de marca y botón salir */}
+      {/* 1. Header con identidad de marca y usuario */}
       <Header />
 
       {/* 2. Subheader con botón atrás solo en rutas internas de gestión */}
@@ -58,51 +55,24 @@ const AdminDashboard = () => {
           />
         ) : (
           <Routes>
-            {/* Login */}
-            <Route
-              path="/login"
-              element={session ? <Navigate to="/admin" replace /> : <LoginView />}
-            />
+            {/* Login (reservado para implementación del equipo) */}
+            <Route path="/login" element={<LoginView />} />
 
             {/* Admin Central Hub */}
-            <Route
-              path="/admin"
-              element={
-                !session ? <Navigate to="/login" replace /> : <AdminHubView />
-              }
-            />
+            <Route path="/admin" element={<AdminHubView />} />
 
             {/* Gestor de Inventario */}
-            <Route
-              path="/admin/inventario"
-              element={
-                !session ? <Navigate to="/login" replace /> : <CatalogView />
-              }
-            />
+            <Route path="/admin/inventario" element={<CatalogView />} />
 
             {/* Alias /admin/catalogo */}
-            <Route
-              path="/admin/catalogo"
-              element={<Navigate to="/admin/inventario" replace />}
-            />
+            <Route path="/admin/catalogo" element={<Navigate to="/admin/inventario" replace />} />
 
             {/* Gestor de Staff */}
-            <Route
-              path="/admin/staff"
-              element={
-                !session ? <Navigate to="/login" replace /> : <AdminUsersView />
-              }
-            />
+            <Route path="/admin/staff" element={<AdminUsersView />} />
 
-            {/* Redirección por defecto */}
-            <Route
-              path="/"
-              element={<Navigate to={session ? "/admin" : "/login"} replace />}
-            />
-            <Route
-              path="*"
-              element={<Navigate to={session ? "/admin" : "/login"} replace />}
-            />
+            {/* Redirección por defecto a /admin */}
+            <Route path="/" element={<Navigate to="/admin" replace />} />
+            <Route path="*" element={<Navigate to="/admin" replace />} />
           </Routes>
         )}
       </main>
