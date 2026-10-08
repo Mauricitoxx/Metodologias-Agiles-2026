@@ -1,7 +1,16 @@
 from datetime import datetime
 from typing import Annotated
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, HttpUrl, field_validator
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    ConfigDict,
+    Field,
+    HttpUrl,
+    TypeAdapter,
+    ValidationError,
+    field_validator,
+)
 
 from app.models.actividad import EstadoActividad, FrecuenciaActividad
 from app.schemas.tipo_actividad import TipoActividadRead
@@ -22,10 +31,22 @@ def ensure_future(value: datetime) -> datetime:
     return value
 
 
+_http_url = TypeAdapter(HttpUrl)
+
+
+def ensure_web_url(value: str) -> str:
+    """Validates the URL but keeps the original text (HttpUrl would normalize it, e.g. adding '/')."""
+    try:
+        _http_url.validate_python(value)
+    except ValidationError:
+        raise ValueError("Debe ingresar una URL web válida") from None
+    return value
+
+
 LocalDateTime = Annotated[datetime, AfterValidator(to_naive_local)]
 FutureDateTime = Annotated[LocalDateTime, AfterValidator(ensure_future)]
 NonEmptyStr = Annotated[str, Field(min_length=1)]
-ImageUrl = Annotated[HttpUrl, Field(max_length=500), AfterValidator(str)]
+ImageUrl = Annotated[str, Field(min_length=1, max_length=500), AfterValidator(ensure_web_url)]
 
 
 class ActividadBase(BaseModel):
@@ -44,8 +65,8 @@ class ActividadBase(BaseModel):
 
     @field_validator("estado")
     @classmethod
-    def ensure_editable_status(cls, value: EstadoActividad) -> EstadoActividad:
-        if value not in EDITABLE_STATUSES:
+    def ensure_editable_status(cls, value: EstadoActividad | None) -> EstadoActividad | None:
+        if value is not None and value not in EDITABLE_STATUSES:
             raise ValueError("El estado solo puede ser 'activa' o 'inactiva'")
         return value
 
@@ -56,6 +77,9 @@ class ActividadCreate(ActividadBase):
 
 class ActividadUpdate(ActividadBase):
     """Full update (PUT). The future-date rule is applied by the service only when the date changes."""
+
+    # None keeps the current status, so editing a cancelled/postponed activity does not reset it
+    estado: EstadoActividad | None = None
 
 
 class ActividadPostpone(BaseModel):
