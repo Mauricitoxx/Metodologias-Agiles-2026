@@ -1,0 +1,15 @@
+# API
+fastapi==0.143.0
+uvicorn[standard]==0.54.0
+
+# Base de datos
+SQLAlchemy==2.1.4
+psycopg[binary]==3.3.6
+alembic==1.20.0
+
+# Configuración (.env)
+pydantic-settings==2.15.0
+
+# Tests
+pytest==9.1.1
+httpx==0.28.1
