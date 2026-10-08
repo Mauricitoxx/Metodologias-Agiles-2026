@@ -1,8 +1,8 @@
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, LogOut } from 'lucide-react';
 import { useAdmin } from '../../context/useAdmin';
 
 export const Header = () => {
-  const { theme, toggleTheme, currentUser } = useAdmin();
+  const { theme, toggleTheme, currentUser, session, logout } = useAdmin();
 
   return (
     <header className="app-header">
@@ -26,6 +26,7 @@ export const Header = () => {
           {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
         </button>
 
+        {session && <button className="logout-button" onClick={logout}><LogOut size={14} /> Cerrar sesión</button>}
         <div className="user-avatar-wrapper" title={`${currentUser.name} (${currentUser.role})`}>
           <img
             src={currentUser.avatar}

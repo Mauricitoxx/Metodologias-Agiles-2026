@@ -11,10 +11,14 @@ import { AdminUsersView } from './views/AdminUsersView';
 import { ItemDetailModal } from './components/modals/ItemDetailModal';
 import { ItemFormModal } from './components/modals/ItemFormModal';
 import { ConfirmBajaModal } from './components/modals/ConfirmBajaModal';
+import { LoginView } from './views/LoginView';
+import { EntityFormView } from './views/EntityFormView';
+import './styles/screens.css';
 
 const AdminDashboard = () => {
   const {
     currentTab,
+    session,
     modalState,
     closeModal,
     addItem,
@@ -25,6 +29,7 @@ const AdminDashboard = () => {
   } = useAdmin();
 
   const isHub = currentTab === 'hub';
+  const isEntityForm = session && modalState.isOpen && ['create', 'edit'].includes(modalState.mode) && ['boardgames', 'comics', 'cards', 'buffet'].includes(modalState.entityType);
 
   return (
     <div className="app-container">
@@ -32,13 +37,15 @@ const AdminDashboard = () => {
       <Header />
 
       {/* 2. Sub-encabezado con botón de volver solo cuando no estamos en el Hub */}
-      {!isHub && <Subheader />}
+      {session && !isHub && !isEntityForm && <Subheader />}
 
       {/* 3. Contenido Principal */}
       <main className="main-content">
-        {isHub && <AdminHubView />}
-        {(currentTab === 'inventario' || currentTab === 'catalogo') && <CatalogView />}
-        {(currentTab === 'staff' || currentTab === 'admin') && <AdminUsersView />}
+        {!session ? <LoginView /> : isEntityForm ? <EntityFormView key={`${modalState.mode}-${modalState.item?.id || 'new'}-${modalState.entityType}`} /> : <>
+          {isHub && <AdminHubView />}
+          {(currentTab === 'inventario' || currentTab === 'catalogo') && <CatalogView />}
+          {(currentTab === 'staff' || currentTab === 'admin') && <AdminUsersView />}
+        </>}
       </main>
 
       {/* 4. Modales Operativos */}
@@ -53,7 +60,7 @@ const AdminDashboard = () => {
 
       <ItemFormModal
         key={`${modalState.mode}-${modalState.item?.id || 'new'}-${modalState.entityType}`}
-        isOpen={modalState.isOpen && (modalState.mode === 'create' || modalState.mode === 'edit')}
+        isOpen={!isEntityForm && modalState.isOpen && (modalState.mode === 'create' || modalState.mode === 'edit')}
         onClose={closeModal}
         mode={modalState.mode}
         entityType={modalState.entityType}
@@ -77,7 +84,7 @@ const AdminDashboard = () => {
 
       {/* 5. Notificaciones Toast */}
       {notification && (
-        <div className={`toast-notification ${notification.type || ''}`}>
+        <div role="status" className={`toast-notification ${notification.type || ''}`}>
           <span>{notification.message}</span>
         </div>
       )}

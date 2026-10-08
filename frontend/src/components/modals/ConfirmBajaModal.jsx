@@ -43,8 +43,7 @@ export const ConfirmBajaModal = ({ isOpen, onClose, item, entityType, onConfirm 
           <button
             className={`btn-confirm ${isAlreadyBaja ? 'btn-confirm-restore' : 'btn-confirm-danger'}`}
             onClick={() => {
-              onConfirm(entityType, item);
-              onClose();
+              if (onConfirm(entityType, item)) onClose();
             }}
           >
             {isAlreadyBaja ? 'Sí, Reactivar' : 'Sí, Dar de Baja'}

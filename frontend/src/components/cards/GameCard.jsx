@@ -10,7 +10,7 @@ export const GameCard = ({ item, entityType, onOpenDetail, onOpenEdit, onOpenCon
       <div className="card-main-content">
         {/* Thumbnail with shelf tag */}
         <div className="card-thumb-container">
-          <img src={item.image} alt={item.title} className="card-thumb-img" />
+          {item.image ? <img src={item.image} alt={item.title} className="card-thumb-img" /> : <span className="staff-avatar-emoji" aria-label="Sin portada">🎲</span>}
           {item.shelf && <ShelfBadge>{item.shelf}</ShelfBadge>}
         </div>
 

@@ -4,6 +4,7 @@ import { AdminContext } from './adminContextInstance';
 
 export const AdminProvider = ({ children }) => {
   const [data, setData] = useState(() => storage.get());
+  const [session, setSession] = useState(() => sessionStorage.getItem('frikioteca_demo_session'));
   const [currentTab, setCurrentTab] = useState('hub'); // 'hub' | 'inventario' | 'staff'
   const [catalogSubTab, setCatalogSubTab] = useState('boardgames'); // 'boardgames' | 'comics' | 'cards'
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,11 +29,15 @@ export const AdminProvider = ({ children }) => {
 
   // Persist data on change
   const persistData = (updater) => {
-    setData((prev) => {
-      const next = typeof updater === 'function' ? updater(prev) : updater;
+    try {
+      const next = typeof updater === 'function' ? updater(data) : updater;
       storage.set(next);
-      return next;
-    });
+      setData(next);
+      return true;
+    } catch {
+      showToast('No se pudo guardar: el almacenamiento local está lleno o no está disponible.', 'error');
+      return false;
+    }
   };
 
   const showToast = (message, type = 'success') => {
@@ -42,6 +47,18 @@ export const AdminProvider = ({ children }) => {
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
+
+  const login = () => {
+    sessionStorage.setItem('frikioteca_demo_session', 'demo');
+    setSession('demo');
+    setCurrentTab('hub');
+  };
+  const logout = () => {
+    sessionStorage.removeItem('frikioteca_demo_session');
+    setSession(null);
+    closeModal();
+    setCurrentTab('hub');
   };
 
   // Current active user
@@ -66,29 +83,33 @@ export const AdminProvider = ({ children }) => {
 
     const newItem = {
       ...itemData,
-      id: `${entityType}-${Date.now()}`,
+      id: `${entityType}-${crypto.randomUUID()}`,
       code: itemData.code || newCode,
-      createdAt: new Date().toISOString().split('T')[0],
+      createdAt: new Date().toLocaleDateString('en-CA'),
       loansCount: 0,
       status: itemData.status || (entityType === 'admins' ? 'activo' : 'disponible')
     };
 
-    persistData((prev) => ({
+    const saved = persistData((prev) => ({
       ...prev,
       [entityType]: [newItem, ...(prev[entityType] || [])]
     }));
 
+    if (!saved) return false;
     showToast(`Elemento ${newItem.code} dado de alta con éxito`);
+    return true;
   };
 
   const updateItem = (entityType, updatedItem) => {
-    persistData((prev) => ({
+    const saved = persistData((prev) => ({
       ...prev,
       [entityType]: (prev[entityType] || []).map((item) =>
         item.id === updatedItem.id ? { ...item, ...updatedItem } : item
       )
     }));
+    if (!saved) return false;
     showToast(`Registro ${updatedItem.code || updatedItem.title || updatedItem.name} actualizado`);
+    return true;
   };
 
   // Toggle Baja / Desactivar
@@ -117,13 +138,14 @@ export const AdminProvider = ({ children }) => {
       ? 'inactivo'
       : 'baja';
 
-    persistData((prev) => ({
+    const saved = persistData((prev) => ({
       ...prev,
       [entityType]: (prev[entityType] || []).map((el) =>
         el.id === item.id ? { ...el, status: newStatus } : el
       )
     }));
 
+    if (!saved) return false;
     showToast(
       isBaja
         ? `Reactivado: ${item.title || item.name}`
@@ -177,6 +199,9 @@ export const AdminProvider = ({ children }) => {
   return (
     <AdminContext.Provider
       value={{
+        session,
+        login,
+        logout,
         data,
         currentTab,
         setCurrentTab,

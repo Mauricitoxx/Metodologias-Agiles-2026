@@ -9,7 +9,7 @@ export const AdminUserCard = ({ item, isCurrentLoggedUser, onOpenDetail, onOpenE
     <div className={`catalog-item-card ${isInactivo ? 'is-baja-state' : ''}`}>
       <div className="card-main-content">
         <div className="card-thumb-container card-thumb-avatar">
-          <img src={item.avatar} alt={item.name} className="card-avatar-img" />
+          {item.avatarEmoji ? <span className="staff-avatar-emoji">{item.avatarEmoji}</span> : <img src={item.avatar} alt={item.name} className="card-avatar-img" />}
           <span className="role-tag-badge">
             <Shield size={10} /> {item.role}
           </span>

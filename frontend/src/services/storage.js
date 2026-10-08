@@ -285,11 +285,7 @@ export const storage = {
   },
 
   set: (data) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (e) {
-      console.error('Error saving to storage', e);
-    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   },
 
   reset: () => {

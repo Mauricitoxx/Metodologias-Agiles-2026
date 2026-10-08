@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Search, Plus } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
 import { GameCard } from '../components/cards/GameCard';
+import { BuffetCard } from '../components/cards/BuffetCard';
 
 export const CatalogView = () => {
   const {
@@ -47,7 +48,7 @@ export const CatalogView = () => {
       if (filterStatus === 'baja') return item.status === 'baja' || item.status === 'en_reparacion';
 
       return true;
-    });
+    }).sort((a, b) => a.code.localeCompare(b.code, 'es', { numeric: true }));
   }, [currentList, searchQuery, filterStatus]);
 
   // Counts for filter pills
@@ -63,6 +64,7 @@ export const CatalogView = () => {
   const getSubTabLabel = () => {
     if (catalogSubTab === 'boardgames') return 'JUEGO DE MESA';
     if (catalogSubTab === 'comics') return 'CÓMIC / MANGA';
+    if (catalogSubTab === 'buffet') return 'PRODUCTO DE BUFFET';
     return 'MAZO DE CARTAS';
   };
 
@@ -70,7 +72,7 @@ export const CatalogView = () => {
     <div className="view-content-wrapper">
       {/* 1. SELECCIONA ENTIDAD (Tabs superiores horizontales) */}
       <div className="entity-selector-section">
-        <span className="section-small-label">SELECCIONA ENTIDAD (3)</span>
+        <span className="section-small-label">SELECCIONA ENTIDAD (4)</span>
         <div className="entity-pills-scroll">
           <button
             className={`entity-pill-btn ${catalogSubTab === 'boardgames' ? 'active' : ''}`}
@@ -104,6 +106,7 @@ export const CatalogView = () => {
               <span className="entity-pill-subtitle">{cardsCount} mazos</span>
             </div>
           </button>
+          <button className={`entity-pill-btn ${catalogSubTab === 'buffet' ? 'active' : ''}`} onClick={() => setCatalogSubTab('buffet')}><span className="entity-pill-emoji">🍔</span><div className="entity-pill-texts"><span className="entity-pill-title">BUFFET</span><span className="entity-pill-subtitle">{data.buffet.length} productos</span></div></button>
         </div>
       </div>
 
@@ -173,7 +176,7 @@ export const CatalogView = () => {
             <p>No se encontraron elementos con los filtros actuales.</p>
           </div>
         ) : (
-          filteredItems.map((item) => (
+          filteredItems.map((item) => catalogSubTab === 'buffet' ? <BuffetCard key={item.id} item={item} onOpenDetail={openDetailModal} onOpenEdit={openEditModal} onOpenConfirmBaja={openConfirmBajaModal} /> : (
             <GameCard
               key={item.id}
               item={item}
