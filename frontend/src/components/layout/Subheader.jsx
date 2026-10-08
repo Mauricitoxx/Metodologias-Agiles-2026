@@ -9,12 +9,9 @@ export const Subheader = () => {
     switch (currentTab) {
       case 'catalogo':
         return 'GESTOR DE INVENTARIO';
-      case 'buffet':
-        return 'GESTOR DE BUFFET';
-      case 'eventos':
-        return 'GESTOR DE EVENTOS';
+      case 'staff':
       case 'admin':
-        return 'ADMINISTRACIÓN Y USUARIOS';
+        return 'GESTOR DE STAFF';
       default:
         return 'PANEL ADMINISTRATIVO';
     }

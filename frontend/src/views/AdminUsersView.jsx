@@ -52,8 +52,8 @@ export const AdminUsersView = () => {
           <ShieldCheck size={24} />
         </div>
         <div>
-          <h4 className="module-banner-title">Control de Acceso y Roles</h4>
-          <p className="module-banner-desc">Administra permisos de personal, altas de cuenta y bajas de administradores.</p>
+          <h4 className="module-banner-title">Gestión de Staff & Permisos</h4>
+          <p className="module-banner-desc">Administra permisos de personal, altas y bajas de cuentas del staff.</p>
         </div>
       </div>
 
@@ -71,7 +71,7 @@ export const AdminUsersView = () => {
         <span className="cta-icon-circle">
           <Plus size={18} strokeWidth={3} />
         </span>
-        NUEVO ADMINISTRADOR
+        NUEVO MIEMBRO DE STAFF
       </button>
 
       {/* Buscador */}
@@ -80,7 +80,7 @@ export const AdminUsersView = () => {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Buscar administrador por nombre o email..."
+          placeholder="Buscar miembro del staff por nombre o email..."
           className="search-input"
         />
         <button className="search-btn-blue" aria-label="Buscar">
@@ -112,7 +112,7 @@ export const AdminUsersView = () => {
 
       {/* Encabezado */}
       <div className="catalog-header-bar">
-        <h3 className="catalog-active-title">PERSONAL CON ACCESO</h3>
+        <h3 className="catalog-active-title">STAFF ACTIVO</h3>
         <span className="catalog-order-caption">{filteredItems.length} registrados</span>
       </div>
 

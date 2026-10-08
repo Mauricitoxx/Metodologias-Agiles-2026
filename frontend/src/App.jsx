@@ -7,8 +7,6 @@ import { Header } from './components/layout/Header';
 import { Subheader } from './components/layout/Subheader';
 import { BottomNav } from './components/layout/BottomNav';
 import { CatalogView } from './views/CatalogView';
-import { BuffetView } from './views/BuffetView';
-import { EventsView } from './views/EventsView';
 import { AdminUsersView } from './views/AdminUsersView';
 import { ItemDetailModal } from './components/modals/ItemDetailModal';
 import { ItemFormModal } from './components/modals/ItemFormModal';
@@ -30,10 +28,7 @@ const AdminDashboard = () => {
     switch (currentTab) {
       case 'catalogo':
         return <CatalogView />;
-      case 'buffet':
-        return <BuffetView />;
-      case 'eventos':
-        return <EventsView />;
+      case 'staff':
       case 'admin':
         return <AdminUsersView />;
       default:
