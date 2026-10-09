@@ -1,10 +1,31 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Save, Plus, X, CalendarDays } from 'lucide-react';
-import { activityService, activityTypeService } from '../services/activityService';
-import { ACTIVITY_FREQUENCIES, ACTIVITY_STATUSES, effectiveDate, toInputDateTime, toInputValue } from '../utils/activity';
+import { ArrowLeft, Save, Settings2, CalendarDays } from 'lucide-react';
+import { StatusBadge } from '../components/common/Badge';
+import { ActivityTypesModal } from '../components/modals/ActivityTypesModal';
+import { activityService } from '../services/activityService';
+import {
+  ACTIVITY_FREQUENCIES,
+  effectiveDate,
+  formatDate,
+  formatTime,
+  toInputDateTime,
+  toInputValue
+} from '../utils/activity';
 
-const EDITABLE_STATUSES = ['activa', 'inactiva'];
-const KEEP_STATUS = '';
+const REASON_MAX_LENGTH = 200;
+
+const STATUS_OPTIONS = {
+  activa: { label: 'Activa', hint: 'Los clientes la ven en el cronograma.' },
+  cancelada: { label: 'Cancelada', hint: 'Los clientes la ven como cancelada.' },
+  inactiva: { label: 'Inactiva', hint: 'Los clientes no la ven. No se borra: podés reactivarla cuando quieras.' }
+};
+const CREATE_STATUSES = ['activa', 'inactiva'];
+const EDIT_STATUSES = ['activa', 'cancelada', 'inactiva'];
+
+const SCOPES = [
+  { value: 'fecha', label: 'Solo esta fecha' },
+  { value: 'serie', label: 'Toda la serie' }
+];
 
 const isWebUrl = (value) => {
   try {
@@ -13,6 +34,8 @@ const isWebUrl = (value) => {
     return false;
   }
 };
+
+const formatDateTime = (value) => `${formatDate(value)} ${formatTime(value)}`;
 
 const emptyForm = {
   nombre: '',
@@ -24,7 +47,9 @@ const emptyForm = {
   edad_minima: '',
   frecuencia: 'unica',
   estado: 'activa',
-  imagen: ''
+  imagen: '',
+  motivo: '',
+  alcance: 'fecha'
 };
 
 const formFromActivity = (activity) => ({
@@ -36,10 +61,24 @@ const formFromActivity = (activity) => ({
   cupo: String(activity.cupo),
   edad_minima: String(activity.edad_minima),
   frecuencia: activity.frecuencia,
-  // Cancelled/postponed activities keep their status unless the admin picks another one
-  estado: EDITABLE_STATUSES.includes(activity.estado) ? activity.estado : KEEP_STATUS,
-  imagen: activity.imagen
+  estado: activity.estado === 'postergada' ? 'activa' : activity.estado,
+  imagen: activity.imagen,
+  motivo: activity.motivo || '',
+  alcance: activity.alcance || 'fecha'
 });
+
+const predictResult = (activity, form, dateChanged) => {
+  if (!activity) return { status: form.estado, postponing: false, undoing: false };
+
+  const backToOriginal = form.fecha_hora === toInputDateTime(activity.fecha_hora);
+  const replacesDate = form.estado === 'inactiva' && !activity.fecha_hora_postergada;
+  const postponing = dateChanged && !backToOriginal && !replacesDate;
+  const undoing = dateChanged && backToOriginal && Boolean(activity.fecha_hora_postergada);
+  const postponed = dateChanged ? postponing : Boolean(activity.fecha_hora_postergada);
+
+  const status = form.estado === 'activa' && postponed ? 'postergada' : form.estado;
+  return { status, postponing, undoing };
+};
 
 const validate = (form, { dateChanged }) => {
   const errors = {};
@@ -70,7 +109,7 @@ const validate = (form, { dateChanged }) => {
   return errors;
 };
 
-export function ActivityFormView({ activity, types, onTypeCreated, onClose, onSaved }) {
+export function ActivityFormView({ activity, types, onTypeCreated, onTypeUpdated, onTypeDeleted, onClose, onSaved }) {
   const editing = Boolean(activity);
   const initialForm = editing ? formFromActivity(activity) : emptyForm;
 
@@ -78,7 +117,7 @@ export function ActivityFormView({ activity, types, onTypeCreated, onClose, onSa
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
-  const [newType, setNewType] = useState(null); // null = hidden, string = input value
+  const [typesOpen, setTypesOpen] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
   const [minDate] = useState(() => toInputValue(new Date()));
 
@@ -87,19 +126,28 @@ export function ActivityFormView({ activity, types, onTypeCreated, onClose, onSa
   }, []);
 
   useEffect(() => {
+    if (typesOpen) return undefined;
     const handleEscape = (event) => {
       if (event.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [onClose]);
+  }, [onClose, typesOpen]);
 
   const dateChanged = !editing || form.fecha_hora !== initialForm.fecha_hora;
+  const result = predictResult(activity, form, dateChanged);
+  const cancelling = editing && form.estado === 'cancelada' && activity.estado !== 'cancelada';
+  const showReason = editing && ['cancelada', 'postergada'].includes(result.status);
+  const showScope = form.frecuencia !== 'unica' && (cancelling || (result.postponing && form.estado !== 'cancelada'));
+
+  const setField = (name, value) => {
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: undefined }));
+  };
 
   const change = (event) => {
     const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: undefined }));
+    setField(name, value);
     if (name === 'imagen') setImageFailed(false);
   };
 
@@ -114,9 +162,11 @@ export function ActivityFormView({ activity, types, onTypeCreated, onClose, onSa
       cupo: Number(form.cupo),
       edad_minima: Number(form.edad_minima),
       frecuencia: form.frecuencia,
+      estado: form.estado,
       imagen: form.imagen.trim()
     };
-    if (form.estado !== KEEP_STATUS) payload.estado = form.estado;
+    if (showReason) payload.motivo = form.motivo.trim() || null;
+    if (showScope) payload.alcance = form.alcance;
     return payload;
   };
 
@@ -143,18 +193,14 @@ export function ActivityFormView({ activity, types, onTypeCreated, onClose, onSa
     }
   };
 
-  const createType = async () => {
-    const nombre = (newType || '').trim();
-    if (!nombre) return setErrors((prev) => ({ ...prev, tipo_id: 'Ingresá el nombre del nuevo tipo' }));
-    try {
-      const created = await activityTypeService.create(nombre);
-      onTypeCreated(created);
-      setForm((prev) => ({ ...prev, tipo_id: String(created.id) }));
-      setErrors((prev) => ({ ...prev, tipo_id: undefined }));
-      setNewType(null);
-    } catch (error) {
-      setErrors((prev) => ({ ...prev, tipo_id: error.fieldErrors?.nombre || error.message }));
-    }
+  const handleTypeCreated = (created) => {
+    onTypeCreated(created);
+    if (!form.tipo_id) setField('tipo_id', String(created.id));
+  };
+
+  const handleTypeDeleted = (deleted) => {
+    onTypeDeleted(deleted);
+    if (form.tipo_id === String(deleted.id)) setField('tipo_id', '');
   };
 
   const invalid = (name) => (errors[name] ? 'is-invalid' : '');
@@ -173,8 +219,8 @@ export function ActivityFormView({ activity, types, onTypeCreated, onClose, onSa
     'aria-describedby': errors[name] ? `activity-${name}-error` : undefined
   });
 
-  const canKeepStatus = editing && !EDITABLE_STATUSES.includes(activity.estado);
-  const currentStatusLabel = ACTIVITY_STATUSES.find((status) => status.value === activity?.estado)?.label;
+  const statusOptions = editing ? EDIT_STATUSES : CREATE_STATUSES;
+  const isStatusDisabled = (status) => status === 'cancelada' && activity?.estado === 'inactiva';
 
   return (
     <div className="entity-form-view">
@@ -191,7 +237,49 @@ export function ActivityFormView({ activity, types, onTypeCreated, onClose, onSa
       <form onSubmit={save} noValidate>
         <section className="retro-panel form-section">
           <h3>
-            <span className="step-number blue">1</span> DATOS DE LA ACTIVIDAD
+            <span className="step-number green">1</span> ESTADO
+          </h3>
+
+          {editing && (
+            <p className="activity-status-current">
+              Estado actual: <StatusBadge status={activity.estado} />
+            </p>
+          )}
+
+          <div className="form-group">
+            <span className="section-small-label" id="activity-estado-label">
+              {editing ? 'CAMBIAR A' : 'ESTADO INICIAL'}
+            </span>
+            <div className="filter-pills-row" role="radiogroup" aria-labelledby="activity-estado-label">
+              {statusOptions.map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  role="radio"
+                  aria-checked={form.estado === status}
+                  className={`filter-pill ${form.estado === status ? 'active' : ''}`}
+                  onClick={() => setField('estado', status)}
+                  disabled={isStatusDisabled(status)}
+                  title={isStatusDisabled(status) ? 'Reactivala primero para poder cancelarla' : undefined}
+                >
+                  {STATUS_OPTIONS[status].label.toUpperCase()}
+                </button>
+              ))}
+            </div>
+            <span className="activity-form-hint">{STATUS_OPTIONS[form.estado].hint}</span>
+            {fieldError('estado')}
+          </div>
+
+          {editing && result.status !== activity.estado && (
+            <p className="activity-status-preview">
+              Al guardar queda: <StatusBadge status={result.status} />
+            </p>
+          )}
+        </section>
+
+        <section className="retro-panel form-section">
+          <h3>
+            <span className="step-number blue">2</span> DATOS DE LA ACTIVIDAD
           </h3>
 
           <div className="form-group">
@@ -217,44 +305,17 @@ export function ActivityFormView({ activity, types, onTypeCreated, onClose, onSa
                   </option>
                 ))}
               </select>
-              {newType === null && (
-                <button type="button" className="btn-secondary" onClick={() => setNewType('')}>
-                  <Plus size={14} /> Nuevo
-                </button>
-              )}
+              <button type="button" className="btn-secondary" onClick={() => setTypesOpen(true)}>
+                <Settings2 size={14} /> Gestionar
+              </button>
             </div>
-            {newType !== null && (
-              <div className="activity-type-row">
-                <input
-                  className="form-input"
-                  aria-label="Nombre del nuevo tipo"
-                  placeholder="Ej: Presentación de libro"
-                  maxLength={50}
-                  value={newType}
-                  onChange={(event) => setNewType(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.preventDefault();
-                      createType();
-                    }
-                  }}
-                  autoFocus
-                />
-                <button type="button" className="btn-primary" onClick={createType}>
-                  Agregar
-                </button>
-                <button type="button" className="btn-secondary" onClick={() => setNewType(null)} aria-label="Cancelar nuevo tipo">
-                  <X size={14} />
-                </button>
-              </div>
-            )}
             {fieldError('tipo_id')}
           </div>
         </section>
 
         <section className="retro-panel form-section">
           <h3>
-            <span className="step-number yellow">2</span> FECHA Y CUPO
+            <span className="step-number yellow">3</span> FECHA Y CUPO
           </h3>
 
           <div className="form-group">
@@ -266,9 +327,26 @@ export function ActivityFormView({ activity, types, onTypeCreated, onClose, onSa
               {...fieldProps('fecha_hora')}
             />
             {fieldError('fecha_hora')}
-            {activity?.fecha_hora_postergada && (
+            {activity?.fecha_hora_postergada && !dateChanged && (
               <span className="activity-form-hint">
-                Esta actividad está postergada. Si volvés a la fecha original, se deshace la postergación.
+                Postergada. Fecha original: {formatDateTime(activity.fecha_hora)}. Si volvés a esa fecha se deshace la
+                postergación.
+              </span>
+            )}
+            {result.postponing && result.status === 'postergada' && (
+              <span className="activity-form-notice" role="status">
+                Al guardar, la actividad queda <strong>postergada</strong>: los clientes van a ver la fecha original (
+                {formatDateTime(activity.fecha_hora)}) tachada.
+              </span>
+            )}
+            {result.postponing && result.status === 'cancelada' && (
+              <span className="activity-form-notice" role="status">
+                La actividad sigue cancelada. Si la reactivás, queda postergada a esta nueva fecha.
+              </span>
+            )}
+            {result.undoing && (
+              <span className="activity-form-notice" role="status">
+                Volviste a la fecha original: al guardar se deshace la postergación.
               </span>
             )}
           </div>
@@ -305,24 +383,52 @@ export function ActivityFormView({ activity, types, onTypeCreated, onClose, onSa
             </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="activity-estado">ESTADO *</label>
-            <select className={`form-select ${invalid('estado')}`} {...fieldProps('estado')}>
-              {canKeepStatus && <option value={KEEP_STATUS}>Mantener: {currentStatusLabel}</option>}
-              {ACTIVITY_STATUSES.filter((status) => EDITABLE_STATUSES.includes(status.value)).map((status) => (
-                <option key={status.value} value={status.value}>
-                  {status.label}
-                </option>
-              ))}
-            </select>
-            {fieldError('estado')}
-            <span className="activity-form-hint">Para cancelar o postergar usá los botones de la tarjeta.</span>
-          </div>
+          {showScope && (
+            <div className="form-group">
+              <span className="section-small-label" id="activity-alcance-label">
+                {cancelling ? '¿QUÉ SE CANCELA?' : '¿QUÉ SE POSTERGA?'}
+              </span>
+              <div className="filter-pills-row" role="radiogroup" aria-labelledby="activity-alcance-label">
+                {SCOPES.map((scope) => (
+                  <button
+                    key={scope.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={form.alcance === scope.value}
+                    className={`filter-pill ${form.alcance === scope.value ? 'active' : ''}`}
+                    onClick={() => setField('alcance', scope.value)}
+                  >
+                    {scope.label.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+              {fieldError('alcance')}
+            </div>
+          )}
+
+          {showReason && (
+            <div className="form-group">
+              <label htmlFor="activity-motivo">
+                MOTIVO DE LA {result.status === 'cancelada' ? 'CANCELACIÓN' : 'POSTERGACIÓN'} (OPCIONAL)
+              </label>
+              <textarea
+                className={`form-textarea ${invalid('motivo')}`}
+                rows={2}
+                maxLength={REASON_MAX_LENGTH}
+                placeholder={result.status === 'cancelada' ? 'Ej: Se suspende por lluvia' : 'Ej: Cambio de sede'}
+                {...fieldProps('motivo')}
+              />
+              <span className="activity-form-hint">
+                Lo ven los clientes. {form.motivo.length}/{REASON_MAX_LENGTH}
+              </span>
+              {fieldError('motivo')}
+            </div>
+          )}
         </section>
 
         <section className="retro-panel form-section">
           <h3>
-            <span className="step-number pink">3</span> IMAGEN
+            <span className="step-number pink">4</span> IMAGEN
           </h3>
           <div className="cover-upload">
             <div className="cover-preview">
@@ -356,6 +462,16 @@ export function ActivityFormView({ activity, types, onTypeCreated, onClose, onSa
           </button>
         </div>
       </form>
+
+      {typesOpen && (
+        <ActivityTypesModal
+          types={types}
+          onCreated={handleTypeCreated}
+          onUpdated={onTypeUpdated}
+          onDeleted={handleTypeDeleted}
+          onClose={() => setTypesOpen(false)}
+        />
+      )}
     </div>
   );
 }

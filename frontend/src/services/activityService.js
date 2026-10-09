@@ -21,5 +21,7 @@ export const activityService = {
 
 export const activityTypeService = {
   list: () => api.get('/activity-types'),
-  create: (nombre) => api.post('/activity-types', { nombre })
+  create: (nombre) => api.post('/activity-types', { nombre }),
+  update: (id, nombre) => api.put(`/activity-types/${id}`, { nombre }),
+  remove: (id) => api.delete(`/activity-types/${id}`)
 };

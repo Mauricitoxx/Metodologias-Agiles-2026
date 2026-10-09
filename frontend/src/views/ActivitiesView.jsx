@@ -85,9 +85,23 @@ export const ActivitiesView = () => {
     reload();
   };
 
+  const sortByName = (list) => [...list].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+
   const handleTypeCreated = (type) => {
-    setTypes((prev) => [...prev, type].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')));
+    setTypes((prev) => sortByName([...prev, type]));
     showToast(`Tipo "${type.nombre}" agregado`);
+  };
+
+  const handleTypeUpdated = (type) => {
+    setTypes((prev) => sortByName(prev.map((item) => (item.id === type.id ? type : item))));
+    showToast(`Tipo renombrado a "${type.nombre}"`);
+    reload(); // the cards show the type name
+  };
+
+  const handleTypeDeleted = (type) => {
+    setTypes((prev) => prev.filter((item) => item.id !== type.id));
+    if (tipoId === type.id) setTipoId('');
+    showToast(`Tipo "${type.nombre}" eliminado`, 'warning');
   };
 
   if (formState) {
@@ -96,6 +110,8 @@ export const ActivitiesView = () => {
         activity={formState.activity}
         types={types}
         onTypeCreated={handleTypeCreated}
+        onTypeUpdated={handleTypeUpdated}
+        onTypeDeleted={handleTypeDeleted}
         onClose={closeForm}
         onSaved={handleSaved}
       />
