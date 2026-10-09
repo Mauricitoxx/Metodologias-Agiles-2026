@@ -11,7 +11,7 @@ npm run dev
 
 ## Conexión con el backend
 
-El módulo de **Actividades** (`/admin/actividades`) consume la API del backend; el resto de los módulos todavía usa datos de prueba en `localStorage`.
+El módulo de **Actividades** (pestaña *Actividades* del inventario, `/admin/inventario`) consume la API del backend; el resto de los módulos todavía usa datos de prueba en `localStorage`.
 
 La URL de la API se configura con `VITE_API_URL` (por defecto `http://127.0.0.1:8000/api`). Para cambiarla, copiar `.env.example` como `.env.local` (no se sube a git) y reiniciar `npm run dev`. El backend tiene que estar levantado (ver `backend/README.md`).
 

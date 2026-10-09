@@ -1,5 +1,5 @@
-import React from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import './styles/theme.css';
 import './styles/admin.css';
 import './styles/screens.css';
@@ -11,12 +11,23 @@ import { Subheader } from './components/layout/Subheader';
 import { AdminHubView } from './views/AdminHubView';
 import { CatalogView } from './views/CatalogView';
 import { AdminUsersView } from './views/AdminUsersView';
-import { ActivitiesView } from './views/ActivitiesView';
 import { LoginView } from './views/LoginView';
 import { EntityFormView } from './views/EntityFormView';
 import { ItemDetailModal } from './components/modals/ItemDetailModal';
 import { ItemFormModal } from './components/modals/ItemFormModal';
 import { ConfirmBajaModal } from './components/modals/ConfirmBajaModal';
+
+const ActivitiesRedirect = () => {
+  const { setCatalogSubTab } = useAdmin();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setCatalogSubTab('actividades');
+    navigate('/admin/inventario', { replace: true });
+  }, [setCatalogSubTab, navigate]);
+
+  return null;
+};
 
 const AdminDashboard = () => {
   const location = useLocation();
@@ -48,8 +59,7 @@ const AdminDashboard = () => {
     !isEntityForm &&
     (location.pathname === '/admin/inventario' ||
       location.pathname === '/admin/catalogo' ||
-      location.pathname === '/admin/staff' ||
-      location.pathname === '/admin/actividades');
+      location.pathname === '/admin/staff');
 
   return (
     <div className="app-container">
@@ -79,8 +89,8 @@ const AdminDashboard = () => {
             {/* Gestor de Staff */}
             <Route path="/admin/staff" element={<AdminUsersView />} />
 
-            {/* Gestor de Actividades */}
-            <Route path="/admin/actividades" element={<ActivitiesView />} />
+            {/* Alias /admin/actividades: pestaña Actividades del inventario */}
+            <Route path="/admin/actividades" element={<ActivitiesRedirect />} />
 
             {/* Redirección por defecto a /admin */}
             <Route path="/" element={<Navigate to="/admin" replace />} />

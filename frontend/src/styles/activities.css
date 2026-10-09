@@ -1,32 +1,3 @@
-
-.icon-actividades {
-  background-color: #ffe4e6;
-  color: #be123c;
-  box-shadow: var(--shadow-retro-sm);
-}
-
-[data-theme='dark'] .icon-actividades {
-  background-color: #3b0d1a;
-  color: #fb7185;
-}
-
-.tags-actividades {
-  color: #be123c;
-}
-
-[data-theme='dark'] .tags-actividades {
-  color: #fb7185;
-}
-
-.btn-actividades {
-  background-color: #be123c;
-  color: #ffffff;
-}
-
-.btn-actividades:hover {
-  background-color: #9f1239;
-}
-
 /* List filters */
 .activity-filter-group {
   display: flex;

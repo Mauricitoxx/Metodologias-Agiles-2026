@@ -327,23 +327,30 @@ Commitear el modelo, esquema, servicio, ruta, test, **la migración** y los dos 
 | ------ | ------------------------------------- | ------- | ------------------------------------------------------- |
 | GET    | `/api/activities/schedule`            | Público | Cronograma: próximas actividades (`search`, `tipo_id`)  |
 | GET    | `/api/activities/schedule/{id}`       | Público | Detalle (404 si está inactiva)                          |
-| GET    | `/api/activities`                     | Admin   | Listado completo (`search`, `tipo_id`, `estado`, `order=asc\|desc`) |
+| GET    | `/api/activities`                     | Admin   | Listado completo (`search`, `tipo_id`, `estado`, `order=asc\|desc`, `date_from`, `date_to`) |
 | GET    | `/api/activities/{id}`                | Admin   | Detalle                                                 |
 | POST   | `/api/activities`                     | Admin   | Alta                                                    |
-| PUT    | `/api/activities/{id}`                | Admin   | Modificación (si no se envía `estado`, se conserva)     |
-| PATCH  | `/api/activities/{id}/cancel`         | Admin   | Cancelar                                                |
-| PATCH  | `/api/activities/{id}/postpone`       | Admin   | Postergar (`fecha_hora_postergada`)                     |
+| PUT    | `/api/activities/{id}`                | Admin   | Modificación (si no se envía `estado`, se conserva; cambiar la fecha la posterga) |
+| PATCH  | `/api/activities/{id}/cancel`         | Admin   | Cancelar (body opcional: `motivo`, `alcance`)           |
+| PATCH  | `/api/activities/{id}/postpone`       | Admin   | Postergar (`fecha_hora_postergada`, `motivo`, `alcance`) |
+| PATCH  | `/api/activities/{id}/undo-postpone`  | Admin   | Volver a la fecha original                              |
+| PATCH  | `/api/activities/{id}/deactivate`     | Admin   | Inactivar (los clientes dejan de verla)                 |
+| PATCH  | `/api/activities/{id}/activate`       | Admin   | Reactivar una inactiva o cancelada                      |
 | DELETE | `/api/activities/{id}`                | Admin   | Eliminación física                                      |
 | GET    | `/api/activity-types`                 | Público | Tipos de actividad                                      |
 | POST   | `/api/activity-types`                 | Admin   | Nuevo tipo (nombre único, sin distinguir mayúsculas)    |
+| PUT    | `/api/activity-types/{id}`            | Admin   | Renombrar tipo                                          |
+| DELETE | `/api/activity-types/{id}`            | Admin   | Eliminar tipo (409 si alguna actividad lo usa)          |
 
 **Reglas de negocio**
 
 - Todos los campos son obligatorios; la fecha debe ser futura al crear, y al editar solo si se cambia.
-- Estados: `activa`, `inactiva` (se eligen en el formulario), `cancelada` y `postergada` (solo con sus acciones).
-- Al postergar se conserva la fecha original y la nueva queda en `fecha_hora_postergada`; las listas ordenan por la fecha efectiva.
+- Estados: al crear se elige `activa` o `inactiva`; al editar, `activa`, `cancelada` o `inactiva`. `postergada` nunca se elige: resulta de cambiar la fecha.
+- Transiciones (`STATUS_TRANSITIONS` en `services/activity.py`): se cancela una activa o postergada; se inactiva cualquiera; se reactiva una inactiva o cancelada (vuelve como `postergada` si conservaba fecha postergada).
+- Al postergar (o cambiar la fecha al editar) se conserva la fecha original y la nueva queda en `fecha_hora_postergada`; volver a la fecha original deshace la postergación. En una `inactiva` sin fecha postergada la fecha simplemente se reemplaza. Las listas ordenan por la fecha efectiva.
+- `motivo` (opcional, lo ve el cliente) y `alcance` (`fecha` o `serie`, solo en recurrentes) describen la última cancelación o postergación; se borran cuando la actividad vuelve a `activa`.
 - El cronograma público oculta las `inactiva` y las que ya terminaron; las `cancelada` se muestran para que el cliente lo vea.
-- **Recurrentes:** antes de cada lectura, las actividades `semanal`/`quincenal` terminadas pasan a la próxima fecha (mismo día y hora) y las `mensual` al mismo N-ésimo día de la semana del mes siguiente (el 5.º pasa a ser el último). Una postergada vuelve a su día habitual; las canceladas no se mueven.
+- **Recurrentes:** antes de cada lectura, las actividades `semanal`/`quincenal` terminadas pasan a la próxima fecha (mismo día y hora) y las `mensual` al mismo N-ésimo día de la semana del mes siguiente (el 5.º pasa a ser el último). Una postergada con alcance `fecha` vuelve a su día habitual; con alcance `serie`, las próximas fechas se calculan desde la nueva. Una cancelada con alcance `fecha` saltea esa fecha y sigue; con alcance `serie` (o sin alcance) la serie se detiene.
 - Los errores 422 propios (`services/errors.py`) usan el mismo formato que los de validación de FastAPI, así el frontend los muestra en el campo correspondiente.
 
 > ⚠ **Pendiente (HU-01):** los endpoints de admin dependen de `require_admin` (`app/api/deps.py`), que por ahora deja pasar todo. Cuando exista el login, solo hay que implementar esa función.

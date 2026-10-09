@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Package, IdCard, ArrowRight, ShieldCheck, CalendarDays } from 'lucide-react';
+import { Shield, Package, IdCard, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const AdminHubView = () => {
@@ -74,32 +74,6 @@ export const AdminHubView = () => {
             onClick={() => navigate('/admin/staff')}
           >
             <span>Gestionar staff</span>
-            <ArrowRight size={18} strokeWidth={2.5} />
-          </button>
-        </div>
-
-        <div className="admin-hub-card">
-          <div className="admin-hub-card-top">
-            <div className="admin-hub-icon-square icon-actividades">
-              <CalendarDays size={26} strokeWidth={2.2} />
-            </div>
-            <div className="admin-hub-card-info">
-              <h3 className="admin-hub-card-title">ACTIVIDADES</h3>
-              <p className="admin-hub-card-desc">
-                Cargá talleres, torneos y eventos, y mantené el cronograma al día.
-              </p>
-            </div>
-          </div>
-
-          <div className="admin-hub-card-tags tags-actividades">
-            TALLERES • TORNEOS • EVENTOS
-          </div>
-
-          <button
-            className="admin-hub-action-btn btn-actividades"
-            onClick={() => navigate('/admin/actividades')}
-          >
-            <span>Gestionar actividades</span>
             <ArrowRight size={18} strokeWidth={2.5} />
           </button>
         </div>
