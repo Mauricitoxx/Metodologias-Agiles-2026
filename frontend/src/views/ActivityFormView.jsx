@@ -3,6 +3,7 @@ import { ArrowLeft, Save, Settings2, CalendarDays } from 'lucide-react';
 import { StatusBadge } from '../components/common/Badge';
 import { AutoResizeTextarea } from '../components/common/AutoResizeTextarea';
 import { DateTimePicker } from '../components/common/DateTimePicker';
+import { Select } from '../components/common/Select';
 import { ActivityTypesModal } from '../components/modals/ActivityTypesModal';
 import { activityService } from '../services/activityService';
 import {
@@ -228,6 +229,16 @@ export function ActivityFormView({ activity, types, onTypeCreated, onTypeUpdated
     'aria-describedby': errors[name] ? `activity-${name}-error` : undefined
   });
 
+  const selectProps = (name) => ({
+    id: `activity-${name}`,
+    value: form[name],
+    onChange: (value) => setField(name, value),
+    invalid: Boolean(errors[name]),
+    'aria-describedby': errors[name] ? `activity-${name}-error` : undefined
+  });
+  // The form keeps ids as strings, like the native select did
+  const typeOptions = types.map((type) => ({ value: String(type.id), label: type.nombre }));
+
   const statusOptions = editing ? EDIT_STATUSES : CREATE_STATUSES;
   const isStatusDisabled = (status) => status === 'cancelada' && activity?.estado === 'inactiva';
 
@@ -306,14 +317,7 @@ export function ActivityFormView({ activity, types, onTypeCreated, onTypeUpdated
           <div className="form-group">
             <label htmlFor="activity-tipo_id">TIPO *</label>
             <div className="activity-type-row">
-              <select className={`form-select ${invalid('tipo_id')}`} {...fieldProps('tipo_id')}>
-                <option value="">Seleccioná un tipo</option>
-                {types.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {type.nombre}
-                  </option>
-                ))}
-              </select>
+              <Select {...selectProps('tipo_id')} options={typeOptions} placeholder="Seleccioná un tipo" />
               <button type="button" className="btn-secondary" onClick={() => setTypesOpen(true)}>
                 <Settings2 size={14} /> Gestionar
               </button>
@@ -383,13 +387,7 @@ export function ActivityFormView({ activity, types, onTypeCreated, onTypeUpdated
             </div>
             <div className="form-group">
               <label htmlFor="activity-frecuencia">FRECUENCIA *</label>
-              <select className={`form-select ${invalid('frecuencia')}`} {...fieldProps('frecuencia')}>
-                {ACTIVITY_FREQUENCIES.map((frequency) => (
-                  <option key={frequency.value} value={frequency.value}>
-                    {frequency.label}
-                  </option>
-                ))}
-              </select>
+              <Select {...selectProps('frecuencia')} options={ACTIVITY_FREQUENCIES} />
               {fieldError('frecuencia')}
             </div>
           </div>

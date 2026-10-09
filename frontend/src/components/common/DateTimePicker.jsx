@@ -4,11 +4,14 @@ import { es } from 'react-day-picker/locale';
 import { CalendarDays, ChevronDown } from 'lucide-react';
 import 'react-day-picker/style.css';
 import { formatDate, formatTime } from '../../utils/activity';
+import { Select } from './Select';
 
 const DEFAULT_TIME = '18:00';
 const HOURS = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, '0'));
 const MINUTE_STEP = 5;
 const MINUTES = Array.from({ length: 60 / MINUTE_STEP }, (_, index) => String(index * MINUTE_STEP).padStart(2, '0'));
+const toOptions = (values) => values.map((value) => ({ value, label: value }));
+const HOUR_OPTIONS = toOptions(HOURS);
 
 const pad = (number) => String(number).padStart(2, '0');
 const toDayValue = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
@@ -106,33 +109,23 @@ export const DateTimePicker = ({
           {withTime && (
             <div className="datetime-picker-time">
               <span className="section-small-label">HORA</span>
-              <select
-                className="form-select"
+              <Select
+                compact
                 aria-label="Hora"
                 value={hour}
-                onChange={(event) => day && emit(day, event.target.value)}
+                onChange={(value) => emit(day, value)}
+                options={HOUR_OPTIONS}
                 disabled={!day}
-              >
-                {HOURS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
+              />
               <span aria-hidden="true">:</span>
-              <select
-                className="form-select"
+              <Select
+                compact
                 aria-label="Minutos"
                 value={minute}
-                onChange={(event) => day && emit(day, hour, event.target.value)}
+                onChange={(value) => emit(day, hour, value)}
+                options={toOptions(minutes)}
                 disabled={!day}
-              >
-                {minutes.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
+              />
               <span className="datetime-picker-hs">hs</span>
               <button type="button" className="btn-primary datetime-picker-done" onClick={() => setOpen(false)}>
                 Listo

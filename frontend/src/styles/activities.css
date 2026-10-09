@@ -103,7 +103,8 @@
 }
 
 .activity-type-row .form-select,
-.activity-type-row .form-input {
+.activity-type-row .form-input,
+.activity-type-row .app-select {
   flex: 1;
   min-width: 0;
 }
@@ -427,8 +428,8 @@
   font-weight: 800;
 }
 
-.datetime-picker-time .form-select {
-  padding: 6px 8px;
+.datetime-picker-time .app-select {
+  width: 64px;
 }
 
 .datetime-picker-hs {
