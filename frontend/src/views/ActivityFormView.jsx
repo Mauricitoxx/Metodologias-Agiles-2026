@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Save, Settings2, CalendarDays } from 'lucide-react';
 import { StatusBadge } from '../components/common/Badge';
+import { AutoResizeTextarea } from '../components/common/AutoResizeTextarea';
+import { DateTimePicker } from '../components/common/DateTimePicker';
 import { ActivityTypesModal } from '../components/modals/ActivityTypesModal';
 import { activityService } from '../services/activityService';
 import {
@@ -36,6 +38,13 @@ const isWebUrl = (value) => {
 };
 
 const formatDateTime = (value) => `${formatDate(value)} ${formatTime(value)}`;
+
+const numberInputProps = {
+  type: 'number',
+  inputMode: 'numeric',
+  step: 1,
+  onWheel: (event) => event.currentTarget.blur()
+};
 
 const emptyForm = {
   nombre: '',
@@ -290,7 +299,7 @@ export function ActivityFormView({ activity, types, onTypeCreated, onTypeUpdated
 
           <div className="form-group">
             <label htmlFor="activity-descripcion">DESCRIPCIÓN *</label>
-            <textarea className={`form-textarea ${invalid('descripcion')}`} rows={3} {...fieldProps('descripcion')} />
+            <AutoResizeTextarea className={`form-textarea ${invalid('descripcion')}`} rows={3} {...fieldProps('descripcion')} />
             {fieldError('descripcion')}
           </div>
 
@@ -320,11 +329,13 @@ export function ActivityFormView({ activity, types, onTypeCreated, onTypeUpdated
 
           <div className="form-group">
             <label htmlFor="activity-fecha_hora">FECHA Y HORA *</label>
-            <input
-              type="datetime-local"
-              className={`form-input ${invalid('fecha_hora')}`}
+            <DateTimePicker
+              id="activity-fecha_hora"
+              value={form.fecha_hora}
+              onChange={(value) => setField('fecha_hora', value)}
               min={dateChanged ? minDate : undefined}
-              {...fieldProps('fecha_hora')}
+              invalid={Boolean(errors.fecha_hora)}
+              describedBy={errors.fecha_hora ? 'activity-fecha_hora-error' : undefined}
             />
             {fieldError('fecha_hora')}
             {activity?.fecha_hora_postergada && !dateChanged && (
@@ -354,12 +365,12 @@ export function ActivityFormView({ activity, types, onTypeCreated, onTypeUpdated
           <div className="form-row-2">
             <div className="form-group">
               <label htmlFor="activity-duracion">DURACIÓN (MIN) *</label>
-              <input type="number" min={1} step={1} className={`form-input ${invalid('duracion')}`} {...fieldProps('duracion')} />
+              <input {...numberInputProps} min={1} className={`form-input ${invalid('duracion')}`} {...fieldProps('duracion')} />
               {fieldError('duracion')}
             </div>
             <div className="form-group">
               <label htmlFor="activity-cupo">CUPO *</label>
-              <input type="number" min={1} step={1} className={`form-input ${invalid('cupo')}`} {...fieldProps('cupo')} />
+              <input {...numberInputProps} min={1} className={`form-input ${invalid('cupo')}`} {...fieldProps('cupo')} />
               {fieldError('cupo')}
             </div>
           </div>
@@ -367,7 +378,7 @@ export function ActivityFormView({ activity, types, onTypeCreated, onTypeUpdated
           <div className="form-row-2">
             <div className="form-group">
               <label htmlFor="activity-edad_minima">EDAD MÍNIMA *</label>
-              <input type="number" min={0} step={1} className={`form-input ${invalid('edad_minima')}`} {...fieldProps('edad_minima')} />
+              <input {...numberInputProps} min={0} className={`form-input ${invalid('edad_minima')}`} {...fieldProps('edad_minima')} />
               {fieldError('edad_minima')}
             </div>
             <div className="form-group">
@@ -411,7 +422,7 @@ export function ActivityFormView({ activity, types, onTypeCreated, onTypeUpdated
               <label htmlFor="activity-motivo">
                 MOTIVO DE LA {result.status === 'cancelada' ? 'CANCELACIÓN' : 'POSTERGACIÓN'} (OPCIONAL)
               </label>
-              <textarea
+              <AutoResizeTextarea
                 className={`form-textarea ${invalid('motivo')}`}
                 rows={2}
                 maxLength={REASON_MAX_LENGTH}

@@ -302,3 +302,160 @@
 [data-theme='dark'] .activity-types-icon-btn.danger {
   color: #f87171;
 }
+
+.form-input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.form-input[type='number']::-webkit-inner-spin-button,
+.form-input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.auto-resize-textarea {
+  resize: none;
+  overflow: hidden;
+}
+
+.datetime-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.datetime-picker-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.datetime-picker-trigger svg {
+  flex-shrink: 0;
+  color: var(--brand-accent-blue);
+}
+
+.datetime-picker-label {
+  flex: 1;
+  min-width: 0;
+}
+
+/* "jue., 15/10/2026" -> "Jue., 15/10/2026" */
+.datetime-picker-label::first-letter {
+  text-transform: uppercase;
+}
+
+.datetime-picker-trigger.is-empty .datetime-picker-label {
+  color: var(--text-muted);
+}
+
+.datetime-picker-chevron {
+  transition: transform 0.15s ease;
+}
+
+.datetime-picker-chevron.open {
+  transform: rotate(180deg);
+}
+
+.datetime-picker-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-card);
+  box-shadow: var(--shadow-retro-sm);
+}
+
+.datetime-picker .rdp-root {
+  --rdp-accent-color: #0b1e36;
+  --rdp-accent-background-color: var(--primary-yellow-light, #fff2b7);
+  --rdp-today-color: var(--brand-accent-blue);
+  --rdp-day-height: 38px;
+  --rdp-day-width: 38px;
+  --rdp-day_button-height: 34px;
+  --rdp-day_button-width: 34px;
+  --rdp-day_button-border-radius: var(--radius-sm);
+  --rdp-nav_button-height: 32px;
+  --rdp-nav_button-width: 32px;
+  --rdp-nav-height: 36px;
+  --rdp-selected-border: 2px solid #0b1e36;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-main);
+}
+
+.datetime-picker .rdp-month_caption {
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.datetime-picker .rdp-weekday {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.datetime-picker .rdp-chevron {
+  fill: var(--text-main);
+}
+
+.datetime-picker .rdp-today:not(.rdp-selected) .rdp-day_button {
+  font-weight: 800;
+}
+
+.datetime-picker .rdp-selected .rdp-day_button {
+  background-color: #0b1e36;
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.datetime-picker .rdp-day_button:hover:not(:disabled) {
+  background-color: var(--bg-card-secondary);
+}
+
+.datetime-picker .rdp-selected .rdp-day_button:hover {
+  background-color: #0b1e36;
+}
+
+[data-theme='dark'] .datetime-picker .rdp-root {
+  --rdp-accent-color: var(--primary-yellow);
+  --rdp-selected-border: 2px solid var(--primary-yellow);
+}
+
+[data-theme='dark'] .datetime-picker .rdp-selected .rdp-day_button,
+[data-theme='dark'] .datetime-picker .rdp-selected .rdp-day_button:hover {
+  background-color: var(--primary-yellow);
+  color: #0b1e36;
+}
+
+.datetime-picker-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-color);
+  font-weight: 800;
+}
+
+.datetime-picker-time .form-select {
+  padding: 6px 8px;
+}
+
+.datetime-picker-hs {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.datetime-picker-done {
+  margin-left: auto;
+  padding: 6px 12px;
+  font-size: 12px;
+}

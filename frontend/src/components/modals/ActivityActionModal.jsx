@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { AlertTriangle, Ban, CalendarClock, Eye, EyeOff, Undo2, X } from 'lucide-react';
 import { activityService } from '../../services/activityService';
+import { AutoResizeTextarea } from '../common/AutoResizeTextarea';
+import { DateTimePicker } from '../common/DateTimePicker';
 import { effectiveDate, formatDate, formatTime, toInputDateTime, toInputValue } from '../../utils/activity';
 
 const REASON_MAX_LENGTH = 200;
@@ -206,18 +208,15 @@ export const ActivityActionModal = ({ action, activity, onClose, onDone }) => {
           {action === 'postpone' && (
             <div className="form-group">
               <label htmlFor="activity-postpone-date">NUEVA FECHA Y HORA *</label>
-              <input
+              <DateTimePicker
                 id="activity-postpone-date"
-                type="datetime-local"
-                className={`form-input ${error ? 'is-invalid' : ''}`}
-                min={minDate}
                 value={newDate}
-                onChange={(event) => {
-                  setNewDate(event.target.value);
+                onChange={(value) => {
+                  setNewDate(value);
                   setError('');
                 }}
-                aria-invalid={Boolean(error)}
-                autoFocus
+                min={minDate}
+                invalid={Boolean(error)}
               />
             </div>
           )}
@@ -248,7 +247,7 @@ export const ActivityActionModal = ({ action, activity, onClose, onDone }) => {
           {config.withReason && (
             <div className="form-group">
               <label htmlFor="activity-action-reason">MOTIVO (OPCIONAL)</label>
-              <textarea
+              <AutoResizeTextarea
                 id="activity-action-reason"
                 className="form-textarea"
                 rows={2}
