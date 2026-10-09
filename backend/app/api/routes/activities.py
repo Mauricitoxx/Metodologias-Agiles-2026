@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 
@@ -41,9 +43,13 @@ def list_activities(
     tipo_id: int | None = Query(None, description="Filter by activity type"),
     estado: EstadoActividad | None = Query(None, description="Filter by status"),
     order: SortOrder = Query("asc", description="Sort by date"),
+    date_from: date | None = Query(None, description="First day of the range (inclusive)"),
+    date_to: date | None = Query(None, description="Last day of the range (inclusive)"),
     db: Session = Depends(get_db),
 ):
-    return activity_service.list_activities(db, search, tipo_id, estado, order)
+    return activity_service.list_activities(
+        db, search, tipo_id, estado, order, date_from, date_to
+    )
 
 
 @router.get("/{activity_id}", response_model=ActividadRead, dependencies=ADMIN_ONLY)

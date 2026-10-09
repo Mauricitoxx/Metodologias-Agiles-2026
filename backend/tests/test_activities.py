@@ -383,6 +383,49 @@ def test_filter_by_status(client: TestClient, payload: dict):
     assert [a["nombre"] for a in response.json()] == ["Cancelada"]
 
 
+def test_filter_by_date_range_includes_both_days(client: TestClient, payload: dict):
+    create(client, payload, nombre="Antes", fecha_hora=in_days(2).isoformat())
+    create(client, payload, nombre="Desde", fecha_hora=in_days(4).replace(hour=0, minute=0).isoformat())
+    create(client, payload, nombre="Hasta", fecha_hora=in_days(6).replace(hour=23, minute=59).isoformat())
+    create(client, payload, nombre="Despues", fecha_hora=in_days(8).isoformat())
+
+    response = client.get(
+        "/api/activities",
+        params={"date_from": in_days(4).date().isoformat(), "date_to": in_days(6).date().isoformat()},
+    )
+
+    assert [a["nombre"] for a in response.json()] == ["Desde", "Hasta"]
+
+
+def test_filter_by_date_range_uses_the_postponed_date(client: TestClient, payload: dict):
+    activity = create(client, payload, fecha_hora=in_days(2).isoformat())
+    postpone(client, activity, 10)
+
+    day = in_days(10).date().isoformat()
+    response = client.get("/api/activities", params={"date_from": day, "date_to": day})
+
+    assert [a["id"] for a in response.json()] == [activity["id"]]
+
+
+def test_filter_by_date_range_with_only_one_end(client: TestClient, payload: dict):
+    create(client, payload, nombre="Pronto", fecha_hora=in_days(1).isoformat())
+    create(client, payload, nombre="Tarde", fecha_hora=in_days(9).isoformat())
+
+    response = client.get("/api/activities", params={"date_from": in_days(5).date().isoformat()})
+
+    assert [a["nombre"] for a in response.json()] == ["Tarde"]
+
+
+def test_filter_by_inverted_date_range_is_rejected(client: TestClient):
+    response = client.get(
+        "/api/activities",
+        params={"date_from": in_days(6).date().isoformat(), "date_to": in_days(4).date().isoformat()},
+    )
+
+    assert response.status_code == 422
+    assert error_fields(response) == {"date_to"}
+
+
 def test_cancelled_activity_is_shown_as_cancelled_to_clients(client: TestClient, payload: dict):
     activity = create(client, payload)
 

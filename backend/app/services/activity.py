@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from typing import Literal
 
 from sqlalchemy import Select, and_, func, or_, select
@@ -95,12 +95,24 @@ def list_activities(
     tipo_id: int | None = None,
     estado: EstadoActividad | None = None,
     order: SortOrder = "asc",
+    date_from: date | None = None,
+    date_to: date | None = None,
 ) -> list[Actividad]:
-    """Admin panel: every activity, in any status."""
+    """Admin panel: every activity, in any status. The date range includes both days."""
+    if date_from and date_to and date_from > date_to:
+        raise field_error(
+            "date_to", "La fecha hasta debe ser igual o posterior a la fecha desde", "query"
+        )
+
     refresh_recurring_dates(db)
+    query = _apply_filters(select(Actividad), search, tipo_id, estado)
+    if date_from:
+        query = query.where(effective_date >= datetime.combine(date_from, time.min))
+    if date_to:
+        next_day = datetime.combine(date_to + timedelta(days=1), time.min)
+        query = query.where(effective_date < next_day)
     sort = effective_date.asc() if order == "asc" else effective_date.desc()
-    query = _apply_filters(select(Actividad), search, tipo_id, estado).order_by(sort, Actividad.id)
-    return list(db.scalars(query))
+    return list(db.scalars(query.order_by(sort, Actividad.id)))
 
 
 def list_schedule(
