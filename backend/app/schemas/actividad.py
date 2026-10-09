@@ -12,7 +12,7 @@ from pydantic import (
     field_validator,
 )
 
-from app.models.actividad import EstadoActividad, FrecuenciaActividad
+from app.models.actividad import AlcanceCambio, EstadoActividad, FrecuenciaActividad
 from app.schemas.tipo_actividad import TipoActividadRead
 
 CREATE_STATUSES = {EstadoActividad.activa, EstadoActividad.inactiva}
@@ -48,6 +48,8 @@ LocalDateTime = Annotated[datetime, AfterValidator(to_naive_local)]
 FutureDateTime = Annotated[LocalDateTime, AfterValidator(ensure_future)]
 NonEmptyStr = Annotated[str, Field(min_length=1)]
 ImageUrl = Annotated[str, Field(min_length=1, max_length=500), AfterValidator(ensure_web_url)]
+# A blank reason is stored as no reason
+Reason = Annotated[str | None, Field(max_length=200), AfterValidator(lambda value: value or None)]
 
 
 class ActividadBase(BaseModel):
@@ -84,6 +86,9 @@ class ActividadUpdate(ActividadBase):
     """
 
     estado: EstadoActividad | None = None
+    # Only stored while the activity is cancelled or postponed; omitted keeps the current one
+    motivo: Reason = None
+    alcance: AlcanceCambio = AlcanceCambio.fecha
 
     @field_validator("estado")
     @classmethod
@@ -93,7 +98,20 @@ class ActividadUpdate(ActividadBase):
         return value
 
 
-class ActividadPostpone(BaseModel):
+class ActividadStatusChange(BaseModel):
+    """Body of cancel/postpone. `alcance` only matters for recurring activities."""
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    motivo: Reason = None
+    alcance: AlcanceCambio = AlcanceCambio.fecha
+
+
+class ActividadCancel(ActividadStatusChange):
+    pass
+
+
+class ActividadPostpone(ActividadStatusChange):
     fecha_hora_postergada: FutureDateTime
 
 
@@ -110,5 +128,7 @@ class ActividadRead(BaseModel):
     imagen: str
     frecuencia: FrecuenciaActividad
     estado: EstadoActividad
+    motivo: str | None
+    alcance: AlcanceCambio | None
     edad_minima: int
     tipo: TipoActividadRead

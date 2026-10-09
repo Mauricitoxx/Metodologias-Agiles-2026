@@ -5,6 +5,7 @@ from app.api.deps import require_admin
 from app.db.session import get_db
 from app.models.actividad import EstadoActividad
 from app.schemas.actividad import (
+    ActividadCancel,
     ActividadCreate,
     ActividadPostpone,
     ActividadRead,
@@ -14,9 +15,6 @@ from app.services import activity as activity_service
 from app.services.activity import SortOrder
 
 router = APIRouter(prefix="/activities", tags=["activities"])
-
-# --- Public endpoints (no session required, RNF-01) ---
-# Declared before "/{activity_id}" so "schedule" is not parsed as an id.
 
 
 @router.get("/schedule", response_model=list[ActividadRead])
@@ -69,8 +67,10 @@ def update_activity(activity_id: int, data: ActividadUpdate, db: Session = Depen
 
 
 @router.patch("/{activity_id}/cancel", response_model=ActividadRead, dependencies=ADMIN_ONLY)
-def cancel_activity(activity_id: int, db: Session = Depends(get_db)):
-    return activity_service.cancel_activity(db, activity_id)
+def cancel_activity(
+    activity_id: int, data: ActividadCancel | None = None, db: Session = Depends(get_db)
+):
+    return activity_service.cancel_activity(db, activity_id, data or ActividadCancel())
 
 
 @router.patch("/{activity_id}/postpone", response_model=ActividadRead, dependencies=ADMIN_ONLY)

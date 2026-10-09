@@ -22,6 +22,13 @@ class EstadoActividad(str, enum.Enum):
     inactiva = "inactiva"
 
 
+class AlcanceCambio(str, enum.Enum):
+    """Scope of a cancellation or postponement of a recurring activity."""
+
+    fecha = "fecha"
+    serie = "serie"
+
+
 class Actividad(Base):
     __tablename__ = "actividades"
 
@@ -40,6 +47,11 @@ class Actividad(Base):
         Enum(EstadoActividad, native_enum=False, length=20),
         default=EstadoActividad.activa,
         index=True,
+    )
+    # Reason of the last cancellation or postponement, shown to clients
+    motivo: Mapped[str | None] = mapped_column(String(200))
+    alcance: Mapped[AlcanceCambio | None] = mapped_column(
+        Enum(AlcanceCambio, native_enum=False, length=20)
     )
     edad_minima: Mapped[int]
     tipo_id: Mapped[int] = mapped_column(ForeignKey("tipos_actividad.id"), index=True)

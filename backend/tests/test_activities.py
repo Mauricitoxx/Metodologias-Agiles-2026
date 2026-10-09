@@ -4,7 +4,12 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.models.actividad import Actividad, EstadoActividad, FrecuenciaActividad
+from app.models.actividad import (
+    Actividad,
+    AlcanceCambio,
+    EstadoActividad,
+    FrecuenciaActividad,
+)
 from app.models.tipo_actividad import TipoActividad
 
 REQUIRED_FIELDS = [
@@ -626,3 +631,177 @@ def test_cancelled_weekly_activity_does_not_move(client: TestClient, db: Session
 
     assert read["fecha_hora"] == start.isoformat()
     assert read["estado"] == "cancelada"
+
+
+def test_date_cancelled_on_its_own_is_skipped(client: TestClient, db: Session, tipos):
+    start = in_days(-10)
+    activity = add_past_activity(
+        db,
+        tipos["Torneo"],
+        fecha_hora=start,
+        estado=EstadoActividad.cancelada,
+        motivo="Feriado",
+        alcance=AlcanceCambio.fecha,
+        frecuencia=FrecuenciaActividad.semanal,
+    )
+
+    read = client.get(f"/api/activities/{activity.id}").json()
+
+    assert datetime.fromisoformat(read["fecha_hora"]) - start == timedelta(weeks=2)
+    assert read["estado"] == "activa"
+    assert read["motivo"] is None
+    assert read["alcance"] is None
+
+
+def test_cancelled_series_does_not_move(client: TestClient, db: Session, tipos):
+    start = in_days(-10)
+    activity = add_past_activity(
+        db,
+        tipos["Torneo"],
+        fecha_hora=start,
+        estado=EstadoActividad.cancelada,
+        alcance=AlcanceCambio.serie,
+        frecuencia=FrecuenciaActividad.semanal,
+    )
+
+    read = client.get(f"/api/activities/{activity.id}").json()
+
+    assert read["fecha_hora"] == start.isoformat()
+    assert read["estado"] == "cancelada"
+
+
+def test_series_postponement_moves_the_next_dates(client: TestClient, db: Session, tipos):
+    start = in_days(-20)
+    postponed = start + timedelta(days=2)
+    activity = add_past_activity(
+        db,
+        tipos["Torneo"],
+        fecha_hora=start,
+        fecha_hora_postergada=postponed,
+        estado=EstadoActividad.postergada,
+        alcance=AlcanceCambio.serie,
+        frecuencia=FrecuenciaActividad.semanal,
+    )
+
+    read = client.get(f"/api/activities/{activity.id}").json()
+
+    new_date = datetime.fromisoformat(read["fecha_hora"])
+    assert new_date > datetime.now()
+    assert new_date.weekday() == postponed.weekday()
+    assert read["estado"] == "activa"
+    assert read["fecha_hora_postergada"] is None
+
+
+# --- Reason and scope of cancellations and postponements ---
+
+
+def test_cancel_reason_is_shown_to_clients(client: TestClient, payload: dict):
+    activity = create(client, payload)
+
+    client.patch(
+        f"/api/activities/{activity['id']}/cancel", json={"motivo": "  Se suspende por lluvia "}
+    )
+
+    schedule = client.get("/api/activities/schedule").json()
+    assert schedule[0]["motivo"] == "Se suspende por lluvia"
+
+
+def test_blank_reason_is_stored_as_no_reason(client: TestClient, payload: dict):
+    activity = create(client, payload)
+
+    response = client.patch(f"/api/activities/{activity['id']}/cancel", json={"motivo": "   "})
+
+    assert response.json()["motivo"] is None
+
+
+def test_too_long_reason_is_rejected(client: TestClient, payload: dict):
+    activity = create(client, payload)
+
+    response = client.patch(f"/api/activities/{activity['id']}/cancel", json={"motivo": "x" * 201})
+
+    assert response.status_code == 422
+    assert error_fields(response) == {"motivo"}
+
+
+def test_undo_postpone_clears_the_reason(client: TestClient, payload: dict):
+    activity = create(client, payload)
+    client.patch(
+        f"/api/activities/{activity['id']}/postpone",
+        json={"fecha_hora_postergada": in_days(8).isoformat(), "motivo": "Falta de inscriptos"},
+    )
+
+    response = client.patch(f"/api/activities/{activity['id']}/undo-postpone")
+
+    assert response.json()["motivo"] is None
+
+
+def test_reactivating_a_cancelled_activity_clears_the_cancel_reason(
+    client: TestClient, payload: dict
+):
+    activity = postpone(client, create(client, payload), 8)
+    client.patch(f"/api/activities/{activity['id']}/cancel", json={"motivo": "Lluvia"})
+
+    response = client.patch(f"/api/activities/{activity['id']}/activate")
+
+    assert response.json()["estado"] == "postergada"
+    assert response.json()["motivo"] is None
+
+
+def test_changing_the_date_in_the_edit_saves_the_reason(client: TestClient, payload: dict):
+    activity = create(client, payload)
+
+    response = client.put(
+        f"/api/activities/{activity['id']}",
+        json=edit_payload(activity, fecha_hora=in_days(9).isoformat(), motivo="Cambio de sede"),
+    )
+
+    assert response.json()["estado"] == "postergada"
+    assert response.json()["motivo"] == "Cambio de sede"
+
+
+def test_edit_without_reason_keeps_the_current_one(client: TestClient, payload: dict):
+    activity = create(client, payload)
+    cancelled = client.patch(
+        f"/api/activities/{activity['id']}/cancel", json={"motivo": "Lluvia"}
+    ).json()
+
+    response = client.put(f"/api/activities/{activity['id']}", json=edit_payload(cancelled, cupo=5))
+
+    assert response.json()["motivo"] == "Lluvia"
+
+
+def test_edit_can_change_the_reason(client: TestClient, payload: dict):
+    activity = create(client, payload)
+    client.patch(f"/api/activities/{activity['id']}/cancel", json={"motivo": "Lluvia"})
+
+    response = client.put(
+        f"/api/activities/{activity['id']}", json=edit_payload(activity, motivo="Corte de luz")
+    )
+
+    assert response.json()["motivo"] == "Corte de luz"
+
+
+def test_reason_is_dropped_when_the_activity_is_active(client: TestClient, payload: dict):
+    activity = create(client, payload)
+
+    response = client.put(
+        f"/api/activities/{activity['id']}", json=edit_payload(activity, motivo="Sin cambios")
+    )
+
+    assert response.json()["motivo"] is None
+
+
+def test_scope_is_stored_for_recurring_activities(client: TestClient, payload: dict):
+    activity = create(client, payload, frecuencia="semanal")
+
+    response = client.patch(f"/api/activities/{activity['id']}/cancel", json={"alcance": "serie"})
+
+    assert response.json()["alcance"] == "serie"
+
+
+def test_scope_is_ignored_for_single_activities(client: TestClient, payload: dict):
+    activity = create(client, payload)
+
+    response = client.patch(f"/api/activities/{activity['id']}/cancel", json={"alcance": "serie"})
+
+    assert response.json()["alcance"] is None
