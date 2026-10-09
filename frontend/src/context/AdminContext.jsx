@@ -24,7 +24,7 @@ export const AdminProvider = ({ children }) => {
     return () => { cancelled = true; };
   }, [authRetry]);
   const [currentTab, setCurrentTab] = useState('hub'); // 'hub' | 'inventario' | 'staff'
-  const [catalogSubTab, setCatalogSubTab] = useState('boardgames'); // 'boardgames' | 'comics' | 'cards'
+  const [catalogSubTab, setCatalogSubTab] = useState('boardgames'); // 'boardgames' | 'comics' | 'cards' | 'buffet' | 'actividades'
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('todos'); // 'todos' | 'disponibles' | 'en_mesa' | 'baja'
   const [theme, setTheme] = useState(() => localStorage.getItem('frikioteca_theme') || 'light');
@@ -104,7 +104,6 @@ export const AdminProvider = ({ children }) => {
       comics: '#MC-',
       cards: '#TCG-',
       buffet: '#BF-',
-      events: '#EV-',
       admins: '#USR-'
     };
 

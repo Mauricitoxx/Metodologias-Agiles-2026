@@ -1,4 +1,6 @@
 import React from 'react';
+import { IdCard } from 'lucide-react';
+import { ageLabel, ageTitle } from '../../utils/activity';
 
 export const StatusBadge = ({ status, text, tableNumber }) => {
   let label = text;
@@ -22,13 +24,26 @@ export const StatusBadge = ({ status, text, tableNumber }) => {
       label = label || (status === 'inactivo' ? 'Inactivo' : 'Baja');
       className += ' status-baja';
       break;
-    case 'programado':
-      label = label || 'Programado';
-      className += ' status-en-mesa';
-      break;
     case 'activo':
       label = label || 'Activo';
       className += ' status-disponible';
+      break;
+    // Estados de las actividades
+    case 'activa':
+      label = label || 'Activa';
+      className += ' status-disponible';
+      break;
+    case 'postergada':
+      label = label || 'Postergada';
+      className += ' status-en-mesa';
+      break;
+    case 'cancelada':
+      label = label || 'Cancelada';
+      className += ' status-reparacion';
+      break;
+    case 'inactiva':
+      label = label || 'Inactiva';
+      className += ' status-baja';
       break;
     default:
       label = label || status;
@@ -48,3 +63,10 @@ export const CategoryTag = ({ children, variant = 'default' }) => {
 export const ShelfBadge = ({ children }) => {
   return <span className="shelf-badge">{children}</span>;
 };
+
+// Minimum age of an activity: "+18 años" or "Todo público"
+export const AgeBadge = ({ minimumAge }) => (
+  <span className="slots-badge age-badge" title={ageTitle(minimumAge)} aria-label={ageTitle(minimumAge)}>
+    <IdCard size={12} aria-hidden="true" /> {ageLabel(minimumAge)}
+  </span>
+);

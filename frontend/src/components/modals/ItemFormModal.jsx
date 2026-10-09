@@ -44,18 +44,6 @@ const getInitialFormData = (initialItem, mode, entityType) => {
       image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80',
       description: ''
     },
-    events: {
-      title: '',
-      category: 'Torneo de Juegos',
-      date: new Date().toISOString().split('T')[0],
-      time: '19:00 hs',
-      fee: '$3.500',
-      maxSlots: 16,
-      bookedSlots: 0,
-      status: 'programado',
-      description: '',
-      reward: ''
-    },
     admins: {
       name: '',
       email: '',
@@ -104,7 +92,6 @@ export const ItemFormModal = ({ isOpen, onClose, mode, entityType, initialItem, 
       comics: 'Cómic o Manga',
       cards: 'Juego de Cartas (TCG)',
       buffet: 'Producto de Buffet',
-      events: 'Evento / Torneo',
       admins: 'Usuario Administrativo'
     };
     return titles[entityType] || 'Elemento';
@@ -250,31 +237,6 @@ export const ItemFormModal = ({ isOpen, onClose, mode, entityType, initialItem, 
                         type="text"
                         name="duration"
                         value={formData.duration || '60 min'}
-                        onChange={handleChange}
-                        className="form-input"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {entityType === 'events' && (
-                  <div className="form-row-2">
-                    <div className="form-group">
-                      <label>Fecha</label>
-                      <input
-                        type="date"
-                        name="date"
-                        value={formData.date || ''}
-                        onChange={handleChange}
-                        className="form-input"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Hora</label>
-                      <input
-                        type="text"
-                        name="time"
-                        value={formData.time || '19:00 hs'}
                         onChange={handleChange}
                         className="form-input"
                       />
