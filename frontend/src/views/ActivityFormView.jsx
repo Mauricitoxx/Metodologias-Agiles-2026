@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Save, Plus, X, CalendarDays } from 'lucide-react';
 import { activityService, activityTypeService } from '../services/activityService';
-import { ACTIVITY_FREQUENCIES, ACTIVITY_STATUSES, toInputDateTime, toInputValue } from '../utils/activity';
+import { ACTIVITY_FREQUENCIES, ACTIVITY_STATUSES, effectiveDate, toInputDateTime, toInputValue } from '../utils/activity';
 
 const EDITABLE_STATUSES = ['activa', 'inactiva'];
 const KEEP_STATUS = '';
@@ -31,7 +31,7 @@ const formFromActivity = (activity) => ({
   nombre: activity.nombre,
   descripcion: activity.descripcion,
   tipo_id: String(activity.tipo.id),
-  fecha_hora: toInputDateTime(activity.fecha_hora),
+  fecha_hora: toInputDateTime(effectiveDate(activity)),
   duracion: String(activity.duracion),
   cupo: String(activity.cupo),
   edad_minima: String(activity.edad_minima),
@@ -109,7 +109,7 @@ export function ActivityFormView({ activity, types, onTypeCreated, onClose, onSa
       descripcion: form.descripcion.trim(),
       tipo_id: Number(form.tipo_id),
       // An unchanged date is sent as stored, so the backend does not treat it as a new date
-      fecha_hora: dateChanged ? form.fecha_hora : activity.fecha_hora,
+      fecha_hora: dateChanged ? form.fecha_hora : effectiveDate(activity),
       duracion: Number(form.duracion),
       cupo: Number(form.cupo),
       edad_minima: Number(form.edad_minima),
@@ -268,7 +268,7 @@ export function ActivityFormView({ activity, types, onTypeCreated, onClose, onSa
             {fieldError('fecha_hora')}
             {activity?.fecha_hora_postergada && (
               <span className="activity-form-hint">
-                Esta actividad está postergada. Al cambiar el estado a Activa o Inactiva se descarta la fecha postergada.
+                Esta actividad está postergada. Si volvés a la fecha original, se deshace la postergación.
               </span>
             )}
           </div>

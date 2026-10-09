@@ -80,6 +80,23 @@ def postpone_activity(
     return activity_service.postpone_activity(db, activity_id, data)
 
 
+@router.patch(
+    "/{activity_id}/undo-postpone", response_model=ActividadRead, dependencies=ADMIN_ONLY
+)
+def undo_postpone_activity(activity_id: int, db: Session = Depends(get_db)):
+    return activity_service.undo_postpone_activity(db, activity_id)
+
+
+@router.patch("/{activity_id}/deactivate", response_model=ActividadRead, dependencies=ADMIN_ONLY)
+def deactivate_activity(activity_id: int, db: Session = Depends(get_db)):
+    return activity_service.deactivate_activity(db, activity_id)
+
+
+@router.patch("/{activity_id}/activate", response_model=ActividadRead, dependencies=ADMIN_ONLY)
+def activate_activity(activity_id: int, db: Session = Depends(get_db)):
+    return activity_service.activate_activity(db, activity_id)
+
+
 @router.delete(
     "/{activity_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=ADMIN_ONLY
 )

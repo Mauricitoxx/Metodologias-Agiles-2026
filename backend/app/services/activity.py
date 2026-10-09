@@ -128,53 +128,130 @@ def create_activity(db: Session, data: ActividadCreate) -> Actividad:
     return activity
 
 
+STATUS_TRANSITIONS = {
+    EstadoActividad.activa: (EstadoActividad.cancelada, EstadoActividad.inactiva),
+    EstadoActividad.cancelada: (EstadoActividad.activa, EstadoActividad.postergada),
+    EstadoActividad.inactiva: (
+        EstadoActividad.activa,
+        EstadoActividad.postergada,
+        EstadoActividad.cancelada,
+    ),
+}
+
+STATUS_CONFLICTS = {
+    EstadoActividad.activa: "La actividad ya está visible para los clientes",
+    EstadoActividad.cancelada: "Solo se puede cancelar una actividad activa o postergada",
+    EstadoActividad.inactiva: "La actividad ya está inactiva",
+}
+
+
+def _visible_status(activity: Actividad) -> EstadoActividad:
+    if activity.fecha_hora_postergada is not None:
+        return EstadoActividad.postergada
+    return EstadoActividad.activa
+
+
+def _visible_or_current(activity: Actividad) -> EstadoActividad:
+    """Status as the edit form sees it: a postponed activity is shown as "activa"."""
+    if activity.estado == EstadoActividad.postergada:
+        return EstadoActividad.activa
+    return activity.estado
+
+
+def _change_status(activity: Actividad, target: EstadoActividad) -> None:
+    if activity.estado not in STATUS_TRANSITIONS[target]:
+        raise conflict(STATUS_CONFLICTS[target])
+    # Inactivating or cancelling keeps the postponed date, so reactivating restores it
+    activity.estado = _visible_status(activity) if target == EstadoActividad.activa else target
+
+
+def _reschedule(activity: Actividad, new_date: datetime, field: str) -> None:
+    """Moves the activity to `new_date`, keeping the original date so clients see the change.
+
+    Going back to the original date undoes the postponement. Inactive activities are not visible
+    to clients, so their date is just replaced.
+    """
+    if new_date <= datetime.now():
+        raise field_error(field, "La fecha y hora deben ser posteriores a la actual")
+
+    if activity.estado == EstadoActividad.inactiva and activity.fecha_hora_postergada is None:
+        activity.fecha_hora = new_date
+        return
+
+    if new_date == activity.fecha_hora:
+        activity.fecha_hora_postergada = None
+    else:
+        activity.fecha_hora_postergada = new_date
+    if activity.estado in (EstadoActividad.activa, EstadoActividad.postergada):
+        activity.estado = _visible_status(activity)
+
+
+def _save(db: Session, activity: Actividad) -> Actividad:
+    db.commit()
+    db.refresh(activity)
+    return activity
+
+
 def update_activity(db: Session, activity_id: int, data: ActividadUpdate) -> Actividad:
     activity = get_activity(db, activity_id)
     _ensure_type_exists(db, data.tipo_id)
 
-    if data.fecha_hora != activity.fecha_hora and data.fecha_hora <= datetime.now():
-        raise field_error("fecha_hora", "La fecha y hora deben ser posteriores a la actual")
+    if data.estado is not None and data.estado != _visible_or_current(activity):
+        _change_status(activity, data.estado)
 
-    changes = data.model_dump(exclude={"estado"})
-    if data.estado is not None and data.estado != activity.estado:
-        changes["estado"] = data.estado
-        # Reactivating or disabling a postponed activity drops the postponed date
-        changes["fecha_hora_postergada"] = None
+    current_date = activity.fecha_hora_postergada or activity.fecha_hora
+    if data.fecha_hora != current_date:
+        _reschedule(activity, data.fecha_hora, "fecha_hora")
 
-    for field, value in changes.items():
+    for field, value in data.model_dump(exclude={"estado", "fecha_hora"}).items():
         setattr(activity, field, value)
-    db.commit()
-    db.refresh(activity)
-    return activity
+    return _save(db, activity)
 
 
 def cancel_activity(db: Session, activity_id: int) -> Actividad:
     activity = get_activity(db, activity_id)
-    if activity.estado == EstadoActividad.cancelada:
-        raise conflict("La actividad ya está cancelada")
-    if activity.estado == EstadoActividad.inactiva:
-        raise conflict("No se puede cancelar una actividad inactiva")
+    _change_status(activity, EstadoActividad.cancelada)
+    return _save(db, activity)
 
-    activity.estado = EstadoActividad.cancelada
-    db.commit()
-    db.refresh(activity)
-    return activity
+
+def deactivate_activity(db: Session, activity_id: int) -> Actividad:
+    """Hides the activity from clients (RN-01) without deleting it."""
+    activity = get_activity(db, activity_id)
+    _change_status(activity, EstadoActividad.inactiva)
+    return _save(db, activity)
+
+
+def activate_activity(db: Session, activity_id: int) -> Actividad:
+    """Makes an inactive or cancelled activity visible again, keeping its postponed date."""
+    activity = get_activity(db, activity_id)
+    _change_status(activity, EstadoActividad.activa)
+    return _save(db, activity)
 
 
 def postpone_activity(db: Session, activity_id: int, data: ActividadPostpone) -> Actividad:
     activity = get_activity(db, activity_id)
-    if activity.estado in (EstadoActividad.cancelada, EstadoActividad.inactiva):
+    if activity.estado not in (EstadoActividad.activa, EstadoActividad.postergada):
         raise conflict(f"No se puede postergar una actividad {activity.estado.value}")
-    if data.fecha_hora_postergada <= activity.fecha_hora:
+    if data.fecha_hora_postergada == activity.fecha_hora:
         raise field_error(
-            "fecha_hora_postergada", "La nueva fecha debe ser posterior a la fecha original"
+            "fecha_hora_postergada", "La nueva fecha debe ser distinta a la fecha original"
         )
 
-    activity.fecha_hora_postergada = data.fecha_hora_postergada
-    activity.estado = EstadoActividad.postergada
-    db.commit()
-    db.refresh(activity)
-    return activity
+    _reschedule(activity, data.fecha_hora_postergada, "fecha_hora_postergada")
+    return _save(db, activity)
+
+
+def undo_postpone_activity(db: Session, activity_id: int) -> Actividad:
+    """Moves a postponed activity back to its original date."""
+    activity = get_activity(db, activity_id)
+    if activity.estado != EstadoActividad.postergada:
+        raise conflict("La actividad no está postergada")
+    if activity.fecha_hora <= datetime.now():
+        raise conflict("La fecha original ya pasó: elegí una nueva fecha")
+
+    activity.fecha_hora_postergada = None
+    activity.estado = EstadoActividad.activa
+    return _save(db, activity)
 
 
 def delete_activity(db: Session, activity_id: int) -> None:

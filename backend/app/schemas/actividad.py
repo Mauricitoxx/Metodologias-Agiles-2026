@@ -15,7 +15,8 @@ from pydantic import (
 from app.models.actividad import EstadoActividad, FrecuenciaActividad
 from app.schemas.tipo_actividad import TipoActividadRead
 
-EDITABLE_STATUSES = {EstadoActividad.activa, EstadoActividad.inactiva}
+CREATE_STATUSES = {EstadoActividad.activa, EstadoActividad.inactiva}
+UPDATE_STATUSES = {EstadoActividad.activa, EstadoActividad.cancelada, EstadoActividad.inactiva}
 
 
 def to_naive_local(value: datetime) -> datetime:
@@ -63,23 +64,33 @@ class ActividadBase(BaseModel):
     edad_minima: Annotated[int, Field(ge=0)]
     tipo_id: Annotated[int, Field(gt=0)]
 
-    @field_validator("estado")
-    @classmethod
-    def ensure_editable_status(cls, value: EstadoActividad | None) -> EstadoActividad | None:
-        if value is not None and value not in EDITABLE_STATUSES:
-            raise ValueError("El estado solo puede ser 'activa' o 'inactiva'")
-        return value
-
 
 class ActividadCreate(ActividadBase):
     fecha_hora: FutureDateTime
 
+    @field_validator("estado")
+    @classmethod
+    def ensure_create_status(cls, value: EstadoActividad) -> EstadoActividad:
+        if value not in CREATE_STATUSES:
+            raise ValueError("El estado solo puede ser 'activa' o 'inactiva'")
+        return value
+
 
 class ActividadUpdate(ActividadBase):
-    """Full update (PUT). The future-date rule is applied by the service only when the date changes."""
+    """Full update (PUT).
 
-    # None keeps the current status, so editing a cancelled/postponed activity does not reset it
+    `fecha_hora` is the date the activity takes place (the postponed one if it exists): changing it
+    postpones the activity. The future-date rule is applied by the service only when the date changes.
+    """
+
     estado: EstadoActividad | None = None
+
+    @field_validator("estado")
+    @classmethod
+    def ensure_update_status(cls, value: EstadoActividad | None) -> EstadoActividad | None:
+        if value is not None and value not in UPDATE_STATUSES:
+            raise ValueError("El estado solo puede ser 'activa', 'cancelada' o 'inactiva'")
+        return value
 
 
 class ActividadPostpone(BaseModel):

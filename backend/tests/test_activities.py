@@ -142,7 +142,16 @@ def test_create_with_unknown_type_is_rejected(client: TestClient, payload: dict)
     assert error_fields(response) == {"tipo_id"}
 
 
-def test_moving_start_one_hour_earlier_is_reflected_in_schedule(client: TestClient, payload: dict):
+def postpone(client: TestClient, activity: dict, days: float) -> dict:
+    response = client.patch(
+        f"/api/activities/{activity['id']}/postpone",
+        json={"fecha_hora_postergada": in_days(days).isoformat()},
+    )
+    assert response.status_code == 200, response.json()
+    return response.json()
+
+
+def test_changing_the_date_postpones_the_activity(client: TestClient, payload: dict):
     activity = create(client, payload)
     earlier = datetime.fromisoformat(activity["fecha_hora"]) - timedelta(hours=1)
 
@@ -151,8 +160,61 @@ def test_moving_start_one_hour_earlier_is_reflected_in_schedule(client: TestClie
     )
 
     assert response.status_code == 200
-    schedule = client.get("/api/activities/schedule").json()
-    assert schedule[0]["fecha_hora"] == earlier.isoformat()
+    assert response.json()["estado"] == "postergada"
+    assert response.json()["fecha_hora"] == activity["fecha_hora"]
+    assert response.json()["fecha_hora_postergada"] == earlier.isoformat()
+
+
+def test_edit_receives_the_postponed_date_as_current_date(client: TestClient, payload: dict):
+    activity = postpone(client, create(client, payload), 8)
+
+    response = client.put(
+        f"/api/activities/{activity['id']}",
+        json=edit_payload(activity, fecha_hora=activity["fecha_hora_postergada"], cupo=30),
+    )
+
+    assert response.json()["cupo"] == 30
+    assert response.json()["estado"] == "postergada"
+    assert response.json()["fecha_hora_postergada"] == activity["fecha_hora_postergada"]
+
+
+def test_edit_back_to_the_original_date_undoes_the_postponement(client: TestClient, payload: dict):
+    activity = postpone(client, create(client, payload), 8)
+
+    response = client.put(f"/api/activities/{activity['id']}", json=edit_payload(activity))
+
+    assert response.json()["estado"] == "activa"
+    assert response.json()["fecha_hora_postergada"] is None
+
+
+def test_changing_the_date_of_an_inactive_activity_does_not_postpone_it(
+    client: TestClient, payload: dict
+):
+    activity = create(client, payload, estado="inactiva")
+    new_date = in_days(9).isoformat()
+
+    response = client.put(
+        f"/api/activities/{activity['id']}", json=edit_payload(activity, fecha_hora=new_date)
+    )
+
+    assert response.json()["estado"] == "inactiva"
+    assert response.json()["fecha_hora"] == new_date
+    assert response.json()["fecha_hora_postergada"] is None
+
+
+def test_changing_the_date_of_a_cancelled_activity_keeps_it_cancelled(
+    client: TestClient, payload: dict
+):
+    activity = create(client, payload)
+    client.patch(f"/api/activities/{activity['id']}/cancel")
+    new_date = in_days(9).isoformat()
+
+    response = client.put(
+        f"/api/activities/{activity['id']}", json=edit_payload(activity, fecha_hora=new_date)
+    )
+
+    assert response.json()["estado"] == "cancelada"
+    assert response.json()["fecha_hora_postergada"] == new_date
 
 
 def test_edit_without_status_keeps_cancelled_status(client: TestClient, payload: dict):
@@ -189,19 +251,46 @@ def test_edit_to_a_new_past_date_is_rejected(client: TestClient, payload: dict):
     assert error_fields(response) == {"fecha_hora"}
 
 
-def test_reactivating_a_postponed_activity_clears_postponed_date(client: TestClient, payload: dict):
-    activity = create(client, payload)
-    client.patch(
-        f"/api/activities/{activity['id']}/postpone",
-        json={"fecha_hora_postergada": in_days(8).isoformat()},
-    )
+def test_edit_as_active_keeps_a_postponed_activity_postponed(client: TestClient, payload: dict):
+    activity = postpone(client, create(client, payload), 8)
 
     response = client.put(
-        f"/api/activities/{activity['id']}", json=edit_payload(activity, estado="activa")
+        f"/api/activities/{activity['id']}",
+        json=edit_payload(activity, fecha_hora=activity["fecha_hora_postergada"], estado="activa"),
     )
 
-    assert response.json()["estado"] == "activa"
-    assert response.json()["fecha_hora_postergada"] is None
+    assert response.json()["estado"] == "postergada"
+
+
+@pytest.mark.parametrize("estado", ["cancelada", "inactiva"])
+def test_edit_can_cancel_or_deactivate(client: TestClient, payload: dict, estado: str):
+    activity = create(client, payload)
+
+    response = client.put(
+        f"/api/activities/{activity['id']}", json=edit_payload(activity, estado=estado)
+    )
+
+    assert response.json()["estado"] == estado
+
+
+def test_edit_cannot_set_postponed_status_by_hand(client: TestClient, payload: dict):
+    activity = create(client, payload)
+
+    response = client.put(
+        f"/api/activities/{activity['id']}", json=edit_payload(activity, estado="postergada")
+    )
+
+    assert response.status_code == 422
+
+
+def test_edit_cannot_cancel_an_inactive_activity(client: TestClient, payload: dict):
+    activity = create(client, payload, estado="inactiva")
+
+    response = client.put(
+        f"/api/activities/{activity['id']}", json=edit_payload(activity, estado="cancelada")
+    )
+
+    assert response.status_code == 409
 
 
 def test_edit_unknown_activity_returns_404(client: TestClient, payload: dict):
@@ -314,6 +403,50 @@ def test_cancel_inactive_activity_is_rejected(client: TestClient, payload: dict)
     assert client.patch(f"/api/activities/{activity['id']}/cancel").status_code == 409
 
 
+def test_deactivate_hides_the_activity_from_clients(client: TestClient, payload: dict):
+    activity = create(client, payload)
+
+    response = client.patch(f"/api/activities/{activity['id']}/deactivate")
+
+    assert response.status_code == 200
+    assert response.json()["estado"] == "inactiva"
+    assert client.get("/api/activities/schedule").json() == []
+
+
+def test_deactivate_twice_is_rejected(client: TestClient, payload: dict):
+    activity = create(client, payload, estado="inactiva")
+
+    assert client.patch(f"/api/activities/{activity['id']}/deactivate").status_code == 409
+
+
+@pytest.mark.parametrize("action", ["cancel", "deactivate"])
+def test_activate_makes_the_activity_visible_again(client: TestClient, payload: dict, action: str):
+    activity = create(client, payload)
+    client.patch(f"/api/activities/{activity['id']}/{action}")
+
+    response = client.patch(f"/api/activities/{activity['id']}/activate")
+
+    assert response.status_code == 200
+    assert response.json()["estado"] == "activa"
+    assert [a["id"] for a in client.get("/api/activities/schedule").json()] == [activity["id"]]
+
+
+def test_activate_keeps_the_postponed_date(client: TestClient, payload: dict):
+    activity = postpone(client, create(client, payload), 8)
+    client.patch(f"/api/activities/{activity['id']}/deactivate")
+
+    response = client.patch(f"/api/activities/{activity['id']}/activate")
+
+    assert response.json()["estado"] == "postergada"
+    assert response.json()["fecha_hora_postergada"] == activity["fecha_hora_postergada"]
+
+
+def test_activate_a_visible_activity_is_rejected(client: TestClient, payload: dict):
+    activity = create(client, payload)
+
+    assert client.patch(f"/api/activities/{activity['id']}/activate").status_code == 409
+
+
 def test_delete_removes_activity_permanently(client: TestClient, db: Session, payload: dict):
     activity = create(client, payload)
 
@@ -346,16 +479,53 @@ def test_postpone_activity(client: TestClient, payload: dict):
     assert response.json()["fecha_hora"] == activity["fecha_hora"]
 
 
-def test_postpone_to_a_date_before_the_original_is_rejected(client: TestClient, payload: dict):
+def test_postpone_to_an_earlier_date_is_allowed(client: TestClient, payload: dict):
+    activity = create(client, payload)
+
+    assert postpone(client, activity, 1)["estado"] == "postergada"
+
+
+def test_postpone_to_the_original_date_is_rejected(client: TestClient, payload: dict):
     activity = create(client, payload)
 
     response = client.patch(
         f"/api/activities/{activity['id']}/postpone",
-        json={"fecha_hora_postergada": in_days(1).isoformat()},
+        json={"fecha_hora_postergada": activity["fecha_hora"]},
     )
 
     assert response.status_code == 422
     assert error_fields(response) == {"fecha_hora_postergada"}
+
+
+def test_undo_postpone_restores_the_original_date(client: TestClient, payload: dict):
+    activity = postpone(client, create(client, payload), 8)
+
+    response = client.patch(f"/api/activities/{activity['id']}/undo-postpone")
+
+    assert response.status_code == 200
+    assert response.json()["estado"] == "activa"
+    assert response.json()["fecha_hora_postergada"] is None
+    assert response.json()["fecha_hora"] == activity["fecha_hora"]
+
+
+def test_undo_postpone_of_a_not_postponed_activity_is_rejected(client: TestClient, payload: dict):
+    activity = create(client, payload)
+
+    assert client.patch(f"/api/activities/{activity['id']}/undo-postpone").status_code == 409
+
+
+def test_undo_postpone_when_the_original_date_passed_is_rejected(
+    client: TestClient, db: Session, tipos
+):
+    activity = add_past_activity(
+        db,
+        tipos["Taller"],
+        fecha_hora=in_days(-1),
+        fecha_hora_postergada=in_days(3),
+        estado=EstadoActividad.postergada,
+    )
+
+    assert client.patch(f"/api/activities/{activity.id}/undo-postpone").status_code == 409
 
 
 def test_postpone_cancelled_activity_is_rejected(client: TestClient, payload: dict):
