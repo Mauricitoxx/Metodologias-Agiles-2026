@@ -11,16 +11,15 @@ import {
   CalendarDays,
   Eye,
   EyeOff,
-  RotateCcw,
-  Undo2
+  RotateCcw
 } from 'lucide-react';
-import { StatusBadge, CategoryTag } from '../common/Badge';
+import { AgeBadge, StatusBadge, CategoryTag } from '../common/Badge';
+import { ActivityChangeNotice } from './ActivityChangeNotice';
 import { effectiveDate, formatDate, formatDuration, formatTime, frequencyLabel } from '../../utils/activity';
 
 export const ActivityCard = ({ activity, onEdit, onAction }) => {
   const [imageFailed, setImageFailed] = useState(false);
   const date = effectiveDate(activity);
-  const isPostponed = Boolean(activity.fecha_hora_postergada);
   const isInactive = activity.estado === 'inactiva';
   const isCancelled = activity.estado === 'cancelada';
   const isVisible = !isInactive && !isCancelled;
@@ -61,16 +60,7 @@ export const ActivityCard = ({ activity, onEdit, onAction }) => {
             </span>
           </div>
 
-          {isPostponed && (
-            <p className="activity-original-date">
-              Fecha original: <s>{formatDate(activity.fecha_hora)} {formatTime(activity.fecha_hora)}</s>
-              {activity.estado === 'postergada' && (
-                <button className="activity-inline-action" onClick={run('undoPostpone')}>
-                  <Undo2 size={11} /> Deshacer
-                </button>
-              )}
-            </p>
-          )}
+          <ActivityChangeNotice activity={activity} onUndoPostpone={run('undoPostpone')} />
 
           <div className="card-footer-chips">
             <span className="slots-badge">
@@ -80,7 +70,7 @@ export const ActivityCard = ({ activity, onEdit, onAction }) => {
             <span className="slots-badge">
               <Repeat size={12} /> {frequencyLabel(activity.frecuencia)}
             </span>
-            <span className="slots-badge">+{activity.edad_minima}</span>
+            <AgeBadge minimumAge={activity.edad_minima} />
           </div>
         </div>
       </div>

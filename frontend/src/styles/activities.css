@@ -56,10 +56,6 @@
   overflow-wrap: anywhere;
 }
 
-.activity-original-date {
-  font-size: 11px;
-  color: var(--text-muted);
-}
 
 .activity-cancelada .activity-title {
   text-decoration: line-through;
@@ -74,20 +70,6 @@
   opacity: 0.65;
 }
 
-.activity-inline-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  margin-left: 8px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--brand-accent-blue);
-  font-size: 11px;
-  font-weight: 700;
-  text-decoration: underline;
-  cursor: pointer;
-}
 
 .activity-card .card-actions-bar .btn-card-action {
   padding-inline: 8px;
@@ -458,4 +440,84 @@
   margin-left: auto;
   padding: 6px 12px;
   font-size: 12px;
+}
+
+/* Card: age */
+
+.age-badge svg {
+  color: var(--brand-accent-blue);
+}
+
+/* Card: cancellation / postponement box (status, scope, original date, reason and undo together) */
+.activity-change-notice {
+  --notice-color: #b45309;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 8px;
+  border-left: 3px solid var(--notice-color);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background-color: #fffbeb;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-main);
+  overflow-wrap: anywhere;
+}
+
+.activity-change-notice.cancelada {
+  --notice-color: #dc2626;
+  background-color: #fef2f2;
+}
+
+[data-theme='dark'] .activity-change-notice {
+  --notice-color: #fbbf24;
+  background-color: #2a1d05;
+}
+
+[data-theme='dark'] .activity-change-notice.cancelada {
+  --notice-color: #f87171;
+  background-color: #2a1215;
+}
+
+.activity-change-notice s {
+  color: var(--text-muted);
+}
+
+.activity-change-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--notice-color);
+}
+
+.activity-change-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+}
+
+.activity-change-scope {
+  font-weight: 700;
+}
+
+.activity-change-undo {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border: 1.5px solid var(--notice-color);
+  border-radius: var(--radius-full);
+  background-color: var(--bg-card);
+  color: var(--notice-color);
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.activity-change-undo:hover {
+  background-color: var(--notice-color);
+  color: var(--bg-card);
 }

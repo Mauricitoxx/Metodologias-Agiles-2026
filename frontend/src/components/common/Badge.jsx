@@ -1,4 +1,6 @@
 import React from 'react';
+import { IdCard } from 'lucide-react';
+import { ageLabel, ageTitle } from '../../utils/activity';
 
 export const StatusBadge = ({ status, text, tableNumber }) => {
   let label = text;
@@ -61,3 +63,10 @@ export const CategoryTag = ({ children, variant = 'default' }) => {
 export const ShelfBadge = ({ children }) => {
   return <span className="shelf-badge">{children}</span>;
 };
+
+// Minimum age of an activity: "+18 años" or "Todo público"
+export const AgeBadge = ({ minimumAge }) => (
+  <span className="slots-badge age-badge" title={ageTitle(minimumAge)} aria-label={ageTitle(minimumAge)}>
+    <IdCard size={12} aria-hidden="true" /> {ageLabel(minimumAge)}
+  </span>
+);

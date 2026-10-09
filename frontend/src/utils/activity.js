@@ -43,3 +43,10 @@ export const toInputValue = (date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 
 export const toInputDateTime = (value) => (value ? value.slice(0, 16) : '');
+
+// 0 means no age restriction
+export const ageLabel = (minimumAge) => (minimumAge > 0 ? `+${minimumAge} años` : 'Todo público');
+export const ageTitle = (minimumAge) =>
+  minimumAge > 0 ? `Edad mínima: ${minimumAge} años` : 'Sin edad mínima: apta para todo público';
+
+export const SCOPE_LABELS = { fecha: 'solo esta fecha', serie: 'toda la serie' };
