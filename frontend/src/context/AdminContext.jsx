@@ -1,10 +1,28 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { storage } from '../services/storage';
 import { AdminContext } from './adminContextInstance';
+import { auth, getSessionToken, clearSessionToken } from '../services/auth';
 
 export const AdminProvider = ({ children }) => {
   const [data, setData] = useState(() => storage.get());
-  const [session, setSession] = useState(() => sessionStorage.getItem('frikioteca_demo_session'));
+  const [session, setSession] = useState(null);
+  const [authLoading, setAuthLoading] = useState(() => Boolean(getSessionToken()));
+  const [authError, setAuthError] = useState('');
+  const [authRetry, setAuthRetry] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    const token = getSessionToken();
+    if (!token) return;
+    auth.me(token).then((admin) => {
+      if (!cancelled) setSession(admin);
+    }).catch((error) => {
+      if (cancelled) return;
+      if ([401, 403].includes(error.status)) clearSessionToken();
+      else setAuthError(error.message);
+    }).finally(() => { if (!cancelled) setAuthLoading(false); });
+    return () => { cancelled = true; };
+  }, [authRetry]);
   const [currentTab, setCurrentTab] = useState('hub'); // 'hub' | 'inventario' | 'staff'
   const [catalogSubTab, setCatalogSubTab] = useState('boardgames'); // 'boardgames' | 'comics' | 'cards'
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,22 +67,34 @@ export const AdminProvider = ({ children }) => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
-  const login = () => {
-    sessionStorage.setItem('frikioteca_demo_session', 'demo');
-    setSession('demo');
+  const login = async (email, password) => {
+    const result = await auth.login(email, password);
+    setSession(result.administrador);
+    setAuthError('');
     setCurrentTab('hub');
   };
-  const logout = () => {
-    sessionStorage.removeItem('frikioteca_demo_session');
+  const logout = async () => {
+    const token = getSessionToken();
+    try {
+      if (token) await auth.logout(token);
+    } catch (error) {
+      if (![401, 403].includes(error.status)) {
+        showToast('No se pudo cerrar la sesión en el servidor. Intentá nuevamente.', 'error');
+        return false;
+      }
+    }
+    clearSessionToken();
     setSession(null);
     closeModal();
     setCurrentTab('hub');
+    return true;
   };
 
   // Current active user
   const currentUser = useMemo(() => {
-    return data.admins.find((a) => a.isCurrentUser) || data.admins[0];
-  }, [data.admins]);
+    const demo = data.admins.find((a) => a.isCurrentUser) || data.admins[0];
+    return session ? { ...demo, name: session.nombre, email: session.email, role: 'Administrador' } : demo;
+  }, [data.admins, session]);
 
   // CRUD Operations
   const addItem = (entityType, itemData) => {
@@ -200,6 +230,13 @@ export const AdminProvider = ({ children }) => {
     <AdminContext.Provider
       value={{
         session,
+        authLoading,
+        authError,
+        retryAuth: () => {
+          setAuthLoading(true);
+          setAuthError('');
+          setAuthRetry((value) => value + 1);
+        },
         login,
         logout,
         data,

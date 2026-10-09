@@ -104,12 +104,35 @@ uvicorn app.main:app --reload
 | `ENVIRONMENT`  | `development`                                       | Entorno de ejecución                          |
 | `DATABASE_URL` | `sqlite:///./frikioteca.db`                         | Conexión a la base de datos                   |
 | `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173`       | Orígenes que pueden llamar a la API (el frontend de Vite), separados por coma |
+| `AUTH_SESSION_MINUTES` | `480` | Duración de las sesiones administrativas (1 a 10080 minutos) |
 
 Si agregás una variable nueva: sumala a `app/core/config.py` **y** a `.env.example`, y avisá al equipo para que la copien en su `.env`.
 
 ---
 
 ## Estructura
+
+### Módulo de autenticación
+
+El login sigue el flujo **ruta → servicio → modelo/base → esquema**. Las tablas `administradores` y `sesiones_administradores` se crean con Alembic; las contraseñas usan scrypt con sal aleatoria y la base guarda únicamente el hash SHA-256 del token de sesión.
+
+Configurá una `DATABASE_URL` válida en tu `.env` (por ejemplo, `sqlite:///./frikioteca.db` para desarrollo local). Después de `alembic upgrade head`, creá la primera cuenta desde `backend/`:
+
+```powershell
+python -m app.create_admin --email admin@frikioteca.test --nombre "Administrador"
+```
+
+El comando solicita y confirma una contraseña de 12 a 256 caracteres sin mostrarla en pantalla. No incluye cuentas o contraseñas predeterminadas ni un endpoint de registro público.
+
+| Endpoint | Función |
+| -------- | ------- |
+| `POST /api/auth/login` | Recibe JSON `email` y `password`; devuelve token Bearer y datos del administrador |
+| `GET /api/auth/me` | Valida la sesión y devuelve el administrador activo |
+| `POST /api/auth/logout` | Invalida la sesión actual; responde 204 |
+
+Para los endpoints privados de los próximos módulos, usá `Depends(get_current_admin)` desde `app.api.routes.auth`. Las sesiones vencidas, revocadas o de administradores inactivos se rechazan. La autorización de roles y la recuperación automática por correo quedan para sus respectivos módulos.
+
+Tests del módulo: `pytest tests/test_auth.py`. La migración inicial de este clon crea únicamente las tablas de autenticación.
 
 Organización **por capas**: cada módulo funcional (juegos, carta, actividades, mangas, usuarios) aporta un archivo en cada capa.
 

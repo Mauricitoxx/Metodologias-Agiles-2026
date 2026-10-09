@@ -19,6 +19,10 @@ import { ConfirmBajaModal } from './components/modals/ConfirmBajaModal';
 const AdminDashboard = () => {
   const location = useLocation();
   const {
+    session,
+    authLoading,
+    authError,
+    retryAuth,
     modalState,
     closeModal,
     addItem,
@@ -27,6 +31,11 @@ const AdminDashboard = () => {
     openEditModal,
     notification
   } = useAdmin();
+
+  if (authLoading) return <div className="login-screen"><p role="status" className="login-content">Verificando sesión…</p></div>;
+  if (location.pathname === '/login') return <LoginView />;
+  if (authError) return <div className="login-screen"><div className="login-content"><p role="alert">{authError}</p><button className="login-submit" onClick={retryAuth}>Reintentar</button></div></div>;
+  if (!session) return <Navigate to="/login" replace />;
 
   const isEntityForm =
     modalState.isOpen &&
@@ -55,9 +64,6 @@ const AdminDashboard = () => {
           />
         ) : (
           <Routes>
-            {/* Login (reservado para implementación del equipo) */}
-            <Route path="/login" element={<LoginView />} />
-
             {/* Admin Central Hub */}
             <Route path="/admin" element={<AdminHubView />} />
 

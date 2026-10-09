@@ -6,9 +6,8 @@ export const Header = () => {
   const navigate = useNavigate();
   const { theme, toggleTheme, currentUser, session, logout } = useAdmin();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const handleLogout = async () => {
+    if (await logout()) navigate('/login');
   };
 
   return (
