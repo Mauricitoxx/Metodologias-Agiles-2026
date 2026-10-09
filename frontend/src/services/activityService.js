@@ -1,8 +1,8 @@
 import { api } from './api';
 
 export const activityService = {
-  list: ({ search, tipo_id, estado, order } = {}) =>
-    api.get('/activities', { search, tipo_id, estado, order }),
+  list: ({ search, tipo_id, estado, order, date_from, date_to } = {}) =>
+    api.get('/activities', { search, tipo_id, estado, order, date_from, date_to }),
   get: (id) => api.get(`/activities/${id}`),
   create: (data) => api.post('/activities', data),
   update: (id, data) => api.put(`/activities/${id}`, data),

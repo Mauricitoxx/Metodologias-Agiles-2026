@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Search, Plus, CalendarDays, ArrowDownWideNarrow, ArrowUpNarrowWide, RefreshCw } from 'lucide-react';
+import { Search, Plus, CalendarDays, ArrowDownWideNarrow, ArrowUpNarrowWide, RefreshCw, X } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
 import { ActivityCard } from '../components/cards/ActivityCard';
+import { DateTimePicker } from '../components/common/DateTimePicker';
 import { ActivityActionModal } from '../components/modals/ActivityActionModal';
 import { ActivityFormView } from './ActivityFormView';
 import { activityService, activityTypeService } from '../services/activityService';
@@ -31,6 +32,8 @@ export const ActivitiesView = () => {
   const [tipoId, setTipoId] = useState('');
   const [estado, setEstado] = useState('');
   const [order, setOrder] = useState('asc');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const [formState, setFormState] = useState(null);
   const [pendingAction, setPendingAction] = useState(null);
@@ -48,12 +51,12 @@ export const ActivitiesView = () => {
     // Load the types only once (showToast is recreated on every render of the provider)
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const requestKey = JSON.stringify([search, tipoId, estado, order, reloadKey]);
+  const requestKey = JSON.stringify([search, tipoId, estado, order, dateFrom, dateTo, reloadKey]);
 
   useEffect(() => {
     let ignore = false;
     activityService
-      .list({ search, tipo_id: tipoId, estado, order })
+      .list({ search, tipo_id: tipoId, estado, order, date_from: dateFrom, date_to: dateTo })
       .then((data) => {
         if (!ignore) setResult({ key: requestKey, activities: data, error: '' });
       })
@@ -87,6 +90,16 @@ export const ActivitiesView = () => {
 
   const sortByName = (list) => [...list].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
 
+  const changeDateFrom = (value) => {
+    setDateFrom(value);
+    if (dateTo && value > dateTo) setDateTo('');
+  };
+
+  const clearDates = () => {
+    setDateFrom('');
+    setDateTo('');
+  };
+
   const handleTypeCreated = (type) => {
     setTypes((prev) => sortByName([...prev, type]));
     showToast(`Tipo "${type.nombre}" agregado`);
@@ -117,7 +130,7 @@ export const ActivitiesView = () => {
       />
     );
   }
-  const hasFilters = Boolean(search || tipoId || estado);
+  const hasFilters = Boolean(search || tipoId || estado || dateFrom || dateTo);
 
   return (
     <div className="view-content-wrapper">
@@ -187,6 +200,44 @@ export const ActivitiesView = () => {
               {status.plural.toUpperCase()}
             </button>
           ))}
+        </div>
+      </div>
+
+      <div className="activity-filter-group">
+        <div className="activity-filter-label-row">
+          <span className="section-small-label">FECHAS</span>
+          {(dateFrom || dateTo) && (
+            <button className="activity-clear-dates" onClick={clearDates}>
+              <X size={11} /> Limpiar fechas
+            </button>
+          )}
+        </div>
+        <div className="activity-date-range">
+          <div className="activity-date-range-field">
+            <label htmlFor="activity-filter-from" className="activity-date-range-label">
+              DESDE
+            </label>
+            <DateTimePicker
+              id="activity-filter-from"
+              value={dateFrom}
+              onChange={changeDateFrom}
+              withTime={false}
+              placeholder="Cualquier fecha"
+            />
+          </div>
+          <div className="activity-date-range-field">
+            <label htmlFor="activity-filter-to" className="activity-date-range-label">
+              HASTA
+            </label>
+            <DateTimePicker
+              id="activity-filter-to"
+              value={dateTo}
+              onChange={setDateTo}
+              min={dateFrom || undefined}
+              withTime={false}
+              placeholder="Cualquier fecha"
+            />
+          </div>
         </div>
       </div>
 
