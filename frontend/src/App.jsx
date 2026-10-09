@@ -1,8 +1,9 @@
-import React from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import './styles/theme.css';
 import './styles/admin.css';
 import './styles/screens.css';
+import './styles/activities.css';
 import { AdminProvider } from './context/AdminContext';
 import { useAdmin } from './context/useAdmin';
 import { Header } from './components/layout/Header';
@@ -16,9 +17,25 @@ import { ItemDetailModal } from './components/modals/ItemDetailModal';
 import { ItemFormModal } from './components/modals/ItemFormModal';
 import { ConfirmBajaModal } from './components/modals/ConfirmBajaModal';
 
+const ActivitiesRedirect = () => {
+  const { setCatalogSubTab } = useAdmin();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setCatalogSubTab('actividades');
+    navigate('/admin/inventario', { replace: true });
+  }, [setCatalogSubTab, navigate]);
+
+  return null;
+};
+
 const AdminDashboard = () => {
   const location = useLocation();
   const {
+    session,
+    authLoading,
+    authError,
+    retryAuth,
     modalState,
     closeModal,
     addItem,
@@ -27,6 +44,11 @@ const AdminDashboard = () => {
     openEditModal,
     notification
   } = useAdmin();
+
+  if (authLoading) return <div className="login-screen"><p role="status" className="login-content">Verificando sesión…</p></div>;
+  if (location.pathname === '/login') return <LoginView />;
+  if (authError) return <div className="login-screen"><div className="login-content"><p role="alert">{authError}</p><button className="login-submit" onClick={retryAuth}>Reintentar</button></div></div>;
+  if (!session) return <Navigate to="/login" replace />;
 
   const isEntityForm =
     modalState.isOpen &&
@@ -55,9 +77,6 @@ const AdminDashboard = () => {
           />
         ) : (
           <Routes>
-            {/* Login (reservado para implementación del equipo) */}
-            <Route path="/login" element={<LoginView />} />
-
             {/* Admin Central Hub */}
             <Route path="/admin" element={<AdminHubView />} />
 
@@ -69,6 +88,9 @@ const AdminDashboard = () => {
 
             {/* Gestor de Staff */}
             <Route path="/admin/staff" element={<AdminUsersView />} />
+
+            {/* Alias /admin/actividades: pestaña Actividades del inventario */}
+            <Route path="/admin/actividades" element={<ActivitiesRedirect />} />
 
             {/* Redirección por defecto a /admin */}
             <Route path="/" element={<Navigate to="/admin" replace />} />

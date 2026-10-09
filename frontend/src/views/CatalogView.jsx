@@ -3,6 +3,7 @@ import { Search, Plus } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
 import { GameCard } from '../components/cards/GameCard';
 import { BuffetCard } from '../components/cards/BuffetCard';
+import { ActivitiesView } from './ActivitiesView';
 
 export const CatalogView = () => {
   const {
@@ -68,47 +69,64 @@ export const CatalogView = () => {
     return 'MAZO DE CARTAS';
   };
 
+  // 1. SELECCIONA ENTIDAD (Tabs superiores horizontales)
+  const entitySelector = (
+    <div className="entity-selector-section">
+      <span className="section-small-label">SELECCIONA ENTIDAD (5)</span>
+      <div className="entity-pills-scroll">
+        <button
+          className={`entity-pill-btn ${catalogSubTab === 'boardgames' ? 'active' : ''}`}
+          onClick={() => setCatalogSubTab('boardgames')}
+        >
+          <span className="entity-pill-emoji">🎲</span>
+          <div className="entity-pill-texts">
+            <span className="entity-pill-title">JUEGOS DE MESA</span>
+            <span className="entity-pill-subtitle">{boardgamesCount} items</span>
+          </div>
+        </button>
+
+        <button
+          className={`entity-pill-btn ${catalogSubTab === 'comics' ? 'active' : ''}`}
+          onClick={() => setCatalogSubTab('comics')}
+        >
+          <span className="entity-pill-emoji">📖</span>
+          <div className="entity-pill-texts">
+            <span className="entity-pill-title">MANGAS & CÓMICS</span>
+            <span className="entity-pill-subtitle">{comicsCount} vols</span>
+          </div>
+        </button>
+
+        <button
+          className={`entity-pill-btn ${catalogSubTab === 'cards' ? 'active' : ''}`}
+          onClick={() => setCatalogSubTab('cards')}
+        >
+          <span className="entity-pill-emoji">🃏</span>
+          <div className="entity-pill-texts">
+            <span className="entity-pill-title">JUEGOS DE CARTAS</span>
+            <span className="entity-pill-subtitle">{cardsCount} mazos</span>
+          </div>
+        </button>
+        <button className={`entity-pill-btn ${catalogSubTab === 'buffet' ? 'active' : ''}`} onClick={() => setCatalogSubTab('buffet')}><span className="entity-pill-emoji">🍔</span><div className="entity-pill-texts"><span className="entity-pill-title">BUFFET</span><span className="entity-pill-subtitle">{data.buffet.length} productos</span></div></button>
+        <button
+          className={`entity-pill-btn ${catalogSubTab === 'actividades' ? 'active' : ''}`}
+          onClick={() => setCatalogSubTab('actividades')}
+        >
+          <span className="entity-pill-emoji">📅</span>
+          <div className="entity-pill-texts">
+            <span className="entity-pill-title">ACTIVIDADES</span>
+            <span className="entity-pill-subtitle">cronograma</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  );
+
+  // Activities come from the API and have their own list, filters and form
+  if (catalogSubTab === 'actividades') return <ActivitiesView header={entitySelector} />;
+
   return (
     <div className="view-content-wrapper">
-      {/* 1. SELECCIONA ENTIDAD (Tabs superiores horizontales) */}
-      <div className="entity-selector-section">
-        <span className="section-small-label">SELECCIONA ENTIDAD (4)</span>
-        <div className="entity-pills-scroll">
-          <button
-            className={`entity-pill-btn ${catalogSubTab === 'boardgames' ? 'active' : ''}`}
-            onClick={() => setCatalogSubTab('boardgames')}
-          >
-            <span className="entity-pill-emoji">🎲</span>
-            <div className="entity-pill-texts">
-              <span className="entity-pill-title">JUEGOS DE MESA</span>
-              <span className="entity-pill-subtitle">{boardgamesCount} items</span>
-            </div>
-          </button>
-
-          <button
-            className={`entity-pill-btn ${catalogSubTab === 'comics' ? 'active' : ''}`}
-            onClick={() => setCatalogSubTab('comics')}
-          >
-            <span className="entity-pill-emoji">📖</span>
-            <div className="entity-pill-texts">
-              <span className="entity-pill-title">MANGAS & CÓMICS</span>
-              <span className="entity-pill-subtitle">{comicsCount} vols</span>
-            </div>
-          </button>
-
-          <button
-            className={`entity-pill-btn ${catalogSubTab === 'cards' ? 'active' : ''}`}
-            onClick={() => setCatalogSubTab('cards')}
-          >
-            <span className="entity-pill-emoji">🃏</span>
-            <div className="entity-pill-texts">
-              <span className="entity-pill-title">JUEGOS DE CARTAS</span>
-              <span className="entity-pill-subtitle">{cardsCount} mazos</span>
-            </div>
-          </button>
-          <button className={`entity-pill-btn ${catalogSubTab === 'buffet' ? 'active' : ''}`} onClick={() => setCatalogSubTab('buffet')}><span className="entity-pill-emoji">🍔</span><div className="entity-pill-texts"><span className="entity-pill-title">BUFFET</span><span className="entity-pill-subtitle">{data.buffet.length} productos</span></div></button>
-        </div>
-      </div>
+      {entitySelector}
 
       {/* 2. BOTÓN PRINCIPAL DE ALTA (Amarillo Stitch) */}
       <button
