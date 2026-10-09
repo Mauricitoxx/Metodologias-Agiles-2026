@@ -1,10 +1,11 @@
 from fastapi import APIRouter
 
-from app.api.routes import health
+from app.api.routes import categorias_juego, dificultades, health, juegos, regla
 
 api_router = APIRouter()
 api_router.include_router(health.router)
+api_router.include_router(juegos.router)
+api_router.include_router(categorias_juego.router)
+api_router.include_router(dificultades.router)
+api_router.include_router(regla.router)
 
-# Registrar acá el router de cada módulo. Ejemplo:
-# from app.api.routes import juegos
-# api_router.include_router(juegos.router)
