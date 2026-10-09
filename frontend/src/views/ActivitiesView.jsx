@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Search, Plus, CalendarDays, ArrowDownWideNarrow, ArrowUpNarrowWide, RefreshCw, X } from 'lucide-react';
+import { Search, Plus, ArrowDownWideNarrow, ArrowUpNarrowWide, RefreshCw, X } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
 import { ActivityCard } from '../components/cards/ActivityCard';
 import { DateTimePicker } from '../components/common/DateTimePicker';
@@ -19,7 +19,8 @@ const ACTION_TOASTS = {
   delete: (activity) => [`Actividad "${activity.nombre}" eliminada definitivamente`, 'warning']
 };
 
-export const ActivitiesView = () => {
+// `header` (the inventory entity selector) is shown above the list, but not over the form
+export const ActivitiesView = ({ header }) => {
   const { showToast } = useAdmin();
 
   const [types, setTypes] = useState([]);
@@ -134,17 +135,7 @@ export const ActivitiesView = () => {
 
   return (
     <div className="view-content-wrapper">
-      <div className="module-banner-box">
-        <div className="module-banner-icon">
-          <CalendarDays size={24} />
-        </div>
-        <div>
-          <h4 className="module-banner-title">Gestor de Actividades</h4>
-          <p className="module-banner-desc">
-            Talleres, torneos, ferias y eventos del cronograma de La Frikioteca.
-          </p>
-        </div>
-      </div>
+      {header}
 
       <button className="primary-cta-yellow-btn" onClick={() => setFormState({ mode: 'create' })}>
         <span className="cta-icon-circle">
