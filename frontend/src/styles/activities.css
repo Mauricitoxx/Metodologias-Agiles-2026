@@ -66,17 +66,49 @@
 }
 
 .activity-inactiva {
-  opacity: 0.65;
   background-color: var(--bg-card-secondary);
+}
+
+/* Only the content is dimmed, so the reactivate button stays clear */
+.activity-inactiva .card-main-content {
+  opacity: 0.65;
+}
+
+.activity-inline-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--brand-accent-blue);
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.activity-card .card-actions-bar .btn-card-action {
+  padding-inline: 8px;
 }
 
 .activity-card .card-actions-bar .btn-card-action:disabled {
   opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.activity-card .card-actions-bar .activity-btn-icon {
+  flex: 0 0 40px;
 }
 
 .activity-btn-cancel {
-  flex: 0 0 44px;
   color: #b45309;
+}
+
+[data-theme='dark'] .activity-card .btn-icon-restore {
+  background-color: #052e22;
+  color: #34d399;
 }
 
 [data-theme='dark'] .activity-btn-cancel {

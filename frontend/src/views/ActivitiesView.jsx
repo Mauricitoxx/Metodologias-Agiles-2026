@@ -11,8 +11,11 @@ const SEARCH_DEBOUNCE_MS = 300;
 
 const ACTION_TOASTS = {
   cancel: (activity) => [`Actividad "${activity.nombre}" cancelada`, 'warning'],
-  delete: (activity) => [`Actividad "${activity.nombre}" eliminada`, 'warning'],
-  postpone: (activity) => [`Actividad "${activity.nombre}" postergada`, 'success']
+  postpone: (activity) => [`Actividad "${activity.nombre}" postergada`, 'success'],
+  undoPostpone: (activity) => [`Actividad "${activity.nombre}" vuelve a su fecha original`, 'success'],
+  deactivate: (activity) => [`Actividad "${activity.nombre}" inactivada: ya no la ven los clientes`, 'warning'],
+  activate: (activity) => [`Actividad "${activity.nombre}" reactivada`, 'success'],
+  delete: (activity) => [`Actividad "${activity.nombre}" eliminada definitivamente`, 'warning']
 };
 
 export const ActivitiesView = () => {
@@ -209,9 +212,7 @@ export const ActivitiesView = () => {
               key={activity.id}
               activity={activity}
               onEdit={(item) => setFormState({ mode: 'edit', activity: item })}
-              onPostpone={(item) => setPendingAction({ type: 'postpone', activity: item })}
-              onCancel={(item) => setPendingAction({ type: 'cancel', activity: item })}
-              onDelete={(item) => setPendingAction({ type: 'delete', activity: item })}
+              onAction={(type, item) => setPendingAction({ type, activity: item })}
             />
           ))
         )}

@@ -1,13 +1,30 @@
 import { useState } from 'react';
-import { Edit3, Trash2, Ban, CalendarClock, Calendar, Clock, Users, Repeat, CalendarDays } from 'lucide-react';
+import {
+  Edit3,
+  Trash2,
+  Ban,
+  CalendarClock,
+  Calendar,
+  Clock,
+  Users,
+  Repeat,
+  CalendarDays,
+  Eye,
+  EyeOff,
+  RotateCcw,
+  Undo2
+} from 'lucide-react';
 import { StatusBadge, CategoryTag } from '../common/Badge';
 import { effectiveDate, formatDate, formatDuration, formatTime, frequencyLabel } from '../../utils/activity';
 
-export const ActivityCard = ({ activity, onEdit, onPostpone, onCancel, onDelete }) => {
+export const ActivityCard = ({ activity, onEdit, onAction }) => {
   const [imageFailed, setImageFailed] = useState(false);
   const date = effectiveDate(activity);
   const isPostponed = Boolean(activity.fecha_hora_postergada);
-  const isClosed = activity.estado === 'cancelada' || activity.estado === 'inactiva';
+  const isInactive = activity.estado === 'inactiva';
+  const isCancelled = activity.estado === 'cancelada';
+  const isVisible = !isInactive && !isCancelled;
+  const run = (type) => () => onAction(type, activity);
 
   return (
     <article className={`catalog-item-card activity-card activity-${activity.estado}`}>
@@ -47,6 +64,11 @@ export const ActivityCard = ({ activity, onEdit, onPostpone, onCancel, onDelete 
           {isPostponed && (
             <p className="activity-original-date">
               Fecha original: <s>{formatDate(activity.fecha_hora)} {formatTime(activity.fecha_hora)}</s>
+              {activity.estado === 'postergada' && (
+                <button className="activity-inline-action" onClick={run('undoPostpone')}>
+                  <Undo2 size={11} /> Deshacer
+                </button>
+              )}
             </p>
           )}
 
@@ -69,26 +91,56 @@ export const ActivityCard = ({ activity, onEdit, onPostpone, onCancel, onDelete 
         </button>
         <button
           className="btn-card-action btn-ficha"
-          onClick={() => onPostpone(activity)}
-          disabled={isClosed}
-          title={isClosed ? 'No se puede postergar una actividad cancelada o inactiva' : 'Postergar'}
+          onClick={run('postpone')}
+          disabled={!isVisible}
+          title={isVisible ? 'Postergar' : 'No se puede postergar una actividad cancelada o inactiva'}
         >
           <CalendarClock size={15} /> POSTERGAR
         </button>
-        <button
-          className="btn-card-action btn-ficha activity-btn-cancel"
-          onClick={() => onCancel(activity)}
-          disabled={isClosed}
-          title={isClosed ? 'La actividad ya está cancelada o inactiva' : 'Cancelar'}
-          aria-label="Cancelar actividad"
-        >
-          <Ban size={15} />
-        </button>
+        {isCancelled ? (
+          <button
+            className="btn-card-action btn-icon-restore activity-btn-icon"
+            onClick={run('activate')}
+            title="Reactivar (deshacer la cancelación)"
+            aria-label="Reactivar actividad cancelada"
+          >
+            <RotateCcw size={15} />
+          </button>
+        ) : (
+          <button
+            className="btn-card-action btn-ficha activity-btn-icon activity-btn-cancel"
+            onClick={run('cancel')}
+            disabled={isInactive}
+            title={isInactive ? 'No se puede cancelar una actividad inactiva' : 'Cancelar'}
+            aria-label="Cancelar actividad"
+          >
+            <Ban size={15} />
+          </button>
+        )}
+        {isInactive ? (
+          <button
+            className="btn-card-action btn-icon-restore activity-btn-icon"
+            onClick={run('activate')}
+            title="Reactivar (volver a mostrarla a los clientes)"
+            aria-label="Reactivar actividad"
+          >
+            <Eye size={15} />
+          </button>
+        ) : (
+          <button
+            className="btn-card-action btn-ficha activity-btn-icon"
+            onClick={run('deactivate')}
+            title="Inactivar (ocultarla a los clientes)"
+            aria-label="Inactivar actividad"
+          >
+            <EyeOff size={15} />
+          </button>
+        )}
         <button
           className="btn-card-action btn-icon-baja"
-          onClick={() => onDelete(activity)}
+          onClick={run('delete')}
           title="Eliminar definitivamente"
-          aria-label="Eliminar actividad"
+          aria-label="Eliminar actividad definitivamente"
         >
           <Trash2 size={15} />
         </button>
