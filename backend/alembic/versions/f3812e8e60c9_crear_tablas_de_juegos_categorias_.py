@@ -1,7 +1,7 @@
 """crear tablas de juegos, categorias, dificultades y reglas
 
 Revision ID: f3812e8e60c9
-Revises: 
+Revises: 70020f699ab9
 Create Date: 2026-10-09 00:55:25.931197
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = 'f3812e8e60c9'
-down_revision: Union[str, Sequence[str], None] = None
+down_revision: Union[str, Sequence[str], None] = '70020f699ab9'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
