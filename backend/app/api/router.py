@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.routes import auth, health, activities, activity_types, mangas_comics, categorias_juego, dificultades, juegos, regla
+from app.api.routes import auth, health, activities, activity_types, mangas_comics, categorias_juego, dificultades, juegos, regla, productos
 
 api_router = APIRouter()
 api_router.include_router(auth.router)
@@ -11,6 +11,7 @@ api_router.include_router(categorias_juego.router)
 api_router.include_router(dificultades.router)
 api_router.include_router(regla.router)
 api_router.include_router(mangas_comics.router)
+api_router.include_router(productos.router)
 
 # Registrar acá el router de cada módulo. Ejemplo:
 # from app.api.routes import juegos
