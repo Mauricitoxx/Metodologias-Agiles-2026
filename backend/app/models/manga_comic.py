@@ -46,6 +46,11 @@ class MangaComic(Base):
         Text,
         nullable=True,
     )
+     # portada del manga o cómic, codificada en Base64
+    image: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
     #indica si el manga o comic está activo o dado de baja
     is_active: Mapped[bool] = mapped_column(
         Boolean,
