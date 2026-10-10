@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Save, Upload, RefreshCw, Trash2 } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
@@ -36,11 +35,15 @@ export function EntityFormView() {
   const [form, setForm] = useState(() => ({
     code: nextCode(modalState.entityType, data),
     title: '',
+    nombre: '',
     category: 'Estrategia & Civilización',
     shelf: 'Estante A-3 · Nivel Central',
     minPlayers: 2,
     maxPlayers: 4,
+    jugadores_min: 2,
+    jugadores_max: 4,
     duration: '30 min',
+    duracion_min: 30,
     complexity: 3,
     volume_number: 1,
     pages: 1,
@@ -50,10 +53,13 @@ export function EntityFormView() {
     image: '',
     description: '',
     ...modalState.item,
+    title: modalState.item?.title || modalState.item?.nombre || '',
+    nombre: modalState.item?.nombre || modalState.item?.title || ''
   }));
 
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const escape = event => {
@@ -66,7 +72,12 @@ export function EntityFormView() {
 
   const change = event => {
     const { name, value } = event.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm(prev => ({
+      ...prev,
+      [name]: value,
+      ...(name === 'title' ? { nombre: value } : {}),
+      ...(name === 'nombre' ? { title: value } : {})
+    }));
   };
 
   const field = (name, label, inputType = 'text', required = false) => (
@@ -87,11 +98,12 @@ export function EntityFormView() {
     </div>
   );
 
-  function save(event) {
+  async function save(event) {
     event.preventDefault();
     setError('');
 
-    if (!form.title.trim()) {
+    const titleVal = form.title?.trim() || form.nombre?.trim();
+    if (!titleVal) {
       setError('Ingresá el nombre de la entidad.');
       return;
     }
@@ -99,7 +111,7 @@ export function EntityFormView() {
     if (
       (data[type] || []).some(
         item =>
-          item.code?.toLowerCase() === form.code.trim().toLowerCase() &&
+          item.code?.toLowerCase() === form.code?.trim().toLowerCase() &&
           item.id !== form.id
       )
     ) {
@@ -107,10 +119,10 @@ export function EntityFormView() {
       return;
     }
 
-    if (
-      type === 'boardgames' &&
-      Number(form.minPlayers) > Number(form.maxPlayers)
-    ) {
+    const minP = Number(form.minPlayers || form.jugadores_min || 1);
+    const maxP = Number(form.maxPlayers || form.jugadores_max || 1);
+
+    if (type === 'boardgames' && minP > maxP) {
       setError('El máximo de jugadores debe ser mayor o igual al mínimo.');
       return;
     }
@@ -128,29 +140,46 @@ export function EntityFormView() {
       return;
     }
 
-    const item = {
+    const durParsed = parseInt(String(form.duration || form.duracion_min || '30').replace(/\D/g, ''), 10) || 30;
+
+    const itemPayload = {
       ...form,
-      code: form.code.trim(),
-      title: form.title.trim(),
-      minPlayers: Number(form.minPlayers),
-      maxPlayers: Number(form.maxPlayers),
+      id: form.id,
+      code: form.code?.trim(),
+      title: titleVal,
+      nombre: titleVal,
+      descripcion: form.description || form.descripcion || '',
+      minPlayers: minP,
+      maxPlayers: maxP,
+      jugadores_min: minP,
+      jugadores_max: maxP,
+      duration: `${durParsed} min`,
+      duracion_min: durParsed,
       price: Number(form.price || 0),
     };
 
     if (type === 'comics') {
-      item.volume_number = Number(form.volume_number);
-      item.pages = Number(form.pages);
-      item.copies = Number(form.copies);
-      item.synopsis = form.synopsis?.trim() || '';
-      item.volumes = item.volume_number;
-      item.description = item.synopsis;
+      itemPayload.volume_number = Number(form.volume_number);
+      itemPayload.pages = Number(form.pages);
+      itemPayload.copies = Number(form.copies);
+      itemPayload.synopsis = form.synopsis?.trim() || '';
+      itemPayload.volumes = itemPayload.volume_number;
+      itemPayload.description = itemPayload.synopsis;
     }
 
-    const saved = editing
-      ? updateItem(type, item)
-      : addItem(type, item);
+    setSaving(true);
 
-    if (saved) closeModal();
+    try {
+      const success = editing
+        ? await updateItem(type, itemPayload)
+        : await addItem(type, itemPayload);
+
+      if (success) closeModal();
+    } catch (err) {
+      setError(err.message || 'Ocurrió un error al guardar los cambios.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   function upload(file) {
@@ -277,7 +306,7 @@ export function EntityFormView() {
             id="entity-code"
             className="form-input sku-input"
             name="code"
-            value={form.code}
+            value={form.code || ''}
             required
             onChange={change}
           />
@@ -323,7 +352,7 @@ export function EntityFormView() {
               id="entity-status"
               className="form-select"
               name="status"
-              value={form.status}
+              value={form.status || 'disponible'}
               onChange={change}
             >
               <option value="disponible">Disponible</option>
@@ -356,7 +385,7 @@ export function EntityFormView() {
               {field('maxPlayers', 'MÁX. JUGADORES', 'number', true)}
             </div>
 
-            {field('duration', 'DURACIÓN', 'text', true)}
+            {field('duration', 'DURACIÓN (ej: 45 min)', 'text', true)}
 
             <label className="section-small-label">
               COMPLEJIDAD DE REGLAS · {form.complexity}/5
@@ -437,17 +466,18 @@ export function EntityFormView() {
             type="button"
             className="btn-secondary"
             onClick={closeModal}
+            disabled={saving}
           >
             <Trash2 size={15} /> Descartar
           </button>
 
           <button
             className="btn-primary"
-            disabled={uploading}
+            disabled={uploading || saving}
             type="submit"
           >
             <Save size={16} />
-            {uploading ? 'Procesando…' : 'GUARDAR CAMBIOS'}
+            {saving ? 'Guardando en Servidor…' : uploading ? 'Procesando…' : 'GUARDAR CAMBIOS'}
           </button>
         </div>
       </form>
