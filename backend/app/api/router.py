@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.routes import auth, health, activities, activity_types, health, mangas_comics, categorias_juego, dificultades, juegos, regla,
+from app.api.routes import auth, health, activities, activity_types, health, mangas_comics, categorias_juego, dificultades, juegos, regla
 
 api_router = APIRouter()
 api_router.include_router(auth.router)

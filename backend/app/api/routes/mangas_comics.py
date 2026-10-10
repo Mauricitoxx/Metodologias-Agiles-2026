@@ -14,6 +14,8 @@ from app.services.manga_comic import (
     deactivate_manga_comic,
     get_manga_comic,
     list_manga_comics,
+    list_all_manga_comics,
+    reactivate_manga_comic,
     update_manga_comic,
 )
 
@@ -44,6 +46,16 @@ def list_mangas(
     db: Session = Depends(get_db),
 ):
     return list_manga_comics(db)
+
+@router.get(
+    "/admin/todos",
+    response_model=list[MangaComicResponse],
+)
+def list_all_mangas_admin(
+    db: Session = Depends(get_db),
+    admin=Depends(get_current_admin),
+):
+    return list_all_manga_comics(db)
 
 
 @router.get(
@@ -80,3 +92,14 @@ def deactivate_manga(
     admin=Depends(get_current_admin),
 ):
     return deactivate_manga_comic(db, manga_id)
+
+@router.patch(
+    "/{manga_id}/reactivar",
+    response_model=MangaComicResponse,
+)
+def reactivate_manga(
+    manga_id: int,
+    db: Session = Depends(get_db),
+    admin=Depends(get_current_admin),
+):
+    return reactivate_manga_comic(db, manga_id)

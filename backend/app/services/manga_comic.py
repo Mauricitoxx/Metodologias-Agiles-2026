@@ -128,7 +128,14 @@ def list_manga_comics(db: Session) -> list[MangaComic]:
         .order_by(MangaComic.title, MangaComic.volume_number)
         .all()
     )
-
+#Agrego esta funcion solo para el admin 
+def list_all_manga_comics(db: Session) -> list[MangaComic]:
+    """Devuelve todos los mangas y cómics, activos e inactivos, para administración."""
+    return (
+        db.query(MangaComic)
+        .order_by(MangaComic.title, MangaComic.volume_number)
+        .all()
+    )
 
 def get_manga_comic(
     db: Session,
@@ -173,4 +180,50 @@ def deactivate_manga_comic(
 
     return manga
 
+
+def reactivate_manga_comic(
+    db: Session,
+    manga_id: int,
+) -> MangaComic:
+    """Reactiva un manga o cómic dado de baja."""
+    manga = (
+        db.query(MangaComic)
+        .filter(MangaComic.id == manga_id)
+        .first()
+    )
+
+    if manga is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No se encontró un manga o cómic con ese ID.",
+        )
+
+    if manga.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="El manga o cómic ya se encuentra activo.",
+        )
+
+    manga.is_active = True
+
+    try:
+        db.commit()
+        db.refresh(manga)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "No se puede reactivar porque ya existe "
+                "un registro activo con ese título y tomo."
+            ),
+        )
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="No se pudo reactivar el registro. Intentá nuevamente.",
+        )
+
+    return manga
 
