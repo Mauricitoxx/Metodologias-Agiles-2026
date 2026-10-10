@@ -10,7 +10,8 @@ class MangaComicBase(BaseModel):
     copies: int = Field(gt=0)
     #sinopsis opcional
     synopsis: str | None = None
-
+    image: str | None = None
+    
     #reviso que el titulo no sea un espacio vacio
     @field_validator("title")
     @classmethod
