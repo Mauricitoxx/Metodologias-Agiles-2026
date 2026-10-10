@@ -3,6 +3,7 @@ import { storage } from '../services/storage';
 import { AdminContext } from './adminContextInstance';
 import { auth, getSessionToken, clearSessionToken } from '../services/auth';
 import { mangaComicService } from '../services/mangaComicService';
+import { staffService } from '../services/staffService';
 
 export const AdminProvider = ({ children }) => {
   const [data, setData] = useState(() => storage.get());
@@ -96,12 +97,42 @@ useEffect(() => {
     }
   };
 
+  const loadStaff = async () => {
+    const token = getSessionToken();
+    if (!token) return;
+    try {
+      const result = await staffService.list();
+      const admins = (Array.isArray(result) ? result : []).map((item) => ({
+        id: item.id,
+        code: `#USR-${String(item.id).padStart(3, '0')}`,
+        name: item.nombre,
+        email: item.email,
+        role: 'Administrador',
+        status: item.activo ? 'activo' : 'inactivo',
+        avatarEmoji: '🛡️',
+        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+        createdAt: '2026-01-01',
+        isCurrentUser: Boolean(session && (session.id === item.id || session.email === item.email)),
+      }));
+
+      if (!cancelled) {
+        setData((prev) => ({
+          ...prev,
+          admins,
+        }));
+      }
+    } catch {
+      // Si la sesión no es válida, se ignora
+    }
+  };
+
   loadComics();
+  loadStaff();
 
   return () => {
     cancelled = true;
   };
-}, []);
+}, [session]);
 
 
   const toggleTheme = () => {
@@ -162,6 +193,40 @@ const addItem = async (entityType, itemData) => {
       return true;
     } catch (error) {
       showToast(error.message || 'No se pudo crear el manga/cómic.', 'error');
+      return false;
+    }
+  }
+
+  if (entityType === 'admins') {
+    try {
+      const created = await staffService.create({
+        nombre: itemData.name || itemData.nombre,
+        email: itemData.email,
+        password: itemData.password,
+      });
+
+      const newAdmin = {
+        id: created.id,
+        code: `#USR-${String(created.id).padStart(3, '0')}`,
+        name: created.nombre,
+        email: created.email,
+        role: 'Administrador',
+        status: created.activo ? 'activo' : 'inactivo',
+        avatarEmoji: itemData.avatarEmoji || '🛡️',
+        avatar: itemData.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+        createdAt: new Date().toLocaleDateString('en-CA'),
+        isCurrentUser: false,
+      };
+
+      setData((prev) => ({
+        ...prev,
+        admins: [newAdmin, ...(prev.admins || []).filter((a) => a.id !== created.id)],
+      }));
+
+      showToast(`Administrador "${created.nombre}" registrado con éxito`, 'success');
+      return true;
+    } catch (error) {
+      showToast(error.message || 'No se pudo registrar el administrador.', 'error');
       return false;
     }
   }
@@ -230,6 +295,37 @@ const updateItem = async (entityType, updatedItem) => {
       return true;
     } catch (error) {
       showToast(error.message || 'No se pudo actualizar el manga/cómic.', 'error');
+      return false;
+    }
+  }
+
+  if (entityType === 'admins') {
+    try {
+      const updated = await staffService.update(updatedItem.id, {
+        nombre: updatedItem.name || updatedItem.nombre,
+        email: updatedItem.email,
+        password: updatedItem.password || undefined,
+      });
+
+      const normalized = {
+        ...updatedItem,
+        id: updated.id,
+        name: updated.nombre,
+        email: updated.email,
+        status: updated.activo ? 'activo' : 'inactivo',
+      };
+
+      setData((prev) => ({
+        ...prev,
+        admins: (prev.admins || []).map((admin) =>
+          admin.id === normalized.id ? { ...admin, ...normalized } : admin
+        ),
+      }));
+
+      showToast(`Administrador "${updated.nombre}" actualizado`);
+      return true;
+    } catch (error) {
+      showToast(error.message || 'No se pudo actualizar el administrador.', 'error');
       return false;
     }
   }
@@ -310,21 +406,47 @@ const toggleBajaItem = async (entityType, item) => {
     }
   }
 
-  // Mantener la protección del único Superadministrador activo.
   if (entityType === 'admins') {
-    const activeSuperadmins = data.admins.filter(
-      (admin) => admin.role === 'Superadmin' && admin.status === 'activo'
-    );
+    const isBaja = item.status === 'inactivo' || item.activo === false;
 
-    if (
-      item.role === 'Superadmin' &&
-      item.status === 'activo' &&
-      activeSuperadmins.length <= 1
-    ) {
-      showToast(
-        'No puedes dar de baja al único Superadministrador activo.',
-        'error'
-      );
+    try {
+      if (isBaja) {
+        const result = await staffService.activate(item.id);
+        const updated = {
+          ...item,
+          status: 'activo',
+          activo: true,
+        };
+
+        setData((prev) => ({
+          ...prev,
+          admins: (prev.admins || []).map((admin) =>
+            admin.id === item.id ? updated : admin
+          ),
+        }));
+
+        showToast(`Reactivado: ${item.name || item.nombre}`, 'success');
+        return true;
+      }
+
+      const result = await staffService.deactivate(item.id);
+      const updated = {
+        ...item,
+        status: 'inactivo',
+        activo: false,
+      };
+
+      setData((prev) => ({
+        ...prev,
+        admins: (prev.admins || []).map((admin) =>
+          admin.id === item.id ? updated : admin
+        ),
+      }));
+
+      showToast(`Dado de baja: ${item.name || item.nombre}`, 'warning');
+      return true;
+    } catch (error) {
+      showToast(error.message || 'No se pudo modificar el estado del administrador.', 'error');
       return false;
     }
   }
