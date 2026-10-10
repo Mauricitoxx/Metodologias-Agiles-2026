@@ -3,6 +3,7 @@ import { storage } from '../services/storage';
 import { AdminContext } from './adminContextInstance';
 import { auth, getSessionToken, clearSessionToken } from '../services/auth';
 import { juegoService } from '../services/juegoService';
+import { mangaComicService } from '../services/mangaComicService';
 
 export const AdminProvider = ({ children }) => {
   const [data, setData] = useState(() => storage.get());
@@ -53,7 +54,7 @@ export const AdminProvider = ({ children }) => {
     setTimeout(() => setNotification(null), 3200);
   };
 
-  // Helper para adaptar respuestas del Backend (API) al formato del Frontend
+  // Helper para adaptar respuestas del Backend de Juegos al formato del Frontend
   const mapJuegoFromBackend = (juego) => ({
     ...juego,
     id: juego.id,
@@ -92,6 +93,46 @@ export const AdminProvider = ({ children }) => {
       cargarJuegosBackend();
     }
   }, [session, catalogSubTab, cargarJuegosBackend]);
+
+  // Cargar mangas y cómics desde la API
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadComics = async () => {
+      try {
+        const result = await mangaComicService.listAllAdmin();
+
+        const comics = (Array.isArray(result) ? result : []).map((item) => ({
+          ...item,
+          code: `#MC-${String(item.id).padStart(3, '0')}`,
+          status: item.is_active ? 'disponible' : 'baja',
+          volumes: item.volume_number,
+          description: item.synopsis || '',
+          image: item.image || '',
+        }));
+
+        if (!cancelled) {
+          setData((prev) => ({
+            ...prev,
+            comics,
+          }));
+        }
+      } catch (error) {
+        if (!cancelled) {
+          showToast(
+            `No se pudieron cargar los mangas y cómics: ${error.message}`,
+            'error'
+          );
+        }
+      }
+    };
+
+    loadComics();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Persist local data on change (para otras entidades en LocalStorage)
   const persistData = (updater) => {
@@ -144,6 +185,7 @@ export const AdminProvider = ({ children }) => {
   // ==========================================
 
   const addItem = async (entityType, itemData) => {
+    // 1. Juegos de mesa (API)
     if (entityType === 'boardgames' || entityType === 'juegos') {
       try {
         const payload = {
@@ -170,9 +212,35 @@ export const AdminProvider = ({ children }) => {
       }
     }
 
-    // Lógica para otras entidades (LocalStorage)
+    // 2. Mangas y Cómics (API)
+    if (entityType === 'comics') {
+      try {
+        const created = await mangaComicService.create(itemData);
+
+        const newItem = {
+          ...created,
+          code: `#MC-${String(created.id).padStart(3, '0')}`,
+          status: created.is_active ? 'disponible' : 'baja',
+          volumes: created.volume_number,
+          description: created.synopsis || '',
+          image: created.image || '',
+        };
+
+        setData((prev) => ({
+          ...prev,
+          comics: [newItem, ...(prev.comics || []).filter((item) => item.id !== created.id)],
+        }));
+
+        showToast(`Manga/cómic "${created.title}" creado correctamente`);
+        return true;
+      } catch (error) {
+        showToast(error.message || 'No se pudo crear el manga/cómic.', 'error');
+        return false;
+      }
+    }
+
+    // 3. Lógica para otras entidades (LocalStorage)
     const prefixMap = {
-      comics: '#MC-',
       cards: '#TCG-',
       buffet: '#BF-',
       admins: '#USR-'
@@ -201,67 +269,99 @@ export const AdminProvider = ({ children }) => {
   };
 
   const updateItem = async (entityType, updatedItem) => {
-  if (entityType === 'boardgames' || entityType === 'juegos') {
-    try {
-      const payload = {
-        nombre: updatedItem.nombre || updatedItem.title || updatedItem.name,
-        descripcion: updatedItem.descripcion || updatedItem.description || '',
-        cantidad: updatedItem.cantidad !== undefined ? Number(updatedItem.cantidad) : undefined,
-        disponibilidad: updatedItem.disponibilidad,
-        duracion_min: updatedItem.duracion_min ? Number(updatedItem.duracion_min) : undefined,
-        edad_recomendada: updatedItem.edad_recomendada ? Number(updatedItem.edad_recomendada) : undefined,
-        jugadores_min: updatedItem.jugadores_min ? Number(updatedItem.jugadores_min) : undefined,
-        jugadores_max: updatedItem.jugadores_max ? Number(updatedItem.jugadores_max) : undefined,
-        video_url: updatedItem.video_url || null,
-        dificultad_id: updatedItem.dificultad_id ? Number(updatedItem.dificultad_id) : undefined,
-        categoria_ids: updatedItem.categoria_ids
-      };
+    // 1. Juegos de mesa (API)
+    if (entityType === 'boardgames' || entityType === 'juegos') {
+      try {
+        const payload = {
+          nombre: updatedItem.nombre || updatedItem.title || updatedItem.name,
+          descripcion: updatedItem.descripcion || updatedItem.description || '',
+          cantidad: updatedItem.cantidad !== undefined ? Number(updatedItem.cantidad) : undefined,
+          disponibilidad: updatedItem.disponibilidad,
+          duracion_min: updatedItem.duracion_min ? Number(updatedItem.duracion_min) : undefined,
+          edad_recomendada: updatedItem.edad_recomendada ? Number(updatedItem.edad_recomendada) : undefined,
+          jugadores_min: updatedItem.jugadores_min ? Number(updatedItem.jugadores_min) : undefined,
+          jugadores_max: updatedItem.jugadores_max ? Number(updatedItem.jugadores_max) : undefined,
+          video_url: updatedItem.video_url || null,
+          dificultad_id: updatedItem.dificultad_id ? Number(updatedItem.dificultad_id) : undefined,
+          categoria_ids: updatedItem.categoria_ids
+        };
 
-      // 1. Enviamos los cambios al backend FastAPI
-      const juegoActualizadoBackend = await juegoService.actualizar(updatedItem.id, payload);
+        const juegoActualizadoBackend = await juegoService.actualizar(updatedItem.id, payload);
+        const juegoMapeado = mapJuegoFromBackend(juegoActualizadoBackend);
 
-      // 2. Mapeamos la respuesta del backend al formato que entienden las Cards del Frontend
-      const juegoMapeado = mapJuegoFromBackend(juegoActualizadoBackend);
+        setData((prev) => ({
+          ...prev,
+          boardgames: (prev.boardgames || []).map((juego) =>
+            juego.id === juegoMapeado.id ? juegoMapeado : juego
+          )
+        }));
 
-      // 3. Actualizamos el estado local inmediatamente para forzar el re-render en CatalogView
-      setData((prev) => ({
-        ...prev,
-        boardgames: (prev.boardgames || []).map((juego) =>
-          juego.id === juegoMapeado.id ? juegoMapeado : juego
-        )
-      }));
-
-      showToast(`Juego "${juegoMapeado.title}" actualizado con éxito`);
-      return true;
-    } catch (error) {
-      showToast(error.message, 'error');
-      return false;
+        showToast(`Juego "${juegoMapeado.title}" actualizado con éxito`);
+        return true;
+      } catch (error) {
+        showToast(error.message, 'error');
+        return false;
+      }
     }
-  }
 
-  // Lógica para el resto de entidades en LocalStorage
-  const saved = persistData((prev) => ({
-    ...prev,
-    [entityType]: (prev[entityType] || []).map((item) =>
-      item.id === updatedItem.id ? { ...item, ...updatedItem } : item
-    )
-  }));
-  if (!saved) return false;
-  showToast(`Registro ${updatedItem.code || updatedItem.title || updatedItem.name} actualizado`);
-  return true;
-};
+    // 2. Mangas y Cómics (API)
+    if (entityType === 'comics') {
+      try {
+        const updated = await mangaComicService.update(updatedItem.id, {
+          title: updatedItem.title,
+          volume_number: Number(updatedItem.volume_number),
+          pages: Number(updatedItem.pages),
+          copies: Number(updatedItem.copies),
+          synopsis: updatedItem.synopsis || null,
+          image: updatedItem.image || null,
+        });
+
+        const normalized = {
+          ...updated,
+          code: `#MC-${String(updated.id).padStart(3, '0')}`,
+          status: updated.is_active ? 'disponible' : 'baja',
+          volumes: updated.volume_number,
+          description: updated.synopsis || '',
+          image: updated.image || '',
+        };
+
+        setData((prev) => ({
+          ...prev,
+          comics: (prev.comics || []).map((item) =>
+            item.id === normalized.id ? normalized : item
+          ),
+        }));
+
+        showToast(`Registro "${updated.title}" actualizado`);
+        return true;
+      } catch (error) {
+        showToast(error.message || 'No se pudo actualizar el manga/cómic.', 'error');
+        return false;
+      }
+    }
+
+    // 3. Lógica para el resto de entidades en LocalStorage
+    const saved = persistData((prev) => ({
+      ...prev,
+      [entityType]: (prev[entityType] || []).map((item) =>
+        item.id === updatedItem.id ? { ...item, ...updatedItem } : item
+      )
+    }));
+    if (!saved) return false;
+    showToast(`Registro ${updatedItem.code || updatedItem.title || updatedItem.name} actualizado`);
+    return true;
+  };
 
   const toggleBajaItem = async (entityType, item) => {
+    // 1. Juegos de mesa (API)
     if (entityType === 'boardgames' || entityType === 'juegos') {
       try {
         const esBajaActual = item.activo === false || item.status === 'baja';
         
         if (esBajaActual) {
-          // Reactivar juego usando update
           await juegoService.actualizar(item.id, { activo: true });
           showToast(`Reactivado: ${item.nombre || item.title}`);
         } else {
-          // Dar de baja lógica a través del endpoint DELETE
           await juegoService.eliminar(item.id, true);
           showToast(`Dado de baja: ${item.nombre || item.title}`, 'warning');
         }
@@ -274,11 +374,69 @@ export const AdminProvider = ({ children }) => {
       }
     }
 
-    // Lógica para otras entidades (Admins, Comics, etc.)
+    // 2. Mangas y Cómics (API)
+    if (entityType === 'comics') {
+      const isBaja = item.status === 'baja' || item.is_active === false;
+
+      try {
+        if (isBaja) {
+          const result = await mangaComicService.reactivate(item.id);
+
+          const updated = {
+            ...item,
+            ...(result && typeof result === 'object' ? result : {}),
+            status: 'disponible',
+            is_active: true,
+          };
+
+          setData((prev) => ({
+            ...prev,
+            comics: (prev.comics || []).map((comic) =>
+              comic.id === item.id ? updated : comic
+            ),
+          }));
+
+          showToast(`Reactivado: ${item.title}`, 'success');
+          return true;
+        }
+
+        const result = await mangaComicService.deactivate(item.id);
+
+        const updated = {
+          ...item,
+          ...(result && typeof result === 'object' ? result : {}),
+          status: 'baja',
+          is_active: false,
+        };
+
+        setData((prev) => ({
+          ...prev,
+          comics: (prev.comics || []).map((comic) =>
+            comic.id === item.id ? updated : comic
+          ),
+        }));
+
+        showToast(`Dado de baja: ${item.title}`, 'warning');
+        return true;
+      } catch (error) {
+        showToast(
+          error.message || (
+            isBaja
+              ? 'No se pudo reactivar el manga/cómic.'
+              : 'No se pudo dar de baja el manga/cómic.'
+          ),
+          'error'
+        );
+        return false;
+      }
+    }
+
+    // 3. Protección para el único Superadministrador activo
     if (entityType === 'admins') {
       const activeSuperadmins = data.admins?.filter(
-        (a) => a.role === 'Superadmin' && a.status === 'activo'
+        (admin) => admin.role === 'Superadmin' && admin.status === 'activo'
       ) || [];
+
       if (
         item.role === 'Superadmin' &&
         item.status === 'activo' &&
@@ -289,6 +447,7 @@ export const AdminProvider = ({ children }) => {
       }
     }
 
+    // 4. Bajas para el resto de entidades (LocalStorage)
     const isBaja = item.status === 'baja' || item.status === 'inactivo';
     const newStatus = isBaja
       ? entityType === 'admins' ? 'activo' : 'disponible'
@@ -296,18 +455,20 @@ export const AdminProvider = ({ children }) => {
 
     const saved = persistData((prev) => ({
       ...prev,
-      [entityType]: (prev[entityType] || []).map((el) =>
-        el.id === item.id ? { ...el, status: newStatus } : el
-      )
+      [entityType]: (prev[entityType] || []).map((element) =>
+        element.id === item.id ? { ...element, status: newStatus } : element
+      ),
     }));
 
     if (!saved) return false;
+
     showToast(
       isBaja
         ? `Reactivado: ${item.title || item.name}`
         : `Dado de baja: ${item.title || item.name}`,
       isBaja ? 'success' : 'warning'
     );
+
     return true;
   };
 
