@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { storage } from '../services/storage';
 import { AdminContext } from './adminContextInstance';
 import { auth, getSessionToken, clearSessionToken } from '../services/auth';
+import { juegoService } from '../services/juegoService';
 
 export const AdminProvider = ({ children }) => {
   const [data, setData] = useState(() => storage.get());
@@ -9,6 +10,23 @@ export const AdminProvider = ({ children }) => {
   const [authLoading, setAuthLoading] = useState(() => Boolean(getSessionToken()));
   const [authError, setAuthError] = useState('');
   const [authRetry, setAuthRetry] = useState(0);
+
+  const [currentTab, setCurrentTab] = useState('hub'); // 'hub' | 'inventario' | 'staff'
+  const [catalogSubTab, setCatalogSubTab] = useState('boardgames'); // 'boardgames' | 'comics' | 'cards' | 'buffet' | 'actividades'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('todos'); // 'todos' | 'disponibles' | 'en_mesa' | 'baja'
+  const [theme, setTheme] = useState(() => localStorage.getItem('frikioteca_theme') || 'light');
+  const [loadingJuegos, setLoadingJuegos] = useState(false);
+
+  // Modal State for Create, Edit, Detail (Ficha), Confirm Baja
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    mode: 'create', // 'create' | 'edit' | 'detail' | 'confirm_baja'
+    entityType: 'boardgames',
+    item: null
+  });
+
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -23,21 +41,6 @@ export const AdminProvider = ({ children }) => {
     }).finally(() => { if (!cancelled) setAuthLoading(false); });
     return () => { cancelled = true; };
   }, [authRetry]);
-  const [currentTab, setCurrentTab] = useState('hub'); // 'hub' | 'inventario' | 'staff'
-  const [catalogSubTab, setCatalogSubTab] = useState('boardgames'); // 'boardgames' | 'comics' | 'cards' | 'buffet' | 'actividades'
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('todos'); // 'todos' | 'disponibles' | 'en_mesa' | 'baja'
-  const [theme, setTheme] = useState(() => localStorage.getItem('frikioteca_theme') || 'light');
-
-  // Modal State for Create, Edit, Detail (Ficha), Confirm Baja
-  const [modalState, setModalState] = useState({
-    isOpen: false,
-    mode: 'create', // 'create' | 'edit' | 'detail' | 'confirm_baja'
-    entityType: 'boardgames',
-    item: null
-  });
-
-  const [notification, setNotification] = useState(null);
 
   // Sync theme
   useEffect(() => {
@@ -45,7 +48,52 @@ export const AdminProvider = ({ children }) => {
     localStorage.setItem('frikioteca_theme', theme);
   }, [theme]);
 
-  // Persist data on change
+  const showToast = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3200);
+  };
+
+  // Helper para adaptar respuestas del Backend (API) al formato del Frontend
+  const mapJuegoFromBackend = (juego) => ({
+    ...juego,
+    id: juego.id,
+    title: juego.nombre,
+    name: juego.nombre,
+    description: juego.descripcion,
+    category: juego.categorias?.map((c) => c.nombre).join(', ') || 'Sin categoría',
+    status: juego.activo ? (juego.disponibilidad ? 'disponible' : 'en_mesa') : 'baja',
+    code: `#BG-${String(juego.id).padStart(3, '0')}`,
+    players: `${juego.jugadores_min}-${juego.jugadores_max} jug.`,
+    duration: `${juego.duracion_min} min`,
+    age: `+${juego.edad_recomendada}`
+  });
+
+  // Cargar juegos de la API de FastAPI
+  const cargarJuegosBackend = useCallback(async () => {
+    setLoadingJuegos(true);
+    try {
+      const juegosAPI = await juegoService.listar({ solo_activos: false });
+      const juegosMapeados = juegosAPI.map(mapJuegoFromBackend);
+
+      setData((prev) => ({
+        ...prev,
+        boardgames: juegosMapeados
+      }));
+    } catch (error) {
+      showToast(`Error al cargar juegos desde la API: ${error.message}`, 'error');
+    } finally {
+      setLoadingJuegos(false);
+    }
+  }, []);
+
+  // Cargar juegos al iniciar o cambiar a la pestaña de inventario de juegos
+  useEffect(() => {
+    if (session && catalogSubTab === 'boardgames') {
+      cargarJuegosBackend();
+    }
+  }, [session, catalogSubTab, cargarJuegosBackend]);
+
+  // Persist local data on change (para otras entidades en LocalStorage)
   const persistData = (updater) => {
     try {
       const next = typeof updater === 'function' ? updater(data) : updater;
@@ -58,11 +106,6 @@ export const AdminProvider = ({ children }) => {
     }
   };
 
-  const showToast = (message, type = 'success') => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 3200);
-  };
-
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
@@ -73,6 +116,7 @@ export const AdminProvider = ({ children }) => {
     setAuthError('');
     setCurrentTab('hub');
   };
+
   const logout = async () => {
     const token = getSessionToken();
     try {
@@ -90,17 +134,44 @@ export const AdminProvider = ({ children }) => {
     return true;
   };
 
-  // Current active user
   const currentUser = useMemo(() => {
-    const demo = data.admins.find((a) => a.isCurrentUser) || data.admins[0];
+    const demo = data.admins?.find((a) => a.isCurrentUser) || data.admins?.[0];
     return session ? { ...demo, name: session.nombre, email: session.email, role: 'Administrador' } : demo;
   }, [data.admins, session]);
 
-  // CRUD Operations
-  const addItem = (entityType, itemData) => {
-    let newCode = '';
+  // ==========================================
+  // OPERACIONES CRUD (CONEXIÓN API / LOCAL)
+  // ==========================================
+
+  const addItem = async (entityType, itemData) => {
+    if (entityType === 'boardgames' || entityType === 'juegos') {
+      try {
+        const payload = {
+          nombre: itemData.nombre || itemData.title || itemData.name,
+          descripcion: itemData.descripcion || itemData.description || '',
+          cantidad: Number(itemData.cantidad) || 1,
+          disponibilidad: itemData.disponibilidad !== undefined ? itemData.disponibilidad : true,
+          duracion_min: Number(itemData.duracion_min) || 30,
+          edad_recomendada: Number(itemData.edad_recomendada) || 8,
+          jugadores_min: Number(itemData.jugadores_min) || 1,
+          jugadores_max: Number(itemData.jugadores_max) || 4,
+          video_url: itemData.video_url || null,
+          dificultad_id: itemData.dificultad_id ? Number(itemData.dificultad_id) : null,
+          categoria_ids: itemData.categoria_ids || []
+        };
+
+        const nuevoJuegoAPI = await juegoService.crear(payload);
+        showToast(`Juego "${nuevoJuegoAPI.nombre}" dado de alta con éxito`);
+        await cargarJuegosBackend();
+        return true;
+      } catch (error) {
+        showToast(error.message, 'error');
+        return false;
+      }
+    }
+
+    // Lógica para otras entidades (LocalStorage)
     const prefixMap = {
-      boardgames: '#BG-',
       comics: '#MC-',
       cards: '#TCG-',
       buffet: '#BF-',
@@ -108,7 +179,7 @@ export const AdminProvider = ({ children }) => {
     };
 
     const count = (data[entityType]?.length || 0) + 1;
-    newCode = `${prefixMap[entityType] || '#IT-'}${String(count).padStart(3, '0')}`;
+    const newCode = `${prefixMap[entityType] || '#IT-'}${String(count).padStart(3, '0')}`;
 
     const newItem = {
       ...itemData,
@@ -129,25 +200,85 @@ export const AdminProvider = ({ children }) => {
     return true;
   };
 
-  const updateItem = (entityType, updatedItem) => {
-    const saved = persistData((prev) => ({
-      ...prev,
-      [entityType]: (prev[entityType] || []).map((item) =>
-        item.id === updatedItem.id ? { ...item, ...updatedItem } : item
-      )
-    }));
-    if (!saved) return false;
-    showToast(`Registro ${updatedItem.code || updatedItem.title || updatedItem.name} actualizado`);
-    return true;
-  };
+  const updateItem = async (entityType, updatedItem) => {
+  if (entityType === 'boardgames' || entityType === 'juegos') {
+    try {
+      const payload = {
+        nombre: updatedItem.nombre || updatedItem.title || updatedItem.name,
+        descripcion: updatedItem.descripcion || updatedItem.description || '',
+        cantidad: updatedItem.cantidad !== undefined ? Number(updatedItem.cantidad) : undefined,
+        disponibilidad: updatedItem.disponibilidad,
+        duracion_min: updatedItem.duracion_min ? Number(updatedItem.duracion_min) : undefined,
+        edad_recomendada: updatedItem.edad_recomendada ? Number(updatedItem.edad_recomendada) : undefined,
+        jugadores_min: updatedItem.jugadores_min ? Number(updatedItem.jugadores_min) : undefined,
+        jugadores_max: updatedItem.jugadores_max ? Number(updatedItem.jugadores_max) : undefined,
+        video_url: updatedItem.video_url || null,
+        dificultad_id: updatedItem.dificultad_id ? Number(updatedItem.dificultad_id) : undefined,
+        categoria_ids: updatedItem.categoria_ids
+      };
 
-  // Toggle Baja / Desactivar
-  const toggleBajaItem = (entityType, item) => {
-    // Safety check for admins: cannot delete/deactivate self if last active superadmin
+      // 1. Enviamos los cambios al backend FastAPI
+      const juegoActualizadoBackend = await juegoService.actualizar(updatedItem.id, payload);
+
+      // 2. Mapeamos la respuesta del backend al formato que entienden las Cards del Frontend
+      const juegoMapeado = mapJuegoFromBackend(juegoActualizadoBackend);
+
+      // 3. Actualizamos el estado local inmediatamente para forzar el re-render en CatalogView
+      setData((prev) => ({
+        ...prev,
+        boardgames: (prev.boardgames || []).map((juego) =>
+          juego.id === juegoMapeado.id ? juegoMapeado : juego
+        )
+      }));
+
+      showToast(`Juego "${juegoMapeado.title}" actualizado con éxito`);
+      return true;
+    } catch (error) {
+      showToast(error.message, 'error');
+      return false;
+    }
+  }
+
+  // Lógica para el resto de entidades en LocalStorage
+  const saved = persistData((prev) => ({
+    ...prev,
+    [entityType]: (prev[entityType] || []).map((item) =>
+      item.id === updatedItem.id ? { ...item, ...updatedItem } : item
+    )
+  }));
+  if (!saved) return false;
+  showToast(`Registro ${updatedItem.code || updatedItem.title || updatedItem.name} actualizado`);
+  return true;
+};
+
+  const toggleBajaItem = async (entityType, item) => {
+    if (entityType === 'boardgames' || entityType === 'juegos') {
+      try {
+        const esBajaActual = item.activo === false || item.status === 'baja';
+        
+        if (esBajaActual) {
+          // Reactivar juego usando update
+          await juegoService.actualizar(item.id, { activo: true });
+          showToast(`Reactivado: ${item.nombre || item.title}`);
+        } else {
+          // Dar de baja lógica a través del endpoint DELETE
+          await juegoService.eliminar(item.id, true);
+          showToast(`Dado de baja: ${item.nombre || item.title}`, 'warning');
+        }
+
+        await cargarJuegosBackend();
+        return true;
+      } catch (error) {
+        showToast(error.message, 'error');
+        return false;
+      }
+    }
+
+    // Lógica para otras entidades (Admins, Comics, etc.)
     if (entityType === 'admins') {
-      const activeSuperadmins = data.admins.filter(
+      const activeSuperadmins = data.admins?.filter(
         (a) => a.role === 'Superadmin' && a.status === 'activo'
-      );
+      ) || [];
       if (
         item.role === 'Superadmin' &&
         item.status === 'activo' &&
@@ -160,12 +291,8 @@ export const AdminProvider = ({ children }) => {
 
     const isBaja = item.status === 'baja' || item.status === 'inactivo';
     const newStatus = isBaja
-      ? entityType === 'admins'
-        ? 'activo'
-        : 'disponible'
-      : entityType === 'admins'
-      ? 'inactivo'
-      : 'baja';
+      ? entityType === 'admins' ? 'activo' : 'disponible'
+      : entityType === 'admins' ? 'inactivo' : 'baja';
 
     const saved = persistData((prev) => ({
       ...prev,
@@ -184,7 +311,7 @@ export const AdminProvider = ({ children }) => {
     return true;
   };
 
-  // Modal helpers
+  // Helper modals
   const openCreateModal = (entityType) => {
     setModalState({
       isOpen: true,
@@ -239,6 +366,8 @@ export const AdminProvider = ({ children }) => {
         login,
         logout,
         data,
+        loadingJuegos,
+        cargarJuegosBackend,
         currentTab,
         setCurrentTab,
         catalogSubTab,
