@@ -18,6 +18,12 @@ from app.schemas.juego import (
     JuegoRead,
     JuegoUpdate,
 )
+from app.schemas.administrador import (
+    AdministradorBase,
+    AdministradorCreate,
+    AdministradorRead,
+    AdministradorUpdate,
+)
 from app.schemas.regla import (
     ReglaBase,
     ReglaCreate,
@@ -26,6 +32,11 @@ from app.schemas.regla import (
 )
 
 __all__ = [
+    # Administrador
+    "AdministradorBase",
+    "AdministradorCreate",
+    "AdministradorRead",
+    "AdministradorUpdate",
     # CategoriaJuego
     "CategoriaJuegoBase",
     "CategoriaJuegoCreate",
