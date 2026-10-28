@@ -19,3 +19,4 @@ class CategoriaJuegoRead(CategoriaJuegoBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    juegos_count: int = 0

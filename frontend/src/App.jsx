@@ -11,6 +11,7 @@ import { Subheader } from './components/layout/Subheader';
 import { AdminHubView } from './views/AdminHubView';
 import { CatalogView } from './views/CatalogView';
 import { AdminUsersView } from './views/AdminUsersView';
+import { CategoriasView } from './views/CategoriasView';
 import { LoginView } from './views/LoginView';
 import { EntityFormView } from './views/EntityFormView';
 import { ItemDetailModal } from './components/modals/ItemDetailModal';
@@ -59,7 +60,8 @@ const AdminDashboard = () => {
     !isEntityForm &&
     (location.pathname === '/admin/inventario' ||
       location.pathname === '/admin/catalogo' ||
-      location.pathname === '/admin/staff');
+      location.pathname === '/admin/staff' ||
+      location.pathname === '/admin/categorias');
 
   return (
     <div className="app-container">
@@ -85,6 +87,9 @@ const AdminDashboard = () => {
 
             {/* Alias /admin/catalogo */}
             <Route path="/admin/catalogo" element={<Navigate to="/admin/inventario" replace />} />
+
+            {/* Gestor de Categorías */}
+            <Route path="/admin/categorias" element={<CategoriasView />} />
 
             {/* Gestor de Staff */}
             <Route path="/admin/staff" element={<AdminUsersView />} />

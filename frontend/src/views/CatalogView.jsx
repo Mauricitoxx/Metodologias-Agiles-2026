@@ -1,11 +1,13 @@
 import React, { useMemo } from 'react';
-import { Search, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Plus, Tags } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
 import { GameCard } from '../components/cards/GameCard';
 import { BuffetCard } from '../components/cards/BuffetCard';
 import { ActivitiesView } from './ActivitiesView';
 
 export const CatalogView = () => {
+  const navigate = useNavigate();
   const {
     data,
     catalogSubTab,
@@ -128,16 +130,30 @@ export const CatalogView = () => {
     <div className="view-content-wrapper">
       {entitySelector}
 
-      {/* 2. BOTÓN PRINCIPAL DE ALTA (Amarillo Stitch) */}
-      <button
-        className="primary-cta-yellow-btn"
-        onClick={() => openCreateModal(catalogSubTab)}
-      >
-        <span className="cta-icon-circle">
-          <Plus size={18} strokeWidth={3} />
-        </span>
-        NUEVO {getSubTabLabel()}
-      </button>
+      {/* 2. BOTONES DE ACCIÓN */}
+      <div className="catalog-action-row">
+        <button
+          className="primary-cta-yellow-btn"
+          onClick={() => openCreateModal(catalogSubTab)}
+        >
+          <span className="cta-icon-circle">
+            <Plus size={18} strokeWidth={3} />
+          </span>
+          NUEVO {getSubTabLabel()}
+        </button>
+
+        {catalogSubTab === 'boardgames' && (
+          <button
+            type="button"
+            className="manage-categories-pill-btn"
+            onClick={() => navigate('/admin/categorias')}
+            title="Gestionar categorías de juegos de mesa"
+          >
+            <Tags size={16} strokeWidth={2.4} />
+            <span>CATEGORÍAS</span>
+          </button>
+        )}
+      </div>
 
       {/* 3. BARRA DE BÚSQUEDA */}
       <div className="search-bar-container">

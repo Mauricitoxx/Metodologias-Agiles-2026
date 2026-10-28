@@ -18,4 +18,9 @@ class CategoriaJuego(Base):
     juegos: Mapped[list["Juego"]] = relationship(
         secondary="juegos_categorias",
         back_populates="categorias",
+        lazy="selectin",
     )
+
+    @property
+    def juegos_count(self) -> int:
+        return len(self.juegos) if self.juegos is not None else 0

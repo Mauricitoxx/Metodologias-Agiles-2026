@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Package, IdCard, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Shield, Package, IdCard, Tags, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const AdminHubView = () => {
@@ -51,7 +51,34 @@ export const AdminHubView = () => {
           </button>
         </div>
 
-        {/* Tarjeta 2: STAFF */}
+        {/* Tarjeta 2: CATEGORÍAS */}
+        <div className="admin-hub-card">
+          <div className="admin-hub-card-top">
+            <div className="admin-hub-icon-square icon-categorias">
+              <Tags size={26} strokeWidth={2.2} />
+            </div>
+            <div className="admin-hub-card-info">
+              <h3 className="admin-hub-card-title">CATEGORÍAS</h3>
+              <p className="admin-hub-card-desc">
+                Definí y gestioná las categorías para clasificar los juegos correctamente.
+              </p>
+            </div>
+          </div>
+
+          <div className="admin-hub-card-tags tags-categorias">
+            CLASIFICACIÓN • GÉNEROS • JUEGOS
+          </div>
+
+          <button
+            className="admin-hub-action-btn btn-categorias"
+            onClick={() => navigate('/admin/categorias')}
+          >
+            <span>Gestionar Categorías</span>
+            <ArrowRight size={18} strokeWidth={2.5} />
+          </button>
+        </div>
+
+        {/* Tarjeta 3: STAFF */}
         <div className="admin-hub-card">
           <div className="admin-hub-card-top">
             <div className="admin-hub-icon-square icon-staff">
