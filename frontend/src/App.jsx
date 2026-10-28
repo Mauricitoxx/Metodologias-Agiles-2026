@@ -12,6 +12,7 @@ import { AdminHubView } from './views/AdminHubView';
 import { CatalogView } from './views/CatalogView';
 import { AdminUsersView } from './views/AdminUsersView';
 import { CategoriasView } from './views/CategoriasView';
+import { ClientCatalogView } from './views/ClientCatalogView';
 import { LoginView } from './views/LoginView';
 import { EntityFormView } from './views/EntityFormView';
 import { ItemDetailModal } from './components/modals/ItemDetailModal';
@@ -46,8 +47,17 @@ const AdminDashboard = () => {
     notification
   } = useAdmin();
 
+  // Rutas públicas accesibles sin autenticación
+  if (location.pathname === '/' || location.pathname === '/catalogo') {
+    return <ClientCatalogView />;
+  }
+
+  if (location.pathname === '/login') {
+    if (session) return <Navigate to="/admin" replace />;
+    return <LoginView />;
+  }
+
   if (authLoading) return <div className="login-screen"><p role="status" className="login-content">Verificando sesión…</p></div>;
-  if (location.pathname === '/login') return <LoginView />;
   if (authError) return <div className="login-screen"><div className="login-content"><p role="alert">{authError}</p><button className="login-submit" onClick={retryAuth}>Reintentar</button></div></div>;
   if (!session) return <Navigate to="/login" replace />;
 
