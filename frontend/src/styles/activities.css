@@ -1,0 +1,665 @@
+/* List filters */
+.activity-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.activity-order-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-full);
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.activity-retry {
+  margin: 8px auto 0;
+}
+
+/* Card */
+.activity-title {
+  overflow-wrap: anywhere;
+}
+
+
+.activity-cancelada .activity-title {
+  text-decoration: line-through;
+}
+
+.activity-inactiva {
+  background-color: var(--bg-card-secondary);
+}
+
+/* Only the content is dimmed, so the reactivate button stays clear */
+.activity-inactiva .card-main-content {
+  opacity: 0.65;
+}
+
+
+.activity-card .card-actions-bar .btn-card-action {
+  padding-inline: 8px;
+}
+
+.activity-card .card-actions-bar .btn-card-action:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.activity-card .card-actions-bar .activity-btn-icon {
+  flex: 0 0 40px;
+}
+
+.activity-btn-cancel {
+  color: #b45309;
+}
+
+[data-theme='dark'] .activity-card .btn-icon-restore {
+  background-color: #052e22;
+  color: #34d399;
+}
+
+[data-theme='dark'] .activity-btn-cancel {
+  color: #fbbf24;
+}
+
+.activity-type-row {
+  display: flex;
+  gap: 6px;
+}
+
+.activity-type-row .form-select,
+.activity-type-row .form-input,
+.activity-type-row .app-select {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-type-row + .activity-type-row {
+  margin-top: 6px;
+}
+
+.activity-type-row button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.activity-form-hint {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.activity-image-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.cover-preview svg {
+  color: var(--brand-blue);
+}
+
+.entity-form-view .form-input.is-invalid,
+.entity-form-view .form-select.is-invalid,
+.entity-form-view .form-textarea.is-invalid {
+  border-color: #dc2626;
+  background-color: #fef2f2;
+}
+
+[data-theme='dark'] .entity-form-view .is-invalid {
+  background-color: #2a1215;
+}
+
+.entity-form-view .form-row-2 > .form-group {
+  min-width: 0;
+}
+
+.entity-form-view .form-row-2 .form-input,
+.entity-form-view .form-row-2 .form-select {
+  width: 100%;
+}
+
+.alert-circle-icon.warning {
+  color: #b45309;
+}
+
+.alert-circle-icon.info {
+  color: #0284c7;
+}
+
+.btn-confirm-warning {
+  background-color: #f59e0b;
+  color: #0b1e36;
+}
+
+.btn-confirm-info {
+  background-color: #00509d;
+  color: #ffffff;
+}
+
+.confirm-message {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-main);
+}
+
+/* Form: status section */
+.step-number.green {
+  background: #a7f3d0;
+}
+
+.activity-status-current,
+.activity-status-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.activity-status-preview {
+  margin: 4px 0 0;
+}
+
+.entity-form-view .filter-pill:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.activity-form-notice {
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 7px 10px;
+  border: 1.5px solid #f59e0b;
+  border-radius: var(--radius-sm);
+  background-color: #fffbeb;
+  color: #92400e;
+}
+
+[data-theme='dark'] .activity-form-notice {
+  background-color: #2a1d05;
+  color: #fcd34d;
+}
+
+/* Activity types modal */
+.activity-types-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.activity-types-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+}
+
+.activity-types-row:not(:last-child) {
+  border-bottom: 1px solid var(--border-subtle, var(--border-color));
+}
+
+.activity-types-view,
+.activity-types-confirm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+}
+
+.activity-types-name,
+.activity-types-confirm span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.activity-types-confirm button {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.activity-types-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.activity-types-icon-btn.danger {
+  color: #dc2626;
+}
+
+[data-theme='dark'] .activity-types-icon-btn.danger {
+  color: #f87171;
+}
+
+.form-input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.form-input[type='number']::-webkit-inner-spin-button,
+.form-input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.auto-resize-textarea {
+  resize: none;
+  overflow: hidden;
+}
+
+.datetime-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.datetime-picker-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.datetime-picker-trigger svg {
+  flex-shrink: 0;
+  color: var(--brand-accent-blue);
+}
+
+.datetime-picker-label {
+  flex: 1;
+  min-width: 0;
+}
+
+/* "jue., 15/10/2026" -> "Jue., 15/10/2026" */
+.datetime-picker-label::first-letter {
+  text-transform: uppercase;
+}
+
+.datetime-picker-trigger.is-empty .datetime-picker-label {
+  color: var(--text-muted);
+}
+
+.datetime-picker-chevron {
+  transition: transform 0.15s ease;
+}
+
+.datetime-picker-chevron.open {
+  transform: rotate(180deg);
+}
+
+.datetime-picker-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-card);
+  box-shadow: var(--shadow-retro-sm);
+}
+
+.datetime-picker .rdp-root {
+  --rdp-accent-color: #0b1e36;
+  --rdp-accent-background-color: var(--primary-yellow-light, #fff2b7);
+  --rdp-today-color: var(--brand-accent-blue);
+  --rdp-day-height: 38px;
+  --rdp-day-width: 38px;
+  --rdp-day_button-height: 34px;
+  --rdp-day_button-width: 34px;
+  --rdp-day_button-border-radius: var(--radius-sm);
+  --rdp-nav_button-height: 32px;
+  --rdp-nav_button-width: 32px;
+  --rdp-nav-height: 36px;
+  --rdp-selected-border: 2px solid #0b1e36;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-main);
+}
+
+.datetime-picker .rdp-month_caption {
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.datetime-picker .rdp-weekday {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.datetime-picker .rdp-chevron {
+  fill: var(--text-main);
+}
+
+.datetime-picker .rdp-today:not(.rdp-selected) .rdp-day_button {
+  font-weight: 800;
+}
+
+.datetime-picker .rdp-selected .rdp-day_button {
+  background-color: #0b1e36;
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.datetime-picker .rdp-day_button:hover:not(:disabled) {
+  background-color: var(--bg-card-secondary);
+}
+
+.datetime-picker .rdp-selected .rdp-day_button:hover {
+  background-color: #0b1e36;
+}
+
+[data-theme='dark'] .datetime-picker .rdp-root {
+  --rdp-accent-color: var(--primary-yellow);
+  --rdp-selected-border: 2px solid var(--primary-yellow);
+}
+
+[data-theme='dark'] .datetime-picker .rdp-selected .rdp-day_button,
+[data-theme='dark'] .datetime-picker .rdp-selected .rdp-day_button:hover {
+  background-color: var(--primary-yellow);
+  color: #0b1e36;
+}
+
+.datetime-picker-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-color);
+  font-weight: 800;
+}
+
+.datetime-picker-time .app-select {
+  width: 64px;
+}
+
+.datetime-picker-hs {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.datetime-picker-done {
+  margin-left: auto;
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+/* Card: age */
+
+.age-badge svg {
+  color: var(--brand-accent-blue);
+}
+
+/* Card: cancellation / postponement box (status, scope, original date, reason and undo together) */
+.activity-change-notice {
+  --notice-color: #b45309;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 8px;
+  border-left: 3px solid var(--notice-color);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background-color: #fffbeb;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-main);
+  overflow-wrap: anywhere;
+}
+
+.activity-change-notice.cancelada {
+  --notice-color: #dc2626;
+  background-color: #fef2f2;
+}
+
+[data-theme='dark'] .activity-change-notice {
+  --notice-color: #fbbf24;
+  background-color: #2a1d05;
+}
+
+[data-theme='dark'] .activity-change-notice.cancelada {
+  --notice-color: #f87171;
+  background-color: #2a1215;
+}
+
+.activity-change-notice s {
+  color: var(--text-muted);
+}
+
+.activity-change-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--notice-color);
+}
+
+.activity-change-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+}
+
+.activity-change-scope {
+  font-weight: 700;
+}
+
+.activity-change-undo {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border: 1.5px solid var(--notice-color);
+  border-radius: var(--radius-full);
+  background-color: var(--bg-card);
+  color: var(--notice-color);
+  font-size: 10.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.activity-change-undo:hover {
+  background-color: var(--notice-color);
+  color: var(--bg-card);
+}
+
+/* List: date range filter */
+.activity-filter-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.activity-clear-dates {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--brand-accent-blue);
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.activity-date-range {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.activity-date-range-field {
+  flex: 1 1 140px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* The open calendar takes the whole row so it is never squeezed */
+.activity-date-range-field:has(.datetime-picker-panel) {
+  flex-basis: 100%;
+}
+
+.activity-date-range-label {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: var(--text-muted);
+}
+
+.activity-date-range .datetime-picker-trigger {
+  background-color: var(--bg-card);
+  font-size: 12px;
+}
+
+.app-select {
+  position: relative;
+  min-width: 0;
+}
+
+.app-select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.app-select-trigger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.app-select-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-select-trigger.is-empty .app-select-label {
+  color: var(--text-muted);
+}
+
+.app-select-chevron {
+  flex-shrink: 0;
+  color: var(--brand-accent-blue);
+  transition: transform 0.15s ease;
+}
+
+.app-select-chevron.open {
+  transform: rotate(180deg);
+}
+
+.app-select-list {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  max-height: 220px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-card);
+  box-shadow: var(--shadow-retro-sm);
+}
+
+.app-select-list.down {
+  top: calc(100% + 4px);
+}
+
+.app-select-list.up {
+  bottom: calc(100% + 4px);
+}
+
+.app-select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-main);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.app-select-option.active {
+  background-color: var(--bg-card-secondary);
+}
+
+.app-select-option.selected {
+  background-color: #0b1e36;
+  color: #ffffff;
+  font-weight: 800;
+}
+
+[data-theme='dark'] .app-select-option.active:not(.selected) {
+  background-color: var(--bg-input);
+}
+
+[data-theme='dark'] .app-select-option.selected {
+  background-color: var(--primary-yellow);
+  color: #0b1e36;
+}
+
+.app-select.compact .app-select-trigger {
+  gap: 4px;
+  padding: 6px 8px;
+}
+
+.app-select.compact .app-select-list {
+  right: auto;
+  min-width: 100%;
+  max-height: 180px;
+}
+
+.app-select.compact .app-select-option {
+  justify-content: center;
+  padding: 6px 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-select.compact .app-select-option svg {
+  display: none;
+}

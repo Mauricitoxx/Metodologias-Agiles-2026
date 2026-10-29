@@ -9,6 +9,11 @@ __pycache__/
 
 # Variables de entorno (usar .env.example como plantilla)
 .env
+.env.*
+!.env.example
 
 # Base de datos local
 *.db
+*.db-journal
+*.db-shm
+*.db-wal

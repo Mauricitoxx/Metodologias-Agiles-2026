@@ -22,7 +22,7 @@ export const AdminHubView = () => {
         </p>
       </div>
 
-      {/* 3. Las 2 Tarjetas Principales */}
+      {/* 3. Tarjetas Principales */}
       <div className="admin-hub-cards-stack">
         {/* Tarjeta 1: INVENTARIO */}
         <div className="admin-hub-card">
@@ -85,7 +85,7 @@ export const AdminHubView = () => {
         <p className="notice-text">
           Área exclusiva para administradores.
           <br />
-          Tus permisos se aplican en ambas gestiones.
+          Tus permisos se aplican en todas las gestiones.
         </p>
       </div>
     </div>

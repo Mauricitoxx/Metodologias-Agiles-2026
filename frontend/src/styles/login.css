@@ -1,0 +1,45 @@
+.login-screen {
+  --login-background: #faf8ff;
+  --login-ink: #131b2e;
+  --login-border: #0f172a;
+  --login-yellow: #ffcb05;
+  --login-blue: #005db6;
+  --login-heading: 'Space Grotesk', sans-serif;
+  width: 100%; max-width: 390px; min-height: 100dvh; margin-inline: auto;
+  background: var(--login-background); color: var(--login-ink);
+  font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 500;
+}
+.login-header { height: 64px; padding: 0 16px; display: flex; align-items: center; gap: 4px; }
+.login-logo { flex-shrink: 0; }
+.login-brand { font-family: var(--login-heading); font-weight: 700; }
+.login-brand p { font-size: 30px; line-height: 30px; letter-spacing: -0.5px; text-shadow: 1.5px 1.5px 0 var(--login-yellow); white-space: nowrap; }
+.login-brand span { display: block; font-size: 9px; line-height: 9px; color: var(--login-blue); }
+.login-content { display: flex; flex-direction: column; gap: 24px; padding: 20px 16px 32px; }
+.login-intro { display: flex; flex-direction: column; gap: 12px; }
+.login-badge { align-self: flex-start; display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: var(--radius-full); background: var(--login-yellow); color: #6f5700; font: 700 11px/14px var(--login-heading); }
+.login-badge img { flex-shrink: 0; }
+.login-intro h1 { font: 700 28px/32px var(--login-heading); margin-bottom: 6px; }
+.login-intro p { font-size: 14px; line-height: 21px; color: #4e4632; }
+.login-card { display: flex; flex-direction: column; gap: 20px; min-height: 378px; background: #fff; border: 2px solid var(--login-border); border-radius: 12px; box-shadow: 3px 3px 0 var(--login-border); padding: 14px; }
+.login-card h2 { display: flex; justify-content: space-between; align-items: center; font: 700 20px/26px var(--login-heading); }
+.login-field { display: flex; flex-direction: column; gap: 8px; }
+.login-field label { font: 700 14px/20px var(--login-heading); }
+.login-input { height: 52px; display: flex; align-items: center; gap: 8px; padding: 0 10px; border: 2px solid var(--login-border); border-radius: 8px; background: var(--login-background); }
+.login-input input { width: 100%; min-width: 0; color: var(--login-ink); border: 0; background: transparent; font: 500 13px/20px 'Plus Jakarta Sans', sans-serif; }
+.login-input input::placeholder { color: #777584; opacity: 1; }
+.login-input img, .login-card h2 img, .login-notice img, .login-back img { flex-shrink: 0; }
+.login-eye { display: flex; flex-shrink: 0; background: none; border: 0; padding: 0; }
+.login-actions { display: flex; flex-direction: column; gap: 20px; }
+.login-submit { display: flex; align-items: center; justify-content: space-between; height: 52px; width: 100%; padding: 0 10px; background: var(--login-yellow); color: var(--login-ink); border: 2px solid var(--login-border); border-radius: 8px; box-shadow: 2px 2px 0 var(--login-border); font: 700 16px/22px var(--login-heading); }
+.login-submit:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--login-border); }
+.login-recover { height: 28px; background: none; border: 0; text-decoration: underline; color: var(--login-blue); font: 700 13px/20px var(--login-heading); }
+.login-notice { display: flex; align-items: center; gap: 8px; background: #eaedff; border-radius: 8px; padding: 12px; }
+.login-notice p { color: #4e4632; font-size: 11px; line-height: 17px; }
+.login-back { display: flex; align-items: center; justify-content: center; gap: 8px; height: 44px; color: var(--login-blue); text-decoration: none; font: 700 13px/20px var(--login-heading); background: none; border: 0; }
+.login-error { color: #b42318; font-size: 13px; line-height: 20px; }
+.login-screen :focus-visible { outline: 3px solid var(--login-blue); outline-offset: 3px; }
+.login-recovery-dialog { margin: auto; max-width: min(358px, calc(100vw - 32px)); padding: 20px; border: 2px solid var(--login-border); border-radius: 12px; color: var(--login-ink); }
+.login-recovery-dialog::backdrop { background: #0f172a99; }
+.login-recovery-dialog h2 { font: 700 20px/26px var(--login-heading); }
+.login-recovery-dialog p { font-size: 14px; line-height: 21px; margin: 16px 0; }
+@media (max-width: 359px) { .login-brand p { font-size: 26px; } }

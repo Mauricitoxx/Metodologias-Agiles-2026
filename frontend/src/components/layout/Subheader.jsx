@@ -35,10 +35,6 @@ export const Subheader = () => {
         <span className="subheader-kicker">ADMIN CENTRAL •</span>
         <h2 className="subheader-title">{getSectionTitle()}</h2>
       </div>
-
-      <div className="subheader-pill-indicator">
-        <span className="indicator-dot-inner" />
-      </div>
     </div>
   );
 };
