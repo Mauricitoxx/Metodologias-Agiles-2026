@@ -16,6 +16,7 @@ export const INITIAL_DATA = {
       notes: '',
       image: 'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=400&q=80',
       description: 'Grandes corporaciones compiten por transformar Marte en un planeta habitable gastando vastos recursos.',
+      videoUrl: 'https://www.youtube.com/watch?v=5_q2i4r6a4M',
       createdAt: '2025-01-10'
     },
     {
@@ -33,6 +34,7 @@ export const INITIAL_DATA = {
       notes: '',
       image: 'https://images.unsplash.com/photo-1606167668584-78701c57f13d?auto=format&fit=crop&w=400&q=80',
       description: 'Coloniza la isla de Catan recolectando madera, trigo, ladrillos, ovejas y minerales.',
+      videoUrl: 'https://www.youtube.com/watch?v=o3WJD_18g80',
       createdAt: '2025-01-12'
     },
     {
