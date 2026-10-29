@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Save, Upload, RefreshCw, Trash2 } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
+import { isValidUrl } from '../utils/validation';
 
 const types = { boardgames: '🎲 Juego de Mesa', comics: '📖 Manga y Cómic', cards: '🃏 Cartas', buffet: '🍔 Buffet' };
 const prefixes = { boardgames: '#BG-', comics: '#MC-', cards: '#TCG-', buffet: '#BF-' };
@@ -10,7 +11,21 @@ export function EntityFormView() {
   const { modalState, closeModal, data, addItem, updateItem } = useAdmin();
   const [type, setType] = useState(modalState.entityType);
   const editing = modalState.mode === 'edit';
-  const [form, setForm] = useState(() => ({ code: nextCode(type, data), title: '', category: 'Estrategia & Civilización', shelf: 'Estante A-3 · Nivel Central', minPlayers: 2, maxPlayers: 4, duration: '30 min', complexity: 3, status: 'disponible', image: '', description: '', ...modalState.item }));
+  const [form, setForm] = useState(() => ({
+    code: nextCode(type, data),
+    title: '',
+    category: 'Estrategia & Civilización',
+    shelf: 'Estante A-3 · Nivel Central',
+    minPlayers: 2,
+    maxPlayers: 4,
+    duration: '30 min',
+    complexity: 3,
+    status: 'disponible',
+    image: '',
+    description: '',
+    videoUrl: '',
+    ...modalState.item
+  }));
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
   useEffect(() => {
@@ -25,7 +40,19 @@ export function EntityFormView() {
     if (!form.title.trim()) return setError('Ingresá el nombre de la entidad.');
     if (data[type].some(item => item.code.toLowerCase() === form.code.trim().toLowerCase() && item.id !== form.id)) return setError('El código ya está registrado. Regenerá el SKU o ingresá otro.');
     if (type === 'boardgames' && Number(form.minPlayers) > Number(form.maxPlayers)) return setError('El máximo de jugadores debe ser mayor o igual al mínimo.');
-    const item = { ...form, code: form.code.trim(), title: form.title.trim(), minPlayers: Number(form.minPlayers), maxPlayers: Number(form.maxPlayers), price: Number(form.price || 0) };
+    const trimmedVideoUrl = form.videoUrl ? form.videoUrl.trim() : '';
+    if (trimmedVideoUrl && !isValidUrl(trimmedVideoUrl)) {
+      return setError('Debe ingresar una URL web válida');
+    }
+    const item = {
+      ...form,
+      code: form.code.trim(),
+      title: form.title.trim(),
+      minPlayers: Number(form.minPlayers),
+      maxPlayers: Number(form.maxPlayers),
+      price: Number(form.price || 0),
+      videoUrl: trimmedVideoUrl
+    };
     const saved = editing ? updateItem(type, item) : addItem(type, item);
     if (saved) closeModal();
   }
@@ -53,9 +80,9 @@ export function EntityFormView() {
   return <div className="entity-form-view">
     <button className="small-back" onClick={closeModal}><ArrowLeft size={15} /> Cancelar</button>
     <section className="retro-panel entity-intro"><span className="section-small-label">ADMIN PANEL | GESTIÓN MAESTRA</span><h2>{editing ? 'EDICIÓN DE ENTIDAD' : 'REGISTRO DE ENTIDAD'}</h2><p>Control de inventario, estado de mesas y catálogo friki en tiempo real.</p><div className="dashed-divider" /><span className="section-small-label">TIPO DE ENTIDAD A GESTIONAR:</span><div className="type-tabs">{Object.entries(types).map(([key, label]) => <button key={key} disabled={editing && type !== key} className={type === key ? 'selected' : ''} onClick={() => { setType(key); setForm(prev => ({ ...prev, code: nextCode(key, data) })); }}>{label}</button>)}</div></section>
-    <form onSubmit={save}>
+    <form noValidate onSubmit={save}>
       <section className="retro-panel form-section"><h3><span className="step-number blue">1</span> DATOS {type === 'boardgames' ? 'DEL JUEGO' : 'DE LA ENTIDAD'} <small>FICHA OFICIAL</small></h3><div className="sku-heading"><label htmlFor="entity-code">CÓDIGO / SKU *</label><button type="button" className="text-link" onClick={() => setForm(prev => ({ ...prev, code: nextCode(type, data) }))}><RefreshCw size={12} /> REGENERAR SKU</button></div><input id="entity-code" className="form-input sku-input" name="code" value={form.code} required onChange={change} />{field('title', type === 'boardgames' ? 'NOMBRE DEL JUEGO' : 'NOMBRE DE LA ENTIDAD', 'text', true)}{field('category', 'CATEGORÍA PRINCIPAL', 'text', true)}{field('shelf', 'UBICACIÓN EN LA FRIKIOTECA')}{type === 'comics' && field('author', 'AUTOR / AUTORA')}{type === 'cards' && field('format', 'FORMATO')}{type === 'buffet' && field('price', 'PRECIO ($)', 'number', true)}<div className="form-group"><label htmlFor="entity-status">ESTADO</label><select id="entity-status" className="form-select" name="status" value={form.status} onChange={change}><option value="disponible">Disponible</option>{type !== 'buffet' && <><option value="en_mesa">En mesa</option><option value="en_reparacion">En reparación</option></>}<option value="baja">Baja</option></select></div>{form.status === 'en_mesa' && field('tableNumber', 'MESA ASIGNADA', 'text', true)}{form.status === 'en_reparacion' && field('notes', 'DETALLE DE REPARACIÓN')}</section>
-      {type === 'boardgames' && <section className="retro-panel form-section"><h3><span className="step-number yellow">2</span> STATS DE MESA <small>HUD TÁCTICO</small></h3><div className="form-row-2">{field('minPlayers', 'MÍN. JUGADORES', 'number', true)}{field('maxPlayers', 'MÁX. JUGADORES', 'number', true)}</div>{field('duration', 'DURACIÓN', 'text', true)}<label className="section-small-label">COMPLEJIDAD DE REGLAS · {form.complexity}/5</label><div className="complexity-buttons">{[1, 2, 3, 4, 5].map(n => <button type="button" key={n} aria-pressed={form.complexity === n} className={form.complexity === n ? 'selected' : ''} onClick={() => setForm(prev => ({ ...prev, complexity: n }))}>{n}</button>)}</div></section>}
+      {type === 'boardgames' && <section className="retro-panel form-section"><h3><span className="step-number yellow">2</span> STATS DE MESA <small>HUD TÁCTICO</small></h3><div className="form-row-2">{field('minPlayers', 'MÍN. JUGADORES', 'number', true)}{field('maxPlayers', 'MÁX. JUGADORES', 'number', true)}</div>{field('duration', 'DURACIÓN', 'text', true)}<label className="section-small-label">COMPLEJIDAD DE REGLAS · {form.complexity}/5</label><div className="complexity-buttons">{[1, 2, 3, 4, 5].map(n => <button type="button" key={n} aria-pressed={form.complexity === n} className={form.complexity === n ? 'selected' : ''} onClick={() => setForm(prev => ({ ...prev, complexity: n }))}>{n}</button>)}</div><div className="form-group" style={{ marginTop: '14px' }}><label htmlFor="entity-videoUrl">VIDEO EXPLICATIVO (URL)</label><input id="entity-videoUrl" className="form-input" name="videoUrl" type="url" placeholder="https://www.youtube.com/watch?v=..." value={form.videoUrl ?? ''} onChange={change} /><small style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '4px' }}>Opcional. Enlace web o YouTube con el tutorial de cómo jugar.</small></div></section>}
       <section className="retro-panel form-section"><h3><span className="step-number pink">3</span> CARÁTULA DE PORTADA <small>Máx. 5 MB</small></h3><div className="cover-upload" onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); upload(event.dataTransfer.files[0]); }}><div className="cover-preview">{form.image ? <img src={form.image} alt="Vista previa de portada" /> : <span>🎲</span>}</div><label className="upload-target"><Upload size={22} /><span>ARRASTRÁ O SELECCIONÁ</span><span className="upload-button">Subir nueva</span><input type="file" accept="image/png,image/jpeg,image/webp" onChange={event => upload(event.target.files[0])} /></label></div><div className="form-group"><label htmlFor="entity-description">OBSERVACIONES</label><textarea id="entity-description" className="form-textarea" name="description" value={form.description || ''} onChange={change} rows={3} /></div></section>
       {error && <p className="error-text form-error" role="alert">{error}</p>}<div className="retro-panel form-save-bar"><button type="button" className="btn-secondary" onClick={closeModal}><Trash2 size={15} /> Descartar</button><button className="btn-primary" disabled={uploading} type="submit"><Save size={16} /> {uploading ? 'Procesando…' : 'GUARDAR CAMBIOS'}</button></div>
     </form>

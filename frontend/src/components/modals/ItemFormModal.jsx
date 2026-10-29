@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Check } from 'lucide-react';
+import { isValidUrl } from '../../utils/validation';
 
 const getInitialFormData = (initialItem, mode, entityType) => {
   if (initialItem && mode === 'edit') {
@@ -16,7 +17,8 @@ const getInitialFormData = (initialItem, mode, entityType) => {
       status: 'disponible',
       image: 'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=400&q=80',
       description: '',
-      notes: ''
+      notes: '',
+      videoUrl: ''
     },
     comics: {
       title: '',
@@ -87,6 +89,11 @@ export const ItemFormModal = ({ isOpen, onClose, mode, entityType, initialItem, 
       if (!formData.email?.trim() || !formData.email.includes('@')) newErrors.email = 'Email inválido';
     } else {
       if (!formData.title?.trim()) newErrors.title = 'El título/nombre es obligatorio';
+      if (entityType === 'boardgames' && formData.videoUrl && formData.videoUrl.trim()) {
+        if (!isValidUrl(formData.videoUrl.trim())) {
+          newErrors.videoUrl = 'Debe ingresar una URL web válida';
+        }
+      }
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -94,7 +101,10 @@ export const ItemFormModal = ({ isOpen, onClose, mode, entityType, initialItem, 
       return;
     }
 
-    onSave(entityType, formData);
+    onSave(entityType, {
+      ...formData,
+      videoUrl: formData.videoUrl ? formData.videoUrl.trim() : ''
+    });
     onClose();
   };
 
@@ -254,6 +264,24 @@ export const ItemFormModal = ({ isOpen, onClose, mode, entityType, initialItem, 
                         className="form-input"
                       />
                     </div>
+                  </div>
+                )}
+
+                {entityType === 'boardgames' && (
+                  <div className="form-group">
+                    <label>Video Explicativo (URL)</label>
+                    <input
+                      type="url"
+                      name="videoUrl"
+                      value={formData.videoUrl || ''}
+                      onChange={handleChange}
+                      className="form-input"
+                      placeholder="https://www.youtube.com/watch?v=..."
+                    />
+                    {errors.videoUrl && <span className="error-text">{errors.videoUrl}</span>}
+                    <small style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                      Opcional. Enlace a YouTube u otra plataforma para aprender a jugar.
+                    </small>
                   </div>
                 )}
 
