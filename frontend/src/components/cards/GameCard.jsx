@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Edit3, Trash2, RotateCcw, Users, Clock } from 'lucide-react';
+import { Eye, Edit3, Trash2, RotateCcw, Users, Clock, Video } from 'lucide-react';
 import { StatusBadge, CategoryTag, ShelfBadge } from '../common/Badge';
 
 export const GameCard = ({ item, entityType, onOpenDetail, onOpenEdit, onOpenConfirmBaja }) => {
@@ -41,6 +41,11 @@ export const GameCard = ({ item, entityType, onOpenDetail, onOpenEdit, onOpenCon
 
           <div className="card-footer-chips">
             {item.category && <CategoryTag>{item.category}</CategoryTag>}
+            {item.videoUrl && (
+              <span className="video-tutorial-chip" title="Tiene video explicativo">
+                <Video size={11} /> Video
+              </span>
+            )}
             {item.loansCount !== undefined && (
               <span className="loans-count-text">{item.loansCount} préstamos</span>
             )}
