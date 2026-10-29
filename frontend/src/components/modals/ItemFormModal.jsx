@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check } from 'lucide-react';
+import { isValidUrl } from '../../utils/validation';
 
 const getInitialFormData = (initialItem, mode, entityType) => {
   if (initialItem && mode === 'edit') {
@@ -33,28 +34,17 @@ const getInitialFormData = (initialItem, mode, entityType) => {
 
   const defaults = {
     boardgames: {
-      nombre: '',
-      descripcion: '',
-      cantidad: 1,
-      duracion_min: 45,
-      edad_recomendada: 8,
-      jugadores_min: 1,
-      jugadores_max: 4,
-      video_url: '',
-      categoria_ids: [],
-      dificultad_id: ''
-    },
-    juegos: {
-      nombre: '',
-      descripcion: '',
-      cantidad: 1,
-      duracion_min: 45,
-      edad_recomendada: 8,
-      jugadores_min: 1,
-      jugadores_max: 4,
-      video_url: '',
-      categoria_ids: [],
-      dificultad_id: ''
+      title: '',
+      category: 'Estrategia',
+      minPlayers: 2,
+      maxPlayers: 4,
+      duration: '45 min',
+      shelf: 'ESTANTE A-1',
+      status: 'disponible',
+      image: 'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=400&q=80',
+      description: '',
+      notes: '',
+      videoUrl: ''
     },
     comics: {
       title: '',
@@ -162,17 +152,10 @@ export const ItemFormModal = ({
         newErrors.jugadores_max = 'Max jugadores debe ser mayor o igual al mínimo.';
       }
     } else {
-      if (!formData.title?.trim()) {
-        newErrors.title = 'El título es obligatorio.';
-      }
-
-      if (entityType === 'comics') {
-        for (const field of ['volume_number', 'pages', 'copies']) {
-          const value = Number(formData[field]);
-
-          if (!Number.isInteger(value) || value < 1) {
-            newErrors[field] = 'Ingresá un número entero mayor que cero.';
-          }
+      if (!formData.title?.trim()) newErrors.title = 'El título/nombre es obligatorio';
+      if (entityType === 'boardgames' && formData.videoUrl && formData.videoUrl.trim()) {
+        if (!isValidUrl(formData.videoUrl.trim())) {
+          newErrors.videoUrl = 'Debe ingresar una URL web válida';
         }
       }
     }
@@ -182,6 +165,11 @@ export const ItemFormModal = ({
       return;
     }
 
+    onSave(entityType, {
+      ...formData,
+      videoUrl: formData.videoUrl ? formData.videoUrl.trim() : ''
+    });
+    onClose();
     let payload;
 
     if (entityType === 'comics') {
@@ -530,6 +518,84 @@ export const ItemFormModal = ({
                     </div>
                   )}
                 </div>
+
+                {entityType === 'boardgames' && (
+                  <div className="form-row-3">
+                    <div className="form-group">
+                      <label>Min Jug.</label>
+                      <input
+                        type="number"
+                        name="minPlayers"
+                        value={formData.minPlayers || 1}
+                        onChange={handleChange}
+                        className="form-input"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Max Jug.</label>
+                      <input
+                        type="number"
+                        name="maxPlayers"
+                        value={formData.maxPlayers || 4}
+                        onChange={handleChange}
+                        className="form-input"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Duración</label>
+                      <input
+                        type="text"
+                        name="duration"
+                        value={formData.duration || '60 min'}
+                        onChange={handleChange}
+                        className="form-input"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {entityType === 'boardgames' && (
+                  <div className="form-group">
+                    <label>Video Explicativo (URL)</label>
+                    <input
+                      type="url"
+                      name="videoUrl"
+                      value={formData.videoUrl || ''}
+                      onChange={handleChange}
+                      className="form-input"
+                      placeholder="https://www.youtube.com/watch?v=..."
+                    />
+                    {errors.videoUrl && <span className="error-text">{errors.videoUrl}</span>}
+                    <small style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                      Opcional. Enlace a YouTube u otra plataforma para aprender a jugar.
+                    </small>
+                  </div>
+                )}
+
+                {entityType === 'events' && (
+                  <div className="form-row-2">
+                    <div className="form-group">
+                      <label>Fecha</label>
+                      <input
+                        type="date"
+                        name="date"
+                        value={formData.date || ''}
+                        onChange={handleChange}
+                        className="form-input"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Hora</label>
+                      <input
+                        type="text"
+                        name="time"
+                        value={formData.time || '19:00 hs'}
+                        onChange={handleChange}
+                        className="form-input"
+                      />
+                    </div>
+                  </div>
+                )}
 
                 <div className="form-group">
                   <label htmlFor="item-image">URL de imagen</label>

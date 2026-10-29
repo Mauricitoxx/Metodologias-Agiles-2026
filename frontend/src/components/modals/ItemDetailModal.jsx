@@ -1,6 +1,7 @@
 import React from 'react';
-import { X, Calendar, Clock, Users, MapPin, Award, FileText } from 'lucide-react';
+import { X, Calendar, Clock, Users, MapPin, Award, FileText, Video, Play, ExternalLink } from 'lucide-react';
 import { StatusBadge, CategoryTag } from '../common/Badge';
+import { getYouTubeEmbedUrl } from '../../utils/validation';
 
 export const ItemDetailModal = ({ isOpen, onClose, item, entityType, onEdit, onToggleBaja }) => {
   if (!isOpen || !item) return null;
@@ -82,6 +83,33 @@ export const ItemDetailModal = ({ isOpen, onClose, item, entityType, onEdit, onT
           {item.notes && (
             <div className="modal-warning-box">
               <strong>Nota interna:</strong> {item.notes}
+            </div>
+          )}
+
+          {item.videoUrl && (
+            <div className="modal-video-section">
+              <div className="section-label">
+                <Video size={14} /> Video Tutorial Explicativo
+              </div>
+              {getYouTubeEmbedUrl(item.videoUrl) && (
+                <div className="modal-video-embed-container">
+                  <iframe
+                    src={getYouTubeEmbedUrl(item.videoUrl)}
+                    title={`Video explicativo de ${item.title || item.name}`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="modal-video-iframe"
+                  />
+                </div>
+              )}
+              <a
+                href={item.videoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="modal-video-link-btn"
+              >
+                <Play size={14} fill="currentColor" /> Abrir Video Tutorial <ExternalLink size={13} />
+              </a>
             </div>
           )}
 
