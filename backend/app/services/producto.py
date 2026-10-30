@@ -50,7 +50,7 @@ def actualizar_producto(
     producto = obtener_producto(db, producto_id)
     validar_nombre_unico(db, datos.nombre, producto_id)
 
-    for clave, valor in datos.model_dump().items():
+    for clave, valor in datos.model_dump(exclude_none=True).items():
         setattr(producto, clave, valor)
 
     db.commit()

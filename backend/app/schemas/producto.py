@@ -32,11 +32,13 @@ class ProductoBase(BaseModel):
 
 
 class ProductoCreate(ProductoBase):
-    pass
+    # El panel puede registrar un producto ya inactivo (fuera de la carta)
+    activo: bool = True
 
 
 class ProductoUpdate(ProductoBase):
-    pass
+    # Si no se envía, el producto conserva su estado
+    activo: bool | None = None
 
 
 class ProductoRead(ProductoBase):
