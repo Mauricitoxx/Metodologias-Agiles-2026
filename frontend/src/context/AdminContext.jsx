@@ -99,6 +99,7 @@ export const AdminProvider = ({ children }) => {
 
   // Cargar mangas y cómics desde la API
   useEffect(() => {
+    if (!session) return;
     let cancelled = false;
 
     const loadComics = async () => {
@@ -135,7 +136,7 @@ export const AdminProvider = ({ children }) => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [session]);
 
   // Persist local data on change (para otras entidades en LocalStorage)
   const persistData = (updater) => {
