@@ -17,6 +17,7 @@ import { ProductoFormView } from './views/ProductoFormView';
 import { ItemDetailModal } from './components/modals/ItemDetailModal';
 import { ItemFormModal } from './components/modals/ItemFormModal';
 import { ConfirmBajaModal } from './components/modals/ConfirmBajaModal';
+import { PublicCatalogRoutes } from './catalog/PublicCatalogRoutes';
 
 const ActivitiesRedirect = () => {
   const { setCatalogSubTab } = useAdmin();
@@ -164,8 +165,10 @@ const AdminDashboard = () => {
 
 export default function App() {
   return (
-    <AdminProvider>
-      <AdminDashboard />
-    </AdminProvider>
+    <Routes>
+      <Route path="/" element={<Navigate to="/catalogo" replace />} />
+      <Route path="/catalogo/*" element={<PublicCatalogRoutes />} />
+      <Route path="*" element={<AdminProvider><AdminDashboard /></AdminProvider>} />
+    </Routes>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Save, Upload, RefreshCw, Trash2 } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
 import { isValidUrl } from '../utils/validation';
+import { getGameVideoUrl } from '../utils/gameVideo';
 
 const types = {
   boardgames: '🎲 Juego de Mesa',
@@ -33,7 +34,6 @@ export function EntityFormView() {
   const editing = modalState.mode === 'edit';
   const [form, setForm] = useState(() => ({
     code: nextCode(type, data),
-    title: '',
     category: 'Estrategia & Civilización',
     shelf: 'Estante A-3 · Nivel Central',
     minPlayers: 2,
@@ -50,8 +50,8 @@ export function EntityFormView() {
     status: 'disponible',
     image: '',
     description: '',
-    videoUrl: '',
     ...modalState.item,
+    videoUrl: getGameVideoUrl(modalState.item || {}) || '',
     title: modalState.item?.title || modalState.item?.nombre || '',
     nombre: modalState.item?.nombre || modalState.item?.title || ''
   }));
@@ -161,7 +161,8 @@ export function EntityFormView() {
       duration: `${durParsed} min`,
       duracion_min: durParsed,
       price: Number(form.price || 0),
-      videoUrl: trimmedVideoUrl
+      videoUrl: trimmedVideoUrl,
+      ...(type === 'boardgames' ? { video_url: trimmedVideoUrl || null } : {})
     };
 
     if (type === 'comics') {
@@ -381,3 +382,113 @@ export function EntityFormView() {
         {type === 'boardgames' && (
           <section className="retro-panel form-section">
             <h3>
+              <span className="step-number yellow">2</span>
+              {' '}STATS DE MESA
+              <small>HUD TÁCTICO</small>
+            </h3>
+
+            <div className="form-row-2">
+              {field('minPlayers', 'MÍN. JUGADORES', 'number', true)}
+              {field('maxPlayers', 'MÁX. JUGADORES', 'number', true)}
+            </div>
+
+            {field('duration', 'DURACIÓN (ej: 45 min)', 'text', true)}
+            {field('videoUrl', 'URL DE VIDEO EXPLICATIVO (OPCIONAL)', 'url')}
+
+            <label className="section-small-label">
+              COMPLEJIDAD DE REGLAS · {form.complexity}/5
+            </label>
+
+            <div className="complexity-buttons">
+              {[1, 2, 3, 4, 5].map(n => (
+                <button
+                  type="button"
+                  key={n}
+                  aria-pressed={Number(form.complexity) === n}
+                  className={Number(form.complexity) === n ? 'selected' : ''}
+                  onClick={() =>
+                    setForm(prev => ({ ...prev, complexity: n }))
+                  }
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section className="retro-panel form-section">
+          <h3>
+            <span className="step-number pink">3</span>
+            {' '}CARÁTULA DE PORTADA
+            <small>Máx. 5 MB</small>
+          </h3>
+
+          <div
+            className="cover-upload"
+            onDragOver={event => event.preventDefault()}
+            onDrop={event => {
+              event.preventDefault();
+              upload(event.dataTransfer.files[0]);
+            }}
+          >
+            <div className="cover-preview">
+              {form.image
+                ? <img src={form.image} alt="Vista previa de portada" />
+                : <span>🎲</span>}
+            </div>
+
+            <label className="upload-target">
+              <Upload size={22} />
+              <span>ARRASTRÁ O SELECCIONÁ</span>
+              <span className="upload-button">Subir nueva</span>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={event => upload(event.target.files[0])}
+              />
+            </label>
+          </div>
+
+          {type !== 'comics' && (
+            <div className="form-group">
+              <label htmlFor="entity-description">OBSERVACIONES</label>
+              <textarea
+                id="entity-description"
+                className="form-textarea"
+                name="description"
+                value={form.description || ''}
+                onChange={change}
+                rows={3}
+              />
+            </div>
+          )}
+        </section>
+
+        {error && (
+          <p className="error-text form-error" role="alert">{error}</p>
+        )}
+
+        <div className="retro-panel form-save-bar">
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={closeModal}
+            disabled={saving}
+          >
+            <Trash2 size={15} /> Descartar
+          </button>
+
+          <button
+            className="btn-primary"
+            disabled={uploading || saving}
+            type="submit"
+          >
+            <Save size={16} />
+            {saving ? 'Guardando en Servidor…' : uploading ? 'Procesando…' : 'GUARDAR CAMBIOS'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
