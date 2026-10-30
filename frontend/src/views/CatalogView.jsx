@@ -30,7 +30,7 @@ export const CatalogView = () => {
 
   // Filter and search
   const filteredItems = useMemo(() => {
-    return currentList.filter((item) => {
+    const items = currentList.filter((item) => {
       // Search
       const query = searchQuery.toLowerCase().trim();
       const matchesSearch =
@@ -49,8 +49,12 @@ export const CatalogView = () => {
       if (filterStatus === 'baja') return item.status === 'baja' || item.status === 'en_reparacion';
 
       return true;
-    }).sort((a, b) => a.code.localeCompare(b.code, 'es', { numeric: true }));
-  }, [currentList, searchQuery, filterStatus]);
+    });
+
+    // El buffet ya llega de la API ordenado por categoría y nombre
+    if (catalogSubTab === 'buffet') return items;
+    return items.sort((a, b) => a.code.localeCompare(b.code, 'es', { numeric: true }));
+  }, [currentList, searchQuery, filterStatus, catalogSubTab]);
 
   // Counts for filter pills
   const counts = useMemo(() => {
