@@ -9,6 +9,7 @@ from app.api.routes import (
     health,
     juegos,
     mangas_comics,
+    productos,
     regla,
 )
 
