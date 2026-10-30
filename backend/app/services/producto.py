@@ -1,9 +1,9 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.producto import Producto
 from app.schemas.producto import ProductoCreate, ProductoUpdate
-from app.services.errors import conflict, not_found
+from app.services.errors import conflict, field_error, not_found
 
 
 def listar_productos(db: Session, incluir_inactivos: bool = False) -> list[Producto]:
@@ -24,7 +24,17 @@ def obtener_producto(db: Session, producto_id: int) -> Producto:
     return producto
 
 
+def validar_nombre_unico(db: Session, nombre: str, producto_id: int | None = None) -> None:
+    """El nombre no se puede repetir en la carta, sin distinguir mayúsculas."""
+    stmt = select(Producto.id).where(func.lower(Producto.nombre) == nombre.lower())
+    if producto_id is not None:
+        stmt = stmt.where(Producto.id != producto_id)
+    if db.scalars(stmt).first() is not None:
+        raise field_error("nombre", "Ya existe un producto con ese nombre")
+
+
 def crear_producto(db: Session, datos: ProductoCreate) -> Producto:
+    validar_nombre_unico(db, datos.nombre)
     producto = Producto(**datos.model_dump())
     db.add(producto)
     db.commit()
@@ -38,6 +48,7 @@ def actualizar_producto(
     datos: ProductoUpdate,
 ) -> Producto:
     producto = obtener_producto(db, producto_id)
+    validar_nombre_unico(db, datos.nombre, producto_id)
 
     for clave, valor in datos.model_dump().items():
         setattr(producto, clave, valor)

@@ -18,8 +18,8 @@ Precio = Annotated[
 class ProductoBase(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    nombre: Annotated[NonEmptyStr, Field(max_length=150)]
-    descripcion: NonEmptyStr
+    nombre: Annotated[NonEmptyStr, Field(max_length=50)]
+    descripcion: Annotated[NonEmptyStr, Field(max_length=500)]
     tipo: TipoProducto
     precio: Precio
 
