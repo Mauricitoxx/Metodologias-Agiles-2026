@@ -18,6 +18,14 @@ const mapProductoFromBackend = (producto) => ({
   code: `#BF-${String(producto.id).padStart(3, '0')}`
 });
 
+// Arma el cuerpo que espera POST/PUT /api/productos a partir del formulario
+const toProductoPayload = (item) => ({
+  nombre: item.title || item.nombre,
+  descripcion: item.description || item.descripcion || '',
+  tipo: item.tipo || 'comida',
+  precio: Number(item.price ?? item.precio)
+});
+
 export const AdminProvider = ({ children }) => {
   const [data, setData] = useState(() => storage.get());
   const [session, setSession] = useState(null);
@@ -269,7 +277,20 @@ export const AdminProvider = ({ children }) => {
       }
     }
 
-    // 3. Lógica para otras entidades (LocalStorage)
+    // 3. Productos del buffet (API)
+    if (entityType === 'buffet') {
+      try {
+        const creado = await productoService.create(toProductoPayload(itemData));
+        showToast(`Producto "${creado.nombre}" dado de alta con éxito`);
+        await cargarProductosBackend();
+        return true;
+      } catch (error) {
+        showToast(error.message || 'No se pudo registrar el producto.', 'error');
+        return false;
+      }
+    }
+
+    // 4. Lógica para otras entidades (LocalStorage)
     const prefixMap = {
       cards: '#TCG-',
       buffet: '#BF-',
@@ -370,7 +391,21 @@ export const AdminProvider = ({ children }) => {
       }
     }
 
-    // 3. Lógica para el resto de entidades en LocalStorage
+    // 3. Productos del buffet (API)
+    if (entityType === 'buffet') {
+      try {
+        const actualizado = await productoService.update(updatedItem.id, toProductoPayload(updatedItem));
+        showToast(`Producto "${actualizado.nombre}" actualizado`);
+        // Recarga para respetar el orden por tipo y nombre
+        await cargarProductosBackend();
+        return true;
+      } catch (error) {
+        showToast(error.message || 'No se pudo actualizar el producto.', 'error');
+        return false;
+      }
+    }
+
+    // 4. Lógica para el resto de entidades en LocalStorage
     const saved = persistData((prev) => ({
       ...prev,
       [entityType]: (prev[entityType] || []).map((item) =>
