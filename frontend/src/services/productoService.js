@@ -1,4 +1,4 @@
-import { api } from './api';
+import { api, ApiError } from './api';
 import { getSessionToken } from './auth';
 
 // Tipos de producto del backend y cómo se muestran en el panel
@@ -31,12 +31,21 @@ const withAuth = async (method, path, body) => {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    const detail = Array.isArray(error.detail) ? error.detail[0]?.msg : error.detail;
-    throw new Error(
-      typeof detail === 'string'
-        ? detail.replace(/^Value error, /, '')
-        : 'No se pudo completar la operación.'
+    const { detail } = await response.json().catch(() => ({}));
+
+    // 422: errores por campo, para marcarlos en el formulario
+    if (Array.isArray(detail)) {
+      const fieldErrors = {};
+      detail.forEach(({ loc = [], msg = '' }) => {
+        const field = loc[loc.length - 1];
+        if (field && !fieldErrors[field]) fieldErrors[field] = msg.replace(/^Value error, /, '');
+      });
+      throw new ApiError('Revisá los campos marcados.', { status: response.status, fieldErrors });
+    }
+
+    throw new ApiError(
+      typeof detail === 'string' ? detail : 'No se pudo completar la operación.',
+      { status: response.status }
     );
   }
 
