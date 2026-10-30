@@ -2,13 +2,11 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Save, Upload, RefreshCw, Trash2 } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
 import { isValidUrl } from '../utils/validation';
-import { TIPOS_PRODUCTO } from '../services/productoService';
 
 const types = {
   boardgames: '🎲 Juego de Mesa',
   comics: '📖 Manga y Cómic',
   cards: '🃏 Cartas',
-  buffet: '🍔 Buffet',
 };
 
 const prefixes = {
@@ -53,7 +51,6 @@ export function EntityFormView() {
     image: '',
     description: '',
     videoUrl: '',
-    tipo: 'comida',
     ...modalState.item,
     title: modalState.item?.title || modalState.item?.nombre || '',
     nombre: modalState.item?.nombre || modalState.item?.title || ''
@@ -93,8 +90,7 @@ export function EntityFormView() {
         name={name}
         type={inputType}
         required={required}
-        min={inputType === 'number' ? (name === 'price' ? 0.01 : 1) : undefined}
-        step={name === 'price' ? 0.01 : undefined}
+        min={inputType === 'number' ? 1 : undefined}
         value={form[name] ?? ''}
         onChange={change}
       />
@@ -328,42 +324,8 @@ export function EntityFormView() {
             true
           )}
 
-          {type === 'buffet' ? (
-            <>
-              <div className="form-group">
-                <label htmlFor="entity-tipo">TIPO DE PRODUCTO *</label>
-                <select
-                  id="entity-tipo"
-                  className="form-select"
-                  name="tipo"
-                  value={form.tipo}
-                  onChange={change}
-                >
-                  {Object.entries(TIPOS_PRODUCTO).map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="entity-buffet-description">DESCRIPCIÓN *</label>
-                <textarea
-                  id="entity-buffet-description"
-                  className="form-textarea"
-                  name="description"
-                  value={form.description || ''}
-                  onChange={change}
-                  rows={3}
-                  required
-                />
-              </div>
-            </>
-          ) : (
-            <>
-              {field('category', 'CATEGORÍA PRINCIPAL', 'text', true)}
-              {field('shelf', 'UBICACIÓN EN LA FRIKIOTECA')}
-            </>
-          )}
+          {field('category', 'CATEGORÍA PRINCIPAL', 'text', true)}
+          {field('shelf', 'UBICACIÓN EN LA FRIKIOTECA')}
 
           {type === 'comics' && (
             <>
@@ -390,24 +352,25 @@ export function EntityFormView() {
           {type === 'cards' && field('format', 'FORMATO')}
           {type === 'buffet' && field('price', 'PRECIO ($)', 'number', true)}
 
-          {/* En el buffet el estado se cambia con dar de baja / reactivar */}
-          {type !== 'buffet' && (
-            <div className="form-group">
-              <label htmlFor="entity-status">ESTADO</label>
-              <select
-                id="entity-status"
-                className="form-select"
-                name="status"
-                value={form.status || 'disponible'}
-                onChange={change}
-              >
-                <option value="disponible">Disponible</option>
-                <option value="en_mesa">En mesa</option>
-                <option value="en_reparacion">En reparación</option>
-                <option value="baja">Baja</option>
-              </select>
-            </div>
-          )}
+          <div className="form-group">
+            <label htmlFor="entity-status">ESTADO</label>
+            <select
+              id="entity-status"
+              className="form-select"
+              name="status"
+              value={form.status || 'disponible'}
+              onChange={change}
+            >
+              <option value="disponible">Disponible</option>
+              {type !== 'buffet' && (
+                <>
+                  <option value="en_mesa">En mesa</option>
+                  <option value="en_reparacion">En reparación</option>
+                </>
+              )}
+              <option value="baja">Baja</option>
+            </select>
+          </div>
 
           {form.status === 'en_mesa' &&
             field('tableNumber', 'MESA ASIGNADA', 'text', true)}
