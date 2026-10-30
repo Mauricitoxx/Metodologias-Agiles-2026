@@ -5,6 +5,7 @@ import { auth, getSessionToken, clearSessionToken } from '../services/auth';
 import { juegoService } from '../services/juegoService';
 import { mangaComicService } from '../services/mangaComicService';
 import { staffService } from '../services/staffService';
+import { getGameVideoUrl } from '../utils/gameVideo';
 
 export const AdminProvider = ({ children }) => {
   const [data, setData] = useState(() => storage.get());
@@ -62,6 +63,9 @@ export const AdminProvider = ({ children }) => {
     title: juego.nombre,
     name: juego.nombre,
     description: juego.descripcion,
+    minPlayers: juego.jugadores_min,
+    maxPlayers: juego.jugadores_max,
+    videoUrl: getGameVideoUrl(juego) || '',
     category: juego.categorias?.map((c) => c.nombre).join(', ') || 'Sin categoría',
     status: juego.activo ? (juego.disponibilidad ? 'disponible' : 'en_mesa') : 'baja',
     code: `#BG-${String(juego.id).padStart(3, '0')}`,
@@ -97,6 +101,7 @@ export const AdminProvider = ({ children }) => {
 
   // Cargar mangas y cómics desde la API
   useEffect(() => {
+    if (!session) return;
     let cancelled = false;
 
     const loadComics = async () => {
@@ -133,7 +138,7 @@ export const AdminProvider = ({ children }) => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [session]);
 
   // Persist local data on change (para otras entidades en LocalStorage)
   const persistData = (updater) => {
@@ -198,7 +203,7 @@ export const AdminProvider = ({ children }) => {
           edad_recomendada: Number(itemData.edad_recomendada) || 8,
           jugadores_min: Number(itemData.jugadores_min) || 1,
           jugadores_max: Number(itemData.jugadores_max) || 4,
-          video_url: itemData.video_url || null,
+          video_url: getGameVideoUrl(itemData),
           dificultad_id: itemData.dificultad_id ? Number(itemData.dificultad_id) : null,
           categoria_ids: itemData.categoria_ids || []
         };
@@ -282,7 +287,7 @@ export const AdminProvider = ({ children }) => {
           edad_recomendada: updatedItem.edad_recomendada ? Number(updatedItem.edad_recomendada) : undefined,
           jugadores_min: updatedItem.jugadores_min ? Number(updatedItem.jugadores_min) : undefined,
           jugadores_max: updatedItem.jugadores_max ? Number(updatedItem.jugadores_max) : undefined,
-          video_url: updatedItem.video_url || null,
+          video_url: getGameVideoUrl(updatedItem),
           dificultad_id: updatedItem.dificultad_id ? Number(updatedItem.dificultad_id) : undefined,
           categoria_ids: updatedItem.categoria_ids
         };
