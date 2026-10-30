@@ -381,9 +381,10 @@ Commitear el modelo, esquema, servicio, ruta, test, **la migración** y los dos 
 **Reglas de negocio**
 
 - `nombre`, `descripcion`, `tipo` y `precio` son obligatorios; los textos en blanco se rechazan.
+- `nombre` tiene hasta 50 caracteres y no se repite (sin distinguir mayúsculas): si ya existe, responde 422 con *"Ya existe un producto con ese nombre"* en el campo `nombre`. `descripcion` tiene hasta 500 caracteres.
 - `tipo` es uno de `comida`, `bebida`, `snack`, `postre` o `combo`.
 - `precio` acepta hasta 2 decimales y debe ser mayor a cero: si no, responde 422 con el mensaje *"El precio debe ser mayor a cero"* en el campo `precio`. La base también lo impide con un `CHECK`.
-- `activo` queda en `true` al crear. La baja es lógica: el producto se conserva, pero la carta pública solo muestra los activos.
+- `activo` es opcional: al crear vale `true` si no se envía y al modificar se conserva el estado actual. La baja es lógica: el producto se conserva, pero la carta pública solo muestra los activos.
 - Dar de baja un producto inactivo, o reactivar uno activo, responde 409; un id inexistente responde 404.
 - Las ofertas se suman en HU-13.
 
