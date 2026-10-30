@@ -1,4 +1,4 @@
-# La Frikioteca — Administración
+# La Frikioteca — Frontend
 
 Frontend React y Vite con las cinco pantallas de la referencia: inicio de sesión, panel central, inventario, formulario de entidad y gestión de staff.
 
@@ -31,7 +31,7 @@ Levantá el backend, aplicá `alembic upgrade head` y creá una cuenta con el co
 Opcionalmente copiá `.env.example` a `.env`:
 
 - `VITE_API_URL`: URL de la API, por defecto `http://127.0.0.1:8000/api`.
-- `VITE_PUBLIC_SITE_URL`: destino de “Volver a La Frikioteca”. Mientras esté vacío, el botón informa que el sitio público estará disponible próximamente. Reiniciá Vite después de cambiarlo.
+- `VITE_PUBLIC_SITE_URL`: destino opcional de “Volver a La Frikioteca”. Si está vacío, abre `/catalogo`. Reiniciá Vite después de cambiarlo.
 
 “¿Te olvidaste la contraseña?” indica contactar al equipo: todavía no hay recuperación automática por correo.
 
