@@ -62,6 +62,8 @@ export const AdminProvider = ({ children }) => {
     title: juego.nombre,
     name: juego.nombre,
     description: juego.descripcion,
+    minPlayers: juego.jugadores_min,
+    maxPlayers: juego.jugadores_max,
     category: juego.categorias?.map((c) => c.nombre).join(', ') || 'Sin categoría',
     status: juego.activo ? (juego.disponibilidad ? 'disponible' : 'en_mesa') : 'baja',
     code: `#BG-${String(juego.id).padStart(3, '0')}`,
