@@ -16,7 +16,8 @@ const formFromProducto = (producto) => ({
   nombre: producto?.nombre ?? '',
   descripcion: producto?.descripcion ?? '',
   tipo: producto?.tipo ?? '',
-  precio: producto ? String(producto.precio) : '',
+  // Mismo formato que el diseño: 8500,00
+  precio: producto ? Number(producto.precio).toFixed(2).replace('.', ',') : '',
   activo: producto?.activo ?? true
 });
 
