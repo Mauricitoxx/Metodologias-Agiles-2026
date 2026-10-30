@@ -461,7 +461,38 @@ export const AdminProvider = ({ children }) => {
       }
     }
 
-    // 3. Protección para el único Superadministrador activo
+    // 3. Productos del buffet (API): baja lógica, deja de mostrarse en la carta
+    if (entityType === 'buffet') {
+      const isBaja = item.status === 'baja' || item.activo === false;
+
+      try {
+        const result = isBaja
+          ? await productoService.reactivate(item.id)
+          : await productoService.deactivate(item.id);
+        const updated = mapProductoFromBackend(result);
+
+        setData((prev) => ({
+          ...prev,
+          buffet: (prev.buffet || []).map((producto) =>
+            producto.id === updated.id ? updated : producto
+          )
+        }));
+
+        showToast(
+          isBaja ? `Reactivado: ${updated.title}` : `Dado de baja: ${updated.title}`,
+          isBaja ? 'success' : 'warning'
+        );
+        return true;
+      } catch (error) {
+        showToast(
+          error.message || (isBaja ? 'No se pudo reactivar el producto.' : 'No se pudo dar de baja el producto.'),
+          'error'
+        );
+        return false;
+      }
+    }
+
+    // 4. Protección para el único Superadministrador activo
     if (entityType === 'admins') {
       const activeSuperadmins = data.admins?.filter(
         (admin) => admin.role === 'Superadmin' && admin.status === 'activo'
@@ -477,7 +508,7 @@ export const AdminProvider = ({ children }) => {
       }
     }
 
-    // 4. Bajas para el resto de entidades (LocalStorage)
+    // 5. Bajas para el resto de entidades (LocalStorage)
     const isBaja = item.status === 'baja' || item.status === 'inactivo';
     const newStatus = isBaja
       ? entityType === 'admins' ? 'activo' : 'disponible'
