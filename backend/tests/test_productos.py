@@ -165,3 +165,80 @@ def test_alta_y_modificacion_requieren_sesion(
     assert client.post("/api/productos", json=producto_data()).status_code == 401
     assert client.put(f"/api/productos/{producto['id']}", json=producto_data()).status_code == 401
     assert client.get(f"/api/productos/{producto['id']}").status_code == 401
+
+
+def test_dar_de_baja_oculta_el_producto_de_la_carta(
+    client: TestClient,
+    admin_headers: dict[str, str],
+):
+    producto = crear_producto(client, admin_headers)
+
+    response = client.patch(f"/api/productos/{producto['id']}/baja", headers=admin_headers)
+
+    assert response.status_code == 200
+    assert response.json()["activo"] is False
+    # Baja lógica: deja de verse en la carta pero sigue guardado
+    assert client.get("/api/productos").json() == []
+    detalle = client.get(f"/api/productos/{producto['id']}", headers=admin_headers)
+    assert detalle.json()["activo"] is False
+
+
+def test_listado_admin_incluye_inactivos_ordenados(
+    client: TestClient,
+    admin_headers: dict[str, str],
+):
+    crear_producto(client, admin_headers, nombre="Pizza", tipo="comida")
+    agua = crear_producto(client, admin_headers, nombre="Agua", tipo="bebida")
+    crear_producto(client, admin_headers, nombre="Empanada", tipo="comida")
+    client.patch(f"/api/productos/{agua['id']}/baja", headers=admin_headers)
+
+    response = client.get("/api/productos/admin/todos", headers=admin_headers)
+
+    assert response.status_code == 200
+    assert [(p["nombre"], p["activo"]) for p in response.json()] == [
+        ("Agua", False),
+        ("Empanada", True),
+        ("Pizza", True),
+    ]
+
+
+def test_reactivar_vuelve_a_mostrar_el_producto(
+    client: TestClient,
+    admin_headers: dict[str, str],
+):
+    producto = crear_producto(client, admin_headers)
+    client.patch(f"/api/productos/{producto['id']}/baja", headers=admin_headers)
+
+    response = client.patch(f"/api/productos/{producto['id']}/reactivar", headers=admin_headers)
+
+    assert response.status_code == 200
+    assert response.json()["activo"] is True
+    assert [p["id"] for p in client.get("/api/productos").json()] == [producto["id"]]
+
+
+def test_rechaza_baja_o_reactivacion_repetida(
+    client: TestClient,
+    admin_headers: dict[str, str],
+):
+    producto = crear_producto(client, admin_headers)
+    url = f"/api/productos/{producto['id']}"
+
+    assert client.patch(f"{url}/reactivar", headers=admin_headers).status_code == 409
+    assert client.patch(f"{url}/baja", headers=admin_headers).status_code == 200
+    assert client.patch(f"{url}/baja", headers=admin_headers).status_code == 409
+
+
+def test_baja_de_producto_inexistente(client: TestClient, admin_headers: dict[str, str]):
+    assert client.patch("/api/productos/999/baja", headers=admin_headers).status_code == 404
+    assert client.patch("/api/productos/999/reactivar", headers=admin_headers).status_code == 404
+
+
+def test_listado_admin_y_baja_requieren_sesion(
+    client: TestClient,
+    admin_headers: dict[str, str],
+):
+    producto = crear_producto(client, admin_headers)
+
+    assert client.get("/api/productos/admin/todos").status_code == 401
+    assert client.patch(f"/api/productos/{producto['id']}/baja").status_code == 401
+    assert client.patch(f"/api/productos/{producto['id']}/reactivar").status_code == 401
