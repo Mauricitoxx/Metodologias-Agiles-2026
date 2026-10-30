@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Save, Upload, RefreshCw, Trash2 } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
 import { isValidUrl } from '../utils/validation';
+import { getGameVideoUrl } from '../utils/gameVideo';
 
 const types = {
   boardgames: '🎲 Juego de Mesa',
@@ -50,8 +51,8 @@ export function EntityFormView() {
     status: 'disponible',
     image: '',
     description: '',
-    videoUrl: '',
     ...modalState.item,
+    videoUrl: getGameVideoUrl(modalState.item || {}) || '',
     title: modalState.item?.title || modalState.item?.nombre || '',
     nombre: modalState.item?.nombre || modalState.item?.title || ''
   }));
@@ -161,7 +162,8 @@ export function EntityFormView() {
       duration: `${durParsed} min`,
       duracion_min: durParsed,
       price: Number(form.price || 0),
-      videoUrl: trimmedVideoUrl
+      videoUrl: trimmedVideoUrl,
+      ...(type === 'boardgames' ? { video_url: trimmedVideoUrl || null } : {})
     };
 
     if (type === 'comics') {
@@ -392,6 +394,7 @@ export function EntityFormView() {
             </div>
 
             {field('duration', 'DURACIÓN (ej: 45 min)', 'text', true)}
+            {field('videoUrl', 'URL DE VIDEO EXPLICATIVO (OPCIONAL)', 'url')}
 
             <label className="section-small-label">
               COMPLEJIDAD DE REGLAS · {form.complexity}/5
