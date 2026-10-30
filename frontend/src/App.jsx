@@ -42,6 +42,7 @@ const AdminDashboard = () => {
     updateItem,
     toggleBajaItem,
     openEditModal,
+    openConfirmBajaModal,
     notification
   } = useAdmin();
 
@@ -106,7 +107,10 @@ const AdminDashboard = () => {
         item={modalState.item}
         entityType={modalState.entityType}
         onEdit={openEditModal}
-        onToggleBaja={toggleBajaItem}
+        // HU-12: la baja de un producto del buffet siempre pide confirmación
+        onToggleBaja={(type, item) =>
+          type === 'buffet' ? openConfirmBajaModal(type, item) : toggleBajaItem(type, item)
+        }
       />
 
       <ItemFormModal
