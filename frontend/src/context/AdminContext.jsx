@@ -5,6 +5,18 @@ import { auth, getSessionToken, clearSessionToken } from '../services/auth';
 import { juegoService } from '../services/juegoService';
 import { mangaComicService } from '../services/mangaComicService';
 import { staffService } from '../services/staffService';
+import { productoService, TIPOS_PRODUCTO } from '../services/productoService';
+
+// Adapta un producto de la carta del backend al formato de las tarjetas del Buffet
+const mapProductoFromBackend = (producto) => ({
+  ...producto,
+  title: producto.nombre,
+  description: producto.descripcion,
+  category: TIPOS_PRODUCTO[producto.tipo] || producto.tipo,
+  price: producto.precio,
+  status: producto.activo ? 'disponible' : 'baja',
+  code: `#BF-${String(producto.id).padStart(3, '0')}`
+});
 
 export const AdminProvider = ({ children }) => {
   const [data, setData] = useState(() => storage.get());
@@ -94,6 +106,23 @@ export const AdminProvider = ({ children }) => {
       cargarJuegosBackend();
     }
   }, [session, catalogSubTab, cargarJuegosBackend]);
+
+  // Cargar productos de la carta (activos e inactivos) desde la API
+  const cargarProductosBackend = useCallback(async () => {
+    try {
+      const productos = await productoService.listAllAdmin();
+      setData((prev) => ({
+        ...prev,
+        buffet: productos.map(mapProductoFromBackend)
+      }));
+    } catch (error) {
+      showToast(`No se pudieron cargar los productos del buffet: ${error.message}`, 'error');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (session) cargarProductosBackend();
+  }, [session, cargarProductosBackend]);
 
   // Cargar mangas y cómics desde la API
   useEffect(() => {
