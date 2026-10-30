@@ -54,7 +54,8 @@ export function EntityFormView() {
     ...modalState.item,
     videoUrl: getGameVideoUrl(modalState.item || {}) || '',
     title: modalState.item?.title || modalState.item?.nombre || '',
-    nombre: modalState.item?.nombre || modalState.item?.title || ''
+    nombre: modalState.item?.nombre || modalState.item?.title || '',
+    type: modalState.item?.type || 'manga'
   }));
 
   const [error, setError] = useState('');
@@ -135,6 +136,15 @@ export function EntityFormView() {
 
     if (
       type === 'comics' &&
+      (!['manga', 'comic'].includes(form.type) ||
+        !form.category?.trim())
+    ) {
+      setError('Seleccioná el tipo de publicación e ingresá una categoría.');
+      return;
+    }
+
+    if (
+      type === 'comics' &&
       (!Number.isInteger(Number(form.volume_number)) ||
         Number(form.volume_number) < 1 ||
         !Number.isInteger(Number(form.pages)) ||
@@ -167,6 +177,8 @@ export function EntityFormView() {
     };
 
     if (type === 'comics') {
+      itemPayload.type = form.type;
+      itemPayload.category = form.category.trim();
       itemPayload.volume_number = Number(form.volume_number);
       itemPayload.pages = Number(form.pages);
       itemPayload.copies = Number(form.copies);
@@ -324,6 +336,23 @@ export function EntityFormView() {
             type === 'boardgames' ? 'NOMBRE DEL JUEGO' : 'NOMBRE DE LA ENTIDAD',
             'text',
             true
+          )}
+
+          {type === 'comics' && (
+            <div className="form-group">
+              <label htmlFor="entity-publication-type">TIPO DE PUBLICACIÓN *</label>
+              <select
+                id="entity-publication-type"
+                className="form-select"
+                name="type"
+                value={form.type || 'manga'}
+                onChange={change}
+                required
+              >
+                <option value="manga">Manga</option>
+                <option value="comic">Cómic</option>
+              </select>
+            </div>
           )}
 
           {field('category', 'CATEGORÍA PRINCIPAL', 'text', true)}

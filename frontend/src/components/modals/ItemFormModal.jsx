@@ -22,6 +22,8 @@ const getInitialFormData = (initialItem, mode, entityType) => {
       return {
         ...initialItem,
         title: initialItem.title || '',
+        type: initialItem.type || 'manga',
+        category: initialItem.category || '',
         volume_number: initialItem.volume_number ?? initialItem.volumes ?? 1,
         pages: initialItem.pages ?? 1,
         copies: initialItem.copies ?? 1,
@@ -48,6 +50,8 @@ const getInitialFormData = (initialItem, mode, entityType) => {
     },
     comics: {
       title: '',
+      type: 'manga',
+      category: '',
       volume_number: 1,
       pages: 1,
       copies: 1,
@@ -153,6 +157,16 @@ export const ItemFormModal = ({
       }
     } else {
       if (!formData.title?.trim()) newErrors.title = 'El título/nombre es obligatorio';
+
+      if (entityType === 'comics') {
+        if (!['manga', 'comic'].includes(formData.type)) {
+          newErrors.type = 'Seleccioná si es manga o cómic.';
+        }
+        if (!formData.category?.trim()) {
+          newErrors.category = 'La categoría es obligatoria.';
+        }
+      }
+
       if (entityType === 'boardgames' && formData.videoUrl && formData.videoUrl.trim()) {
         if (!isValidUrl(formData.videoUrl.trim())) {
           newErrors.videoUrl = 'Debe ingresar una URL web válida';
@@ -165,16 +179,13 @@ export const ItemFormModal = ({
       return;
     }
 
-    onSave(entityType, {
-      ...formData,
-      videoUrl: formData.videoUrl ? formData.videoUrl.trim() : ''
-    });
-    onClose();
     let payload;
 
     if (entityType === 'comics') {
       payload = {
         title: formData.title.trim(),
+        type: formData.type,
+        category: formData.category.trim(),
         volume_number: Number(formData.volume_number),
         pages: Number(formData.pages),
         copies: Number(formData.copies),
@@ -449,6 +460,43 @@ export const ItemFormModal = ({
                   {errors.title && (
                     <span className="error-text">{errors.title}</span>
                   )}
+                </div>
+
+                <div className="form-row-2">
+                  <div className="form-group">
+                    <label htmlFor="comic-type">Tipo de publicación *</label>
+                    <select
+                      id="comic-type"
+                      name="type"
+                      value={formData.type || 'manga'}
+                      onChange={handleChange}
+                      className="form-select"
+                      required
+                    >
+                      <option value="manga">Manga</option>
+                      <option value="comic">Cómic</option>
+                    </select>
+                    {errors.type && (
+                      <span className="error-text">{errors.type}</span>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="comic-category">Categoría *</label>
+                    <input
+                      id="comic-category"
+                      type="text"
+                      name="category"
+                      value={formData.category || ''}
+                      onChange={handleChange}
+                      className="form-input"
+                      placeholder="Ej. Aventura, Fantasía..."
+                      required
+                    />
+                    {errors.category && (
+                      <span className="error-text">{errors.category}</span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="form-row-3">
