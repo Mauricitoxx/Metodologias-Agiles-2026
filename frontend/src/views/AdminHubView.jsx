@@ -1,18 +1,9 @@
 import React from 'react';
-import {
-  Shield,
-  BookOpen,
-  Utensils,
-  CalendarDays,
-  IdCard
-} from 'lucide-react';
+import { Shield, Package, IdCard, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAdmin } from '../context/useAdmin';
-import { JuegosView } from './JuegosView';
 
 export const AdminHubView = () => {
   const navigate = useNavigate();
-  const { data, setCatalogSubTab } = useAdmin();
 
   return (
     <div className="admin-hub-container">
@@ -22,72 +13,81 @@ export const AdminHubView = () => {
         <span>MODO ADMIN CONECTADO</span>
       </div>
 
-      {/* 2. Hero Título & Subtítulo */}
+      {/* 2. Título & Subtítulo */}
       <div className="admin-hub-hero">
         <h2 className="admin-hub-title">ADMIN CENTRAL</h2>
         <p className="admin-hub-subtitle">
-          Base de operaciones de La Frikioteca. Gestioná las <strong>categorías</strong>, los <strong>juegos</strong> y el resto del catálogo friki.
+          Tu base de operaciones en La Frikioteca.<br />
+          ¿Qué vas a gestionar hoy?
         </p>
       </div>
 
-      {/* 3. Barra de Acceso Rápido a Otros Módulos */}
-      <div className="admin-hub-quick-nav" aria-label="Accesos rápidos">
-        <button
-          type="button"
-          className="quick-nav-item"
-          onClick={() => {
-            setCatalogSubTab('comics');
-            navigate('/admin/inventario');
-          }}
-          title="Ver Cómics y Mangas"
-        >
-          <BookOpen size={15} color="#0284c7" />
-          <span>MANGAS & CÓMICS</span>
-          <span className="quick-nav-badge">{data.comics?.length || 0}</span>
-        </button>
+      {/* 3. Tarjetas Principales */}
+      <div className="admin-hub-cards-stack">
+        {/* Tarjeta 1: INVENTARIO */}
+        <div className="admin-hub-card">
+          <div className="admin-hub-card-top">
+            <div className="admin-hub-icon-square icon-inventario">
+              <Package size={26} strokeWidth={2.2} />
+            </div>
+            <div className="admin-hub-card-info">
+              <h3 className="admin-hub-card-title">INVENTARIO</h3>
+              <p className="admin-hub-card-desc">
+                Gestioná los juegos, los mangas y cómics, la carta y las actividades.
+              </p>
+            </div>
+          </div>
 
-        <button
-          type="button"
-          className="quick-nav-item"
-          onClick={() => {
-            setCatalogSubTab('buffet');
-            navigate('/admin/inventario');
-          }}
-          title="Ver Buffet"
-        >
-          <Utensils size={15} color="#f59e0b" />
-          <span>BUFFET</span>
-          <span className="quick-nav-badge">{data.buffet?.length || 0}</span>
-        </button>
+          <div className="admin-hub-card-tags tags-inventario">
+            JUEGOS • MANGAS • CARTA • ACTIVIDADES
+          </div>
 
-        <button
-          type="button"
-          className="quick-nav-item"
-          onClick={() => {
-            setCatalogSubTab('actividades');
-            navigate('/admin/inventario');
-          }}
-          title="Ver Cronograma de Actividades"
-        >
-          <CalendarDays size={15} color="#8b5cf6" />
-          <span>ACTIVIDADES</span>
-          <span className="quick-nav-badge">Eventos</span>
-        </button>
+          <button
+            className="admin-hub-action-btn btn-inventario"
+            onClick={() => navigate('/admin/inventario')}
+          >
+            <span>Gestionar Inventario</span>
+            <ArrowRight size={18} strokeWidth={2.5} />
+          </button>
+        </div>
 
-        <button
-          type="button"
-          className="quick-nav-item"
-          onClick={() => navigate('/admin/staff')}
-          title="Administrar Staff"
-        >
-          <IdCard size={15} color="#10b981" />
-          <span>STAFF</span>
-          <span className="quick-nav-badge">Equipo</span>
-        </button>
+        {/* Tarjeta 2: STAFF */}
+        <div className="admin-hub-card">
+          <div className="admin-hub-card-top">
+            <div className="admin-hub-icon-square icon-staff">
+              <IdCard size={26} strokeWidth={2.2} />
+            </div>
+            <div className="admin-hub-card-info">
+              <h3 className="admin-hub-card-title">STAFF</h3>
+              <p className="admin-hub-card-desc">
+                Administrá tu equipo, sus roles y credenciales de acceso.
+              </p>
+            </div>
+          </div>
+
+          <div className="admin-hub-card-tags tags-staff">
+            EQUIPO • ROLES • PERMISOS
+          </div>
+
+          <button
+            className="admin-hub-action-btn btn-staff"
+            onClick={() => navigate('/admin/staff')}
+          >
+            <span>Gestionar staff</span>
+            <ArrowRight size={18} strokeWidth={2.5} />
+          </button>
+        </div>
       </div>
 
-      {/* 4. Zona de Juegos y Categorías */}
-      <JuegosView />
+      {/* 4. Caja Informativa Inferior */}
+      <div className="admin-hub-notice-box">
+        <ShieldCheck size={20} className="notice-icon" />
+        <p className="notice-text">
+          Área exclusiva para administradores.
+          <br />
+          Tus permisos se aplican en todas las gestiones.
+        </p>
+      </div>
     </div>
   );
 };
