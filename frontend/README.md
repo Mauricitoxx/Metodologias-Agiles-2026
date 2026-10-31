@@ -37,7 +37,7 @@ Opcionalmente copiá `.env.example` a `.env`:
 
 Las entidades y miembros de staff siguen guardándose en `localStorage` de este navegador. El staff de demostración no crea cuentas del backend. No se almacenan contraseñas de staff; la clave temporal es una vista previa para una futura integración.
 
-El panel central (`/admin`) solo ofrece dos accesos: Inventario y Staff. Inventario (`/admin/inventario`) agrupa las pestañas Juegos de mesa, Mangas & Cómics, Carta y Actividades.
+El panel central (`/admin`) solo ofrece dos accesos: Inventario y Staff. Inventario (`/admin/inventario`) agrupa las pestañas Juegos de mesa, Mangas & Cómics, Carta y Actividades, y abre en Actividades.
 
 Juegos de mesa (`views/JuegosView.jsx`) muestra los juegos agrupados por categoría y permite crear, editar y eliminar categorías; una categoría con juegos asociados no se puede eliminar.
 
