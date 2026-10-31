@@ -315,7 +315,7 @@ Commitear el modelo, esquema, servicio, ruta, test, **la migración** y los dos 
 
 | Capa      | Archivos                                                                 |
 | --------- | ------------------------------------------------------------------------ |
-| Modelos   | `models/actividad.py` (`Actividad`), `models/tipo_actividad.py` (`TipoActividad`) |
+| Modelos   | `models/actividad.py` (`Actividad`), `models/tipo_actividad.py` (`TipoActividad`), `models/inscripcion.py` (`Inscripcion`) |
 | Esquemas  | `schemas/actividad.py`, `schemas/tipo_actividad.py`                      |
 | Servicios | `services/activity.py`, `services/activity_type.py`, `services/recurrence.py` |
 | Rutas     | `api/routes/activities.py`, `api/routes/activity_types.py`               |
@@ -327,6 +327,7 @@ Commitear el modelo, esquema, servicio, ruta, test, **la migración** y los dos 
 | ------ | ------------------------------------- | ------- | ------------------------------------------------------- |
 | GET    | `/api/activities/schedule`            | Público | Cronograma: próximas actividades (`search`, `tipo_id`)  |
 | GET    | `/api/activities/schedule/{id}`       | Público | Detalle (404 si está inactiva)                          |
+| POST   | `/api/activities/schedule/{id}/registrations` | Público | Inscripción de un cliente (`nombre`, `email`); devuelve la actividad con los cupos actualizados |
 | GET    | `/api/activities`                     | Admin   | Listado completo (`search`, `tipo_id`, `estado`, `order=asc\|desc`, `date_from`, `date_to`) |
 | GET    | `/api/activities/{id}`                | Admin   | Detalle                                                 |
 | POST   | `/api/activities`                     | Admin   | Alta                                                    |
@@ -351,6 +352,7 @@ Commitear el modelo, esquema, servicio, ruta, test, **la migración** y los dos 
 - `motivo` (opcional, lo ve el cliente) y `alcance` (`fecha` o `serie`, solo en recurrentes) describen la última cancelación o postergación; se borran cuando la actividad vuelve a `activa`.
 - El cronograma público oculta las `inactiva` y las que ya terminaron; las `cancelada` se muestran para que el cliente lo vea.
 - **Recurrentes:** antes de cada lectura, las actividades `semanal`/`quincenal` terminadas pasan a la próxima fecha (mismo día y hora) y las `mensual` al mismo N-ésimo día de la semana del mes siguiente (el 5.º pasa a ser el último). Una postergada con alcance `fecha` vuelve a su día habitual; con alcance `serie`, las próximas fechas se calculan desde la nueva. Una cancelada con alcance `fecha` saltea esa fecha y sigue; con alcance `serie` (o sin alcance) la serie se detiene.
+- **Inscripciones:** el cliente se inscribe con nombre y correo, sin cuenta. Toda actividad devuelve `inscriptos` y `cupos_disponibles` (nunca negativo, aunque se baje el cupo). Se rechaza (409) si está cancelada, ya comenzó o no quedan cupos, y (422 en `email`) si ese correo ya está inscripto. La inscripción guarda la fecha original de la ocurrencia: postergar conserva los inscriptos y, cuando una recurrente pasa a su próxima fecha, el conteo empieza de cero. Eliminar la actividad elimina sus inscripciones.
 - Los errores 422 propios (`services/errors.py`) usan el mismo formato que los de validación de FastAPI, así el frontend los muestra en el campo correspondiente.
 
 > ⚠ **Pendiente (HU-01):** los endpoints de admin dependen de `require_admin` (`app/api/deps.py`), que por ahora deja pasar todo. Cuando exista el login, solo hay que implementar esa función.
