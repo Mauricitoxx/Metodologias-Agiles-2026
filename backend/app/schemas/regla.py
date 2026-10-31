@@ -1,10 +1,24 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ReglaBase(BaseModel):
     titulo: str = Field(..., min_length=1, max_length=150, description="Título o sección de la regla")
     contenido: str = Field(..., min_length=1, description="Texto explicativo de la regla")
     orden: int = Field(default=1, ge=1, description="Orden de aparición de la regla en el juego")
+
+    @field_validator("titulo")
+    @classmethod
+    def validate_titulo(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("El título no puede estar vacío. Debe completar la información")
+        return v.strip()
+
+    @field_validator("contenido")
+    @classmethod
+    def validate_contenido(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("El cuerpo del texto no puede estar vacío. Debe completar la información")
+        return v.strip()
 
 
 class ReglaCreate(ReglaBase):
@@ -15,6 +29,29 @@ class ReglaUpdate(BaseModel):
     titulo: str | None = Field(default=None, min_length=1, max_length=150)
     contenido: str | None = Field(default=None, min_length=1)
     orden: int | None = Field(default=None, ge=1)
+
+    @field_validator("titulo")
+    @classmethod
+    def validate_titulo(cls, v: str | None) -> str | None:
+        if v is not None:
+            if not v.strip():
+                raise ValueError("El título no puede estar vacío. Debe completar la información")
+            return v.strip()
+        return v
+
+    @field_validator("contenido")
+    @classmethod
+    def validate_contenido(cls, v: str | None) -> str | None:
+        if v is not None:
+            if not v.strip():
+                raise ValueError("El cuerpo del texto no puede estar vacío. Debe completar la información")
+            return v.strip()
+        return v
+
+
+class ReglaReorderItem(BaseModel):
+    id: int
+    orden: int = Field(..., ge=1)
 
 
 class ReglaRead(ReglaBase):
