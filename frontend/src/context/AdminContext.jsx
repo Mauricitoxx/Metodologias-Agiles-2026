@@ -88,12 +88,12 @@ export const AdminProvider = ({ children }) => {
     }
   }, []);
 
-  // Cargar juegos al iniciar o cambiar a la pestaña de inventario de juegos
+  // Cargar juegos al iniciar sesión o cuando se requiera
   useEffect(() => {
-    if (session && catalogSubTab === 'boardgames') {
+    if (session) {
       cargarJuegosBackend();
     }
-  }, [session, catalogSubTab, cargarJuegosBackend]);
+  }, [session, cargarJuegosBackend]);
 
   // Cargar mangas/cómics y staff desde la API
   useEffect(() => {

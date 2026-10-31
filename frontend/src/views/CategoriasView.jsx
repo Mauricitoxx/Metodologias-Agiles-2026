@@ -6,7 +6,7 @@ import { CategoryCard } from '../components/cards/CategoryCard';
 import { CategoriaFormModal } from '../components/modals/CategoriaFormModal';
 import { ConfirmDeleteCategoryModal } from '../components/modals/ConfirmDeleteCategoryModal';
 
-export const CategoriasView = () => {
+export const CategoriasView = ({ header } = {}) => {
   const { showToast } = useAdmin();
 
   const [categorias, setCategorias] = useState([]);
@@ -137,6 +137,9 @@ export const CategoriasView = () => {
 
   return (
     <div className="view-content-wrapper categorias-view">
+      {/* 0. Entity selector (passed from CatalogView) */}
+      {header}
+
       {/* 1. Alerta persistente si hubo bloqueo */}
       {alertMessage && (
         <div className="category-view-alert-banner" role="alert">

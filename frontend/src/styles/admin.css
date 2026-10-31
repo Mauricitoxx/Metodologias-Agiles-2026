@@ -2458,3 +2458,641 @@
   font-size: 13.5px;
 }
 
+/* ==========================================================================
+   ZONA JUEGOS -> CATEGORÍAS -> JUEGOS
+   ========================================================================== */
+.boardgames-view-mode-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 8px 12px;
+  box-shadow: var(--shadow-retro-sm);
+  margin-top: 4px;
+}
+
+.view-mode-switch-group {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.view-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-color);
+  background-color: var(--bg-main, #f8fafc);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.view-mode-btn.active {
+  background-color: var(--primary-yellow, #ffcb05);
+  color: #131b2e;
+  box-shadow: 1.5px 1.5px 0px var(--border-color);
+}
+
+.boardgames-categories-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.category-games-group {
+  border: 2.5px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-card);
+  box-shadow: var(--shadow-retro);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.category-group-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: #faf8ff;
+  border: none;
+  border-bottom: 2px solid var(--border-color);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease;
+}
+
+[data-theme='dark'] .category-group-header {
+  background-color: #1a2238;
+}
+
+.category-group-header:hover {
+  background-color: #f1f0fc;
+}
+
+[data-theme='dark'] .category-group-header:hover {
+  background-color: #242d4a;
+}
+
+.category-group-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.category-group-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  background-color: #e0f2fe;
+  color: #0284c7;
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.category-group-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.category-group-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-group-title {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--brand-blue, #131b2e);
+  letter-spacing: -0.2px;
+  text-transform: uppercase;
+}
+
+[data-theme='dark'] .category-group-title {
+  color: #ffffff;
+}
+
+.category-group-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border-color);
+  background-color: var(--primary-yellow, #ffcb05);
+  color: #131b2e;
+}
+
+.category-group-desc {
+  font-size: 12.5px;
+  color: var(--text-muted, #64748b);
+  margin: 0;
+  max-width: 600px;
+}
+
+.category-group-toggle-icon {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+}
+
+.category-group-body {
+  padding: 16px;
+  background-color: var(--bg-main, #f8fafc);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+[data-theme='dark'] .category-group-body {
+  background-color: #0f172a;
+}
+
+.category-group-empty {
+  padding: 20px 16px;
+  text-align: center;
+  background-color: var(--bg-card);
+  border: 1.5px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   ADMIN CENTRAL: ZONA MAESTRA DE JUEGOS Y CAJITAS DE CATEGORÍAS
+   ========================================================================== */
+
+/* Barra de acceso rápido a otros módulos */
+.admin-hub-quick-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.admin-hub-quick-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.quick-nav-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  background-color: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-main);
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: var(--shadow-retro-sm);
+  transition: all 0.15s ease;
+}
+
+.quick-nav-item:hover {
+  background-color: #f8fafc;
+  transform: translateY(-1px);
+}
+
+[data-theme='dark'] .quick-nav-item:hover {
+  background-color: #1a2238;
+}
+
+.quick-nav-badge {
+  font-size: 10px;
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: var(--primary-yellow);
+  color: #131b2e;
+}
+
+/* Zona de Juegos Principal */
+.admin-games-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.admin-games-zone-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+  border: 2.5px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-retro);
+  flex-wrap: wrap;
+}
+
+[data-theme='dark'] .admin-games-zone-banner {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+.admin-games-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.admin-games-banner-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background-color: var(--primary-yellow);
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: var(--shadow-retro-sm);
+  flex-shrink: 0;
+}
+
+.admin-games-banner-texts h3 {
+  font-size: 19px;
+  font-weight: 900;
+  color: var(--brand-blue);
+  letter-spacing: -0.3px;
+  text-transform: uppercase;
+}
+
+[data-theme='dark'] .admin-games-banner-texts h3 {
+  color: #ffffff;
+}
+
+.admin-games-banner-texts p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.admin-games-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-new-category-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background-color: var(--primary-yellow);
+  color: #131b2e;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: var(--shadow-retro-sm);
+  transition: all 0.15s ease;
+}
+
+.btn-new-category-cta:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-retro);
+  background-color: #ffd633;
+}
+
+.btn-new-game-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background-color: var(--bg-card);
+  color: var(--brand-blue);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: var(--shadow-retro-sm);
+  transition: all 0.15s ease;
+}
+
+[data-theme='dark'] .btn-new-game-cta {
+  color: #ffffff;
+}
+
+.btn-new-game-cta:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-retro);
+  background-color: #f1f5f9;
+}
+
+/* Barra de Filtros & Búsqueda */
+.admin-games-controls-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-games-stats-strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--text-main);
+  box-shadow: 1px 1px 0px var(--border-color);
+}
+
+.admin-stat-chip strong {
+  color: #0284c7;
+}
+
+/* Cajitas de Categorías */
+.admin-cajitas-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.admin-cajita-card {
+  background-color: var(--bg-card);
+  border: 2.5px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-retro);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.admin-cajita-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  background-color: #faf8ff;
+  border-bottom: 2px solid var(--border-color);
+  flex-wrap: wrap;
+}
+
+[data-theme='dark'] .admin-cajita-header {
+  background-color: #1e253c;
+}
+
+.cajita-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 250px;
+}
+
+.cajita-icon-bubble {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background-color: #e0f2fe;
+  color: #0284c7;
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cajita-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cajita-title-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cajita-title {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--brand-blue);
+  text-transform: uppercase;
+  letter-spacing: -0.2px;
+}
+
+[data-theme='dark'] .cajita-title {
+  color: #ffffff;
+}
+
+.cajita-id-chip {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: #f1f5f9;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+}
+
+[data-theme='dark'] .cajita-id-chip {
+  background-color: #0f172a;
+}
+
+.cajita-games-count-badge {
+  font-size: 11px;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--border-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cajita-games-count-badge.badge-has-games {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+[data-theme='dark'] .cajita-games-count-badge.badge-has-games {
+  background-color: #14532d;
+  color: #86efac;
+}
+
+.cajita-games-count-badge.badge-empty {
+  background-color: #f1f5f9;
+  color: #64748b;
+}
+
+[data-theme='dark'] .cajita-games-count-badge.badge-empty {
+  background-color: #334155;
+  color: #cbd5e1;
+}
+
+/* Botones de acción en la cabecera de la Cajita */
+.cajita-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cajita-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  font-size: 11.5px;
+  font-weight: 800;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  cursor: pointer;
+  box-shadow: 1.5px 1.5px 0px var(--border-color);
+  transition: all 0.15s ease;
+}
+
+.cajita-action-btn:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 2.5px 2.5px 0px var(--border-color);
+}
+
+.cajita-action-btn-edit:hover {
+  background-color: #fef08a;
+  color: #854d0e;
+}
+
+.cajita-action-btn-delete:hover:not(.btn-disabled-hint) {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.cajita-action-btn.btn-disabled-hint {
+  opacity: 0.65;
+  cursor: not-allowed;
+  background-color: #f1f5f9;
+}
+
+.cajita-collapse-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-muted);
+  cursor: pointer;
+  box-shadow: 1.5px 1.5px 0px var(--border-color);
+  transition: all 0.15s ease;
+}
+
+.cajita-collapse-btn:hover {
+  background-color: #f1f5f9;
+  color: var(--text-main);
+}
+
+/* Descripción de la Categoría */
+.cajita-desc-strip {
+  padding: 8px 18px;
+  background-color: #ffffff;
+  border-bottom: 1px dashed var(--border-subtle);
+  font-size: 12.5px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+[data-theme='dark'] .cajita-desc-strip {
+  background-color: #121829;
+}
+
+/* Contenido de la Cajita (Los Juegos) */
+.cajita-body {
+  padding: 16px 18px;
+  background-color: var(--bg-main, #f8fafc);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+[data-theme='dark'] .cajita-body {
+  background-color: #0b1120;
+}
+
+.cajita-games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+}
+
+/* Empty State dentro de la Cajita */
+.cajita-empty-box {
+  padding: 24px 16px;
+  text-align: center;
+  background-color: var(--bg-card);
+  border: 1.5px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.cajita-empty-box p {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.btn-cajita-add-game {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background-color: var(--primary-yellow);
+  color: #131b2e;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 1.5px 1.5px 0px var(--border-color);
+  transition: all 0.15s ease;
+}
+
+.btn-cajita-add-game:hover {
+  transform: translateY(-1px);
+  box-shadow: 2px 2px 0px var(--border-color);
+}
+
