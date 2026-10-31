@@ -224,6 +224,32 @@ def cancel_registration(db: Session, token: str) -> Actividad:
     return activity
 
 
+def list_registrations(db: Session, activity_id: int) -> list[Inscripcion]:
+    """Admin panel: sign-ups of the current occurrence (the ones counted in `inscriptos`)."""
+    activity = get_activity(db, activity_id)
+    return list(
+        db.scalars(
+            select(Inscripcion)
+            .where(
+                Inscripcion.actividad_id == activity.id,
+                Inscripcion.fecha_hora == activity.fecha_hora,
+            )
+            .order_by(Inscripcion.creada_en, Inscripcion.id)
+        )
+    )
+
+
+def delete_registration(db: Session, activity_id: int, registration_id: int) -> Actividad:
+    """The admin removes a sign-up, freeing its spot. Returns the activity with the updated counts."""
+    activity = get_activity(db, activity_id)
+    registration = db.get(Inscripcion, registration_id)
+    if registration is None or registration.actividad_id != activity.id:
+        raise not_found("La inscripción no existe o ya fue eliminada")
+    db.delete(registration)
+    db.commit()
+    return activity
+
+
 def create_activity(db: Session, data: ActividadCreate) -> Actividad:
     _ensure_type_exists(db, data.tipo_id)
 

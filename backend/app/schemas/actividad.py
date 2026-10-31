@@ -162,6 +162,18 @@ class InscripcionCreated(BaseModel):
     actividad: ActividadRead
 
 
+class InscriptoRead(BaseModel):
+    """A sign-up as the admin sees it in the list of an activity."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    nombre: str
+    edad: int | None  # null only in sign-ups made before the field existed
+    email: str
+    creada_en: datetime
+
+
 class InscripcionRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

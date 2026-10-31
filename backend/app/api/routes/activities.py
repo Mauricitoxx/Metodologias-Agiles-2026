@@ -15,6 +15,7 @@ from app.schemas.actividad import (
     InscripcionCreate,
     InscripcionCreated,
     InscripcionRead,
+    InscriptoRead,
 )
 from app.services import activity as activity_service
 from app.services.activity import SortOrder
@@ -129,6 +130,25 @@ def deactivate_activity(activity_id: int, db: Session = Depends(get_db)):
 @router.patch("/{activity_id}/activate", response_model=ActividadRead, dependencies=ADMIN_ONLY)
 def activate_activity(activity_id: int, db: Session = Depends(get_db)):
     return activity_service.activate_activity(db, activity_id)
+
+
+@router.get(
+    "/{activity_id}/registrations",
+    response_model=list[InscriptoRead],
+    dependencies=ADMIN_ONLY,
+)
+def list_registrations(activity_id: int, db: Session = Depends(get_db)):
+    return activity_service.list_registrations(db, activity_id)
+
+
+@router.delete(
+    "/{activity_id}/registrations/{registration_id}",
+    response_model=ActividadRead,
+    dependencies=ADMIN_ONLY,
+)
+def delete_registration(activity_id: int, registration_id: int, db: Session = Depends(get_db)):
+    """Returns the activity with the freed spot."""
+    return activity_service.delete_registration(db, activity_id, registration_id)
 
 
 @router.delete(
