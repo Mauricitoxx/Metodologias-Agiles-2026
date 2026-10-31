@@ -2,15 +2,18 @@ from datetime import date, datetime, time, timedelta
 from typing import Literal
 
 from sqlalchemy import Select, and_, func, or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.actividad import Actividad, AlcanceCambio, EstadoActividad, FrecuenciaActividad
+from app.models.inscripcion import Inscripcion
 from app.models.tipo_actividad import TipoActividad
 from app.schemas.actividad import (
     ActividadCancel,
     ActividadCreate,
     ActividadPostpone,
     ActividadUpdate,
+    InscripcionCreate,
 )
 from app.services.errors import conflict, field_error, not_found
 from app.services.recurrence import next_occurrence
@@ -143,6 +146,35 @@ def get_public_activity(db: Session, activity_id: int) -> Actividad:
     activity = get_activity(db, activity_id)
     if activity.estado == EstadoActividad.inactiva:
         raise not_found("La actividad no existe")
+    return activity
+
+
+def register_to_activity(db: Session, activity_id: int, data: InscripcionCreate) -> Actividad:
+    """Signs a client up for the current occurrence. Sign-ups close when the activity starts."""
+    activity = get_public_activity(db, activity_id)
+    if activity.estado == EstadoActividad.cancelada:
+        raise conflict("La actividad está cancelada")
+    if (activity.fecha_hora_postergada or activity.fecha_hora) <= datetime.now():
+        raise conflict("La actividad ya comenzó: las inscripciones están cerradas")
+    if activity.cupos_disponibles == 0:
+        raise conflict("No quedan cupos disponibles")
+
+    already_registered = db.scalar(
+        select(Inscripcion.id).where(
+            Inscripcion.actividad_id == activity.id,
+            Inscripcion.fecha_hora == activity.fecha_hora,
+            Inscripcion.email == data.email,
+        )
+    )
+    if already_registered is not None:
+        raise field_error("email", "Este correo ya está inscripto en la actividad")
+
+    db.add(Inscripcion(actividad_id=activity.id, fecha_hora=activity.fecha_hora, **data.model_dump()))
+    try:
+        db.commit()
+    except IntegrityError:  # the same email signed up at the same time
+        db.rollback()
+        raise field_error("email", "Este correo ya está inscripto en la actividad") from None
     return activity
 
 

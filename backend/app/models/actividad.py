@@ -1,10 +1,11 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, String, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import DateTime, Enum, ForeignKey, String, Text, func, select
+from sqlalchemy.orm import Mapped, mapped_column, object_session, relationship
 
 from app.db.base import Base
+from app.models.inscripcion import Inscripcion
 from app.models.tipo_actividad import TipoActividad
 
 
@@ -57,3 +58,23 @@ class Actividad(Base):
     tipo_id: Mapped[int] = mapped_column(ForeignKey("tipos_actividad.id"), index=True)
 
     tipo: Mapped[TipoActividad] = relationship(lazy="joined")
+    # Only used to delete the sign-ups along with the activity
+    inscripciones: Mapped[list[Inscripcion]] = relationship(cascade="all, delete-orphan")
+
+    @property
+    def inscriptos(self) -> int:
+        """Sign-ups of the current occurrence (queried each time, so it never goes stale)."""
+        session = object_session(self)
+        if session is None:
+            return 0
+        return session.scalar(
+            select(func.count(Inscripcion.id)).where(
+                Inscripcion.actividad_id == self.id,
+                Inscripcion.fecha_hora == self.fecha_hora,
+            )
+        )
+
+    @property
+    def cupos_disponibles(self) -> int:
+        # The admin may lower the quota below the sign-ups already taken
+        return max(self.cupo - self.inscriptos, 0)

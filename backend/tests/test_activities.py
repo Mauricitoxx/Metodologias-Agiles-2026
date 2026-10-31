@@ -10,6 +10,7 @@ from app.models.actividad import (
     EstadoActividad,
     FrecuenciaActividad,
 )
+from app.models.inscripcion import Inscripcion
 from app.models.tipo_actividad import TipoActividad
 
 REQUIRED_FIELDS = [
@@ -622,6 +623,114 @@ def test_public_detail_hides_inactive_activity(client: TestClient, payload: dict
 
     assert client.get(f"/api/activities/schedule/{active['id']}").status_code == 200
     assert client.get(f"/api/activities/schedule/{inactive['id']}").status_code == 404
+
+
+# --- Client sign-ups ---
+
+
+def register(client: TestClient, activity_id: int, email: str = "ana@example.com", nombre: str = "Ana"):
+    return client.post(
+        f"/api/activities/schedule/{activity_id}/registrations",
+        json={"nombre": nombre, "email": email},
+    )
+
+
+def test_register_takes_a_spot(client: TestClient, payload: dict):
+    activity = create(client, payload, cupo=3)
+    assert (activity["inscriptos"], activity["cupos_disponibles"]) == (0, 3)
+
+    response = register(client, activity["id"])
+
+    assert response.status_code == 201
+    assert (response.json()["inscriptos"], response.json()["cupos_disponibles"]) == (1, 2)
+    schedule = client.get("/api/activities/schedule").json()
+    assert schedule[0]["cupos_disponibles"] == 2
+
+
+def test_register_rejects_the_same_email_twice(client: TestClient, payload: dict):
+    activity = create(client, payload)
+    register(client, activity["id"], email="ana@example.com")
+
+    response = register(client, activity["id"], email="  ANA@example.com ")
+
+    assert response.status_code == 422
+    assert error_fields(response) == {"email"}
+
+
+def test_register_validates_name_and_email(client: TestClient, payload: dict):
+    activity = create(client, payload)
+
+    response = client.post(
+        f"/api/activities/schedule/{activity['id']}/registrations",
+        json={"nombre": "  ", "email": "no-es-un-mail"},
+    )
+
+    assert response.status_code == 422
+    assert error_fields(response) == {"nombre", "email"}
+
+
+def test_register_rejects_when_full(client: TestClient, payload: dict):
+    activity = create(client, payload, cupo=1)
+    register(client, activity["id"], email="ana@example.com")
+
+    response = register(client, activity["id"], email="beto@example.com")
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "No quedan cupos disponibles"
+
+
+def test_register_rejects_cancelled_inactive_and_started(
+    client: TestClient, db: Session, payload: dict, tipos
+):
+    cancelled = create(client, payload)
+    client.patch(f"/api/activities/{cancelled['id']}/cancel")
+    inactive = create(client, payload, estado="inactiva")
+    started = add_past_activity(db, tipos["Taller"], fecha_hora=datetime.now() - timedelta(minutes=30))
+
+    assert register(client, cancelled["id"]).status_code == 409
+    assert register(client, inactive["id"]).status_code == 404
+    assert register(client, started.id).status_code == 409
+
+
+def test_postponing_keeps_the_sign_ups(client: TestClient, payload: dict):
+    activity = create(client, payload)
+    register(client, activity["id"])
+
+    assert postpone(client, activity, 8)["inscriptos"] == 1
+
+
+def test_recurring_activity_starts_counting_again_on_its_next_date(
+    client: TestClient, db: Session, tipos
+):
+    activity = add_past_activity(
+        db, tipos["Torneo"], fecha_hora=in_days(1), frecuencia=FrecuenciaActividad.semanal
+    )
+    register(client, activity.id)
+    activity.fecha_hora = in_days(-3)  # the registered date already happened
+    db.commit()
+
+    read = client.get(f"/api/activities/schedule/{activity.id}").json()
+
+    assert (read["inscriptos"], read["cupos_disponibles"]) == (0, activity.cupo)
+
+
+def test_lowering_the_quota_never_shows_negative_spots(client: TestClient, payload: dict):
+    activity = create(client, payload, cupo=2)
+    register(client, activity["id"], email="ana@example.com")
+    register(client, activity["id"], email="beto@example.com")
+
+    response = client.put(f"/api/activities/{activity['id']}", json=edit_payload(activity, cupo=1))
+
+    assert response.json()["cupos_disponibles"] == 0
+
+
+def test_delete_activity_removes_its_sign_ups(client: TestClient, db: Session, payload: dict):
+    activity = create(client, payload)
+    register(client, activity["id"])
+
+    client.delete(f"/api/activities/{activity['id']}")
+
+    assert db.query(Inscripcion).count() == 0
 
 
 # --- Recurring activities ---

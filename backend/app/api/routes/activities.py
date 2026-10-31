@@ -12,6 +12,7 @@ from app.schemas.actividad import (
     ActividadPostpone,
     ActividadRead,
     ActividadUpdate,
+    InscripcionCreate,
 )
 from app.services import activity as activity_service
 from app.services.activity import SortOrder
@@ -31,6 +32,18 @@ def list_schedule(
 @router.get("/schedule/{activity_id}", response_model=ActividadRead)
 def get_public_activity(activity_id: int, db: Session = Depends(get_db)):
     return activity_service.get_public_activity(db, activity_id)
+
+
+@router.post(
+    "/schedule/{activity_id}/registrations",
+    response_model=ActividadRead,
+    status_code=status.HTTP_201_CREATED,
+)
+def register_to_activity(
+    activity_id: int, data: InscripcionCreate, db: Session = Depends(get_db)
+):
+    """Returns the activity with its updated remaining spots."""
+    return activity_service.register_to_activity(db, activity_id, data)
 
 
 # --- Admin endpoints (RN-02) ---
