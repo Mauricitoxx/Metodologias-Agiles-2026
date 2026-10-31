@@ -132,3 +132,41 @@ class ActividadRead(BaseModel):
     alcance: AlcanceCambio | None
     edad_minima: int
     tipo: TipoActividadRead
+    inscriptos: int
+    cupos_disponibles: int
+
+
+class InscripcionCreate(BaseModel):
+    """A client signs up for the next occurrence of an activity (no account needed)."""
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    nombre: Annotated[NonEmptyStr, Field(max_length=100)]
+    email: Annotated[str, Field(min_length=3, max_length=254)]
+    edad: Annotated[int, Field(ge=0, le=120)]
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        value = value.lower()
+        local, _, domain = value.partition("@")
+        if not local or "." not in domain or any(char.isspace() for char in value):
+            raise ValueError("Ingresá un correo electrónico válido")
+        return value
+
+
+class InscripcionCreated(BaseModel):
+    """`token` is shown only once: the client keeps it to cancel the sign-up later."""
+
+    token: str
+    actividad: ActividadRead
+
+
+class InscripcionRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    nombre: str
+    email: str
+    fecha_hora: datetime  # original date of the occurrence
+    cancelable: bool
+    actividad: ActividadRead

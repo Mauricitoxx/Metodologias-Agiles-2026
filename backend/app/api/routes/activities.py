@@ -12,6 +12,9 @@ from app.schemas.actividad import (
     ActividadPostpone,
     ActividadRead,
     ActividadUpdate,
+    InscripcionCreate,
+    InscripcionCreated,
+    InscripcionRead,
 )
 from app.services import activity as activity_service
 from app.services.activity import SortOrder
@@ -31,6 +34,31 @@ def list_schedule(
 @router.get("/schedule/{activity_id}", response_model=ActividadRead)
 def get_public_activity(activity_id: int, db: Session = Depends(get_db)):
     return activity_service.get_public_activity(db, activity_id)
+
+
+@router.post(
+    "/schedule/{activity_id}/registrations",
+    response_model=InscripcionCreated,
+    status_code=status.HTTP_201_CREATED,
+)
+def register_to_activity(
+    activity_id: int, data: InscripcionCreate, db: Session = Depends(get_db)
+):
+    """Returns the activity with its updated remaining spots and the token to cancel the sign-up."""
+    activity, token = activity_service.register_to_activity(db, activity_id, data)
+    return {"token": token, "actividad": activity}
+
+
+# The token is the only proof of the sign-up: clients don't have accounts
+@router.get("/registrations/{token}", response_model=InscripcionRead)
+def get_registration(token: str, db: Session = Depends(get_db)):
+    return activity_service.get_registration(db, token)
+
+
+@router.delete("/registrations/{token}", response_model=ActividadRead)
+def cancel_registration(token: str, db: Session = Depends(get_db)):
+    """Returns the activity with the freed spot."""
+    return activity_service.cancel_registration(db, token)
 
 
 # --- Admin endpoints (RN-02) ---

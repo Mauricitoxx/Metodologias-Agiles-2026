@@ -19,6 +19,7 @@ import { ItemDetailModal } from './components/modals/ItemDetailModal';
 import { ItemFormModal } from './components/modals/ItemFormModal';
 import { ConfirmBajaModal } from './components/modals/ConfirmBajaModal';
 import { PublicCatalogRoutes } from './catalog/PublicCatalogRoutes';
+import { PublicEventsRoutes } from './catalog/PublicEventsRoutes';
 
 const ActivitiesRedirect = () => {
   const { setCatalogSubTab } = useAdmin();
@@ -178,6 +179,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Navigate to="/catalogo" replace />} />
       <Route path="/catalogo/*" element={<PublicCatalogRoutes />} />
+      <Route path="/eventos/*" element={<PublicEventsRoutes />} />
       <Route path="*" element={<AdminProvider><AdminDashboard /></AdminProvider>} />
     </Routes>
   );

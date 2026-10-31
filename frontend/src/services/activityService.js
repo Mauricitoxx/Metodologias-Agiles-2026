@@ -16,7 +16,12 @@ export const activityService = {
   remove: (id) => api.delete(`/activities/${id}`),
 
   listSchedule: ({ search, tipo_id } = {}) => api.get('/activities/schedule', { search, tipo_id }),
-  getPublic: (id) => api.get(`/activities/schedule/${id}`)
+  getPublic: (id) => api.get(`/activities/schedule/${id}`),
+  // Returns { token, actividad }: the token is the only way to cancel later (clients have no account)
+  register: (id, { nombre, email, edad }) => api.post(`/activities/schedule/${id}/registrations`, { nombre, email, edad }),
+  getRegistration: (token) => api.get(`/activities/registrations/${encodeURIComponent(token)}`),
+  // Returns the activity with the freed spot
+  cancelRegistration: (token) => api.delete(`/activities/registrations/${encodeURIComponent(token)}`)
 };
 
 export const activityTypeService = {
