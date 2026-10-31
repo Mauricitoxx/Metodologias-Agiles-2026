@@ -34,7 +34,7 @@ def crear(datos: CategoriaJuegoCreate, db: Session = Depends(get_db)):
     if existente:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Ya existe una categoría con ese nombre",
+            detail="Ya existe una categoría con ese nombre: el nombre ya está en uso",
         )
     return categoria_service.crear_categoria(db, datos)
 
@@ -54,7 +54,7 @@ def actualizar(
         if existente and existente.id != categoria_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Ya existe una categoría con ese nombre",
+                detail="Ya existe una categoría con ese nombre: el nombre ya está en uso",
             )
     return categoria_service.actualizar_categoria(db, categoria, datos)
 
@@ -66,6 +66,11 @@ def eliminar(categoria_id: int, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Categoría no encontrada",
+        )
+    if categoria_service.categoria_tiene_juegos(db, categoria_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se puede eliminar esta categoría porque hay juegos usándola",
         )
     categoria_service.eliminar_categoria(db, categoria)
     return None

@@ -70,7 +70,7 @@ export function LoginView() {
           </div>
         </form>
         <aside className="login-notice"><Icon name="b91eb.svg" /><p>Área exclusiva para administradores.<br />Usá las credenciales que te asignó el equipo.</p></aside>
-        {publicSite ? <a className="login-back" href={publicSite}><Icon name="388e2.svg" />Volver a La Frikioteca</a> : <button className="login-back" type="button" onClick={() => openDialog('public')}><Icon name="388e2.svg" />Volver a La Frikioteca</button>}
+        <button className="login-back" type="button" onClick={() => navigate('/')}><Icon name="388e2.svg" />Volver a La Frikioteca</button>
       </main>
       <dialog ref={recovery} className="login-recovery-dialog" aria-labelledby="recovery-title">
         <h2 id="recovery-title">{dialogType === 'recovery' ? 'Recuperar acceso' : 'La Frikioteca'}</h2><p>{dialogType === 'recovery' ? 'Contactá al equipo de La Frikioteca para que te asignen una nueva contraseña.' : 'El sitio público estará disponible próximamente.'}</p><form method="dialog"><button className="login-submit">Entendido</button></form>
