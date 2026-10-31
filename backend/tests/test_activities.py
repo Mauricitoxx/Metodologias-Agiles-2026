@@ -628,23 +628,37 @@ def test_public_detail_hides_inactive_activity(client: TestClient, payload: dict
 # --- Client sign-ups ---
 
 
-def register(client: TestClient, activity_id: int, email: str = "ana@example.com", nombre: str = "Ana"):
+def register(
+    client: TestClient, activity_id: int, email: str = "ana@example.com", nombre: str = "Ana", edad: int = 30
+):
     return client.post(
         f"/api/activities/schedule/{activity_id}/registrations",
-        json={"nombre": nombre, "email": email},
+        json={"nombre": nombre, "email": email, "edad": edad},
     )
 
 
-def test_register_takes_a_spot(client: TestClient, payload: dict):
+def test_register_takes_a_spot_and_returns_a_cancel_token(client: TestClient, payload: dict):
     activity = create(client, payload, cupo=3)
     assert (activity["inscriptos"], activity["cupos_disponibles"]) == (0, 3)
 
     response = register(client, activity["id"])
 
     assert response.status_code == 201
-    assert (response.json()["inscriptos"], response.json()["cupos_disponibles"]) == (1, 2)
+    body = response.json()
+    assert (body["actividad"]["inscriptos"], body["actividad"]["cupos_disponibles"]) == (1, 2)
+    assert len(body["token"]) >= 32
     schedule = client.get("/api/activities/schedule").json()
     assert schedule[0]["cupos_disponibles"] == 2
+
+
+def test_only_the_token_hash_is_stored(client: TestClient, db: Session, payload: dict):
+    activity = create(client, payload)
+
+    token = register(client, activity["id"]).json()["token"]
+
+    stored = db.query(Inscripcion).one()
+    assert stored.token_hash != token
+    assert len(stored.token_hash) == 64
 
 
 def test_register_rejects_the_same_email_twice(client: TestClient, payload: dict):
@@ -657,16 +671,27 @@ def test_register_rejects_the_same_email_twice(client: TestClient, payload: dict
     assert error_fields(response) == {"email"}
 
 
-def test_register_validates_name_and_email(client: TestClient, payload: dict):
+def test_register_validates_name_email_and_age(client: TestClient, payload: dict):
     activity = create(client, payload)
 
     response = client.post(
         f"/api/activities/schedule/{activity['id']}/registrations",
-        json={"nombre": "  ", "email": "no-es-un-mail"},
+        json={"nombre": "  ", "email": "no-es-un-mail", "edad": -1},
     )
 
     assert response.status_code == 422
-    assert error_fields(response) == {"nombre", "email"}
+    assert error_fields(response) == {"nombre", "email", "edad"}
+
+
+def test_register_requires_the_minimum_age(client: TestClient, payload: dict):
+    activity = create(client, payload, edad_minima=18)
+
+    too_young = register(client, activity["id"], edad=17)
+
+    assert too_young.status_code == 422
+    assert error_fields(too_young) == {"edad"}
+    assert "18 años" in too_young.json()["detail"][0]["msg"]
+    assert register(client, activity["id"], edad=18).status_code == 201
 
 
 def test_register_rejects_when_full(client: TestClient, payload: dict):
@@ -692,6 +717,45 @@ def test_register_rejects_cancelled_inactive_and_started(
     assert register(client, started.id).status_code == 409
 
 
+def test_get_registration_by_token(client: TestClient, payload: dict):
+    activity = create(client, payload)
+    token = register(client, activity["id"], nombre="Ana").json()["token"]
+
+    response = client.get(f"/api/activities/registrations/{token}")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert (body["nombre"], body["cancelable"], body["actividad"]["id"]) == ("Ana", True, activity["id"])
+    assert client.get("/api/activities/registrations/otro-token").status_code == 404
+
+
+def test_cancel_registration_frees_the_spot(client: TestClient, payload: dict):
+    activity = create(client, payload, cupo=1)
+    token = register(client, activity["id"], email="ana@example.com").json()["token"]
+
+    response = client.delete(f"/api/activities/registrations/{token}")
+
+    assert response.status_code == 200
+    assert response.json()["cupos_disponibles"] == 1
+    assert client.delete(f"/api/activities/registrations/{token}").status_code == 404
+    # The same person can sign up again
+    assert register(client, activity["id"], email="ana@example.com").status_code == 201
+
+
+def test_cancel_registration_is_rejected_once_the_activity_started(
+    client: TestClient, db: Session, payload: dict
+):
+    activity = create(client, payload)
+    token = register(client, activity["id"]).json()["token"]
+    stored = db.get(Actividad, activity["id"])
+    db.query(Inscripcion).update({Inscripcion.fecha_hora: in_days(-1) + timedelta(hours=23)})
+    stored.fecha_hora = in_days(-1) + timedelta(hours=23)  # started an hour ago
+    db.commit()
+
+    assert client.get(f"/api/activities/registrations/{token}").json()["cancelable"] is False
+    assert client.delete(f"/api/activities/registrations/{token}").status_code == 409
+
+
 def test_postponing_keeps_the_sign_ups(client: TestClient, payload: dict):
     activity = create(client, payload)
     register(client, activity["id"])
@@ -705,13 +769,15 @@ def test_recurring_activity_starts_counting_again_on_its_next_date(
     activity = add_past_activity(
         db, tipos["Torneo"], fecha_hora=in_days(1), frecuencia=FrecuenciaActividad.semanal
     )
-    register(client, activity.id)
+    token = register(client, activity.id).json()["token"]
+    db.query(Inscripcion).update({Inscripcion.fecha_hora: in_days(-3)})
     activity.fecha_hora = in_days(-3)  # the registered date already happened
     db.commit()
 
     read = client.get(f"/api/activities/schedule/{activity.id}").json()
 
     assert (read["inscriptos"], read["cupos_disponibles"]) == (0, activity.cupo)
+    assert client.get(f"/api/activities/registrations/{token}").json()["cancelable"] is False
 
 
 def test_lowering_the_quota_never_shows_negative_spots(client: TestClient, payload: dict):

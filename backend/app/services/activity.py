@@ -1,3 +1,5 @@
+import hashlib
+import secrets
 from datetime import date, datetime, time, timedelta
 from typing import Literal
 
@@ -149,13 +151,30 @@ def get_public_activity(db: Session, activity_id: int) -> Actividad:
     return activity
 
 
-def register_to_activity(db: Session, activity_id: int, data: InscripcionCreate) -> Actividad:
-    """Signs a client up for the current occurrence. Sign-ups close when the activity starts."""
+def _hash_token(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def register_to_activity(
+    db: Session, activity_id: int, data: InscripcionCreate
+) -> tuple[Actividad, str]:
+    """Signs a client up for the current occurrence. Sign-ups close when the activity starts.
+
+    Returns the activity and the secret token that lets the client cancel without an account.
+    """
     activity = get_public_activity(db, activity_id)
     if activity.estado == EstadoActividad.cancelada:
         raise conflict("La actividad está cancelada")
     if (activity.fecha_hora_postergada or activity.fecha_hora) <= datetime.now():
         raise conflict("La actividad ya comenzó: las inscripciones están cerradas")
+    if data.edad < activity.edad_minima:
+        raise field_error(
+            "edad", f"Tenés que tener al menos {activity.edad_minima} años para inscribirte"
+        )
+
+    # Locks the activity until the commit, so two clients can't take the last spot at the same time
+    # (SQLite ignores it, but it only runs one write at a time anyway)
+    db.execute(select(Actividad.id).where(Actividad.id == activity.id).with_for_update())
     if activity.cupos_disponibles == 0:
         raise conflict("No quedan cupos disponibles")
 
@@ -169,12 +188,39 @@ def register_to_activity(db: Session, activity_id: int, data: InscripcionCreate)
     if already_registered is not None:
         raise field_error("email", "Este correo ya está inscripto en la actividad")
 
-    db.add(Inscripcion(actividad_id=activity.id, fecha_hora=activity.fecha_hora, **data.model_dump()))
+    token = secrets.token_urlsafe(32)
+    db.add(
+        Inscripcion(
+            actividad_id=activity.id,
+            fecha_hora=activity.fecha_hora,
+            token_hash=_hash_token(token),
+            **data.model_dump(),
+        )
+    )
     try:
         db.commit()
     except IntegrityError:  # the same email signed up at the same time
         db.rollback()
         raise field_error("email", "Este correo ya está inscripto en la actividad") from None
+    return activity, token
+
+
+def get_registration(db: Session, token: str) -> Inscripcion:
+    refresh_recurring_dates(db)  # so `cancelable` sees the current occurrence
+    registration = db.scalar(select(Inscripcion).where(Inscripcion.token_hash == _hash_token(token)))
+    if registration is None:
+        raise not_found("La inscripción no existe o ya fue cancelada")
+    return registration
+
+
+def cancel_registration(db: Session, token: str) -> Actividad:
+    """Deletes the sign-up, freeing its spot. Returns the activity with the updated counts."""
+    registration = get_registration(db, token)
+    if not registration.cancelable:
+        raise conflict("La actividad ya comenzó: la inscripción no se puede cancelar")
+    activity = registration.actividad
+    db.delete(registration)
+    db.commit()
     return activity
 
 

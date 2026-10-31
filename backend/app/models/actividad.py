@@ -58,8 +58,10 @@ class Actividad(Base):
     tipo_id: Mapped[int] = mapped_column(ForeignKey("tipos_actividad.id"), index=True)
 
     tipo: Mapped[TipoActividad] = relationship(lazy="joined")
-    # Only used to delete the sign-ups along with the activity
-    inscripciones: Mapped[list[Inscripcion]] = relationship(cascade="all, delete-orphan")
+    # Not serialized: the counts below query only the current occurrence
+    inscripciones: Mapped[list[Inscripcion]] = relationship(
+        back_populates="actividad", cascade="all, delete-orphan"
+    )
 
     @property
     def inscriptos(self) -> int:
