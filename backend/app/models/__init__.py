@@ -7,4 +7,4 @@ from app.models.categoria_juego import CategoriaJuego  # noqa: F401
 from app.models.dificultad import Dificultad  # noqa: F401
 from app.models.juego import Juego, juegos_categorias  # noqa: F401
 from app.models.regla import Regla  # noqa: F401
-
+from app.models.producto import Producto  # noqa: F401

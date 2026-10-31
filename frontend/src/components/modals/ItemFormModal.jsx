@@ -1,8 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Check } from 'lucide-react';
+import { isValidUrl } from '../../utils/validation';
 
 const getInitialFormData = (initialItem, mode, entityType) => {
   if (initialItem && mode === 'edit') {
+    if (entityType === 'boardgames' || entityType === 'juegos') {
+      return {
+        ...initialItem,
+        nombre: initialItem.nombre || initialItem.title || '',
+        duracion_min: initialItem.duracion_min || 45,
+        jugadores_min: initialItem.jugadores_min || initialItem.minPlayers || 1,
+        jugadores_max: initialItem.jugadores_max || initialItem.maxPlayers || 4,
+        edad_recomendada: initialItem.edad_recomendada || 8,
+        cantidad: initialItem.cantidad || 1,
+        video_url: initialItem.video_url || '',
+        descripcion: initialItem.descripcion || initialItem.description || ''
+      };
+    }
+
     if (entityType === 'comics') {
       return {
         ...initialItem,
@@ -26,10 +41,10 @@ const getInitialFormData = (initialItem, mode, entityType) => {
       duration: '45 min',
       shelf: 'ESTANTE A-1',
       status: 'disponible',
-      image:
-        'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=400&q=80',
+      image: 'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=400&q=80',
       description: '',
       notes: '',
+      videoUrl: ''
     },
     comics: {
       title: '',
@@ -94,12 +109,12 @@ export const ItemFormModal = ({
 
   if (!isOpen) return null;
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
+  const handleChange = (e) => {
+    const { name, value, type } = e.target;
 
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === 'number' ? (value === '' ? '' : Number(value)) : value
     }));
 
     setErrors((prev) => {
@@ -123,19 +138,24 @@ export const ItemFormModal = ({
       if (!formData.email?.trim() || !formData.email.includes('@')) {
         newErrors.email = 'Ingresá un correo válido.';
       }
-    } else {
-      if (!formData.title?.trim()) {
-        newErrors.title = 'El título es obligatorio.';
+    } else if (entityType === 'boardgames' || entityType === 'juegos') {
+      if (!formData.nombre?.trim()) {
+        newErrors.nombre = 'El nombre del juego es obligatorio.';
       }
-
-      if (entityType === 'comics') {
-        for (const field of ['volume_number', 'pages', 'copies']) {
-          const value = Number(formData[field]);
-
-          if (!Number.isInteger(value) || value < 1) {
-            newErrors[field] =
-              'Ingresá un número entero mayor que cero.';
-          }
+      if (!formData.duracion_min || formData.duracion_min <= 0) {
+        newErrors.duracion_min = 'Duración inválida.';
+      }
+      if (!formData.jugadores_min || formData.jugadores_min < 1) {
+        newErrors.jugadores_min = 'Mínimo 1 jugador.';
+      }
+      if (formData.jugadores_max < formData.jugadores_min) {
+        newErrors.jugadores_max = 'Max jugadores debe ser mayor o igual al mínimo.';
+      }
+    } else {
+      if (!formData.title?.trim()) newErrors.title = 'El título/nombre es obligatorio';
+      if (entityType === 'boardgames' && formData.videoUrl && formData.videoUrl.trim()) {
+        if (!isValidUrl(formData.videoUrl.trim())) {
+          newErrors.videoUrl = 'Debe ingresar una URL web válida';
         }
       }
     }
@@ -145,6 +165,11 @@ export const ItemFormModal = ({
       return;
     }
 
+    onSave(entityType, {
+      ...formData,
+      videoUrl: formData.videoUrl ? formData.videoUrl.trim() : ''
+    });
+    onClose();
     let payload;
 
     if (entityType === 'comics') {
@@ -158,24 +183,13 @@ export const ItemFormModal = ({
     } else {
       payload = {
         ...formData,
-        ...(formData.title !== undefined
-          ? { title: formData.title.trim() }
-          : {}),
-        ...(formData.name !== undefined
-          ? { name: formData.name.trim() }
-          : {}),
-        ...(formData.email !== undefined
-          ? { email: formData.email.trim() }
-          : {}),
-        ...(formData.price !== undefined
-          ? { price: Number(formData.price) }
-          : {}),
-        ...(formData.minPlayers !== undefined
-          ? { minPlayers: Number(formData.minPlayers) }
-          : {}),
-        ...(formData.maxPlayers !== undefined
-          ? { maxPlayers: Number(formData.maxPlayers) }
-          : {}),
+        ...(formData.nombre !== undefined ? { nombre: formData.nombre.trim() } : {}),
+        ...(formData.title !== undefined ? { title: formData.title.trim() } : {}),
+        ...(formData.name !== undefined ? { name: formData.name.trim() } : {}),
+        ...(formData.email !== undefined ? { email: formData.email.trim() } : {}),
+        ...(formData.price !== undefined ? { price: Number(formData.price) } : {}),
+        ...(formData.minPlayers !== undefined ? { minPlayers: Number(formData.minPlayers) } : {}),
+        ...(formData.maxPlayers !== undefined ? { maxPlayers: Number(formData.maxPlayers) } : {}),
       };
     }
 
@@ -197,6 +211,7 @@ export const ItemFormModal = ({
 
   const titles = {
     boardgames: 'Juego de Mesa',
+    juegos: 'Juego de Mesa',
     comics: 'Cómic o Manga',
     cards: 'Juego de Cartas (TCG)',
     buffet: 'Producto de Buffet',
@@ -205,6 +220,7 @@ export const ItemFormModal = ({
 
   const entityTitle = titles[entityType] || 'Elemento';
   const isEditing = mode === 'edit';
+  const isBoardgame = entityType === 'boardgames' || entityType === 'juegos';
 
   const renderNumberField = (name, label) => (
     <div className="form-group" key={name}>
@@ -290,7 +306,7 @@ export const ItemFormModal = ({
                   <select
                     id="admin-role"
                     name="role"
-                    value={formData.role || 'Staff Buffet'}
+                    value={formData.role || 'Gestor de Inventario'}
                     onChange={handleChange}
                     className="form-select"
                   >
@@ -302,6 +318,117 @@ export const ItemFormModal = ({
                     </option>
                     <option value="Staff Buffet">Staff Buffet</option>
                   </select>
+                </div>
+              </>
+            ) : isBoardgame ? (
+              <>
+                <div className="form-group">
+                  <label htmlFor="boardgame-nombre">Nombre del Juego *</label>
+                  <input
+                    id="boardgame-nombre"
+                    type="text"
+                    name="nombre"
+                    value={formData.nombre || ''}
+                    onChange={handleChange}
+                    className="form-input"
+                    placeholder="Ej. Catan, Carcassonne..."
+                  />
+                  {errors.nombre && <span className="error-text">{errors.nombre}</span>}
+                </div>
+
+                <div className="form-row-3">
+                  <div className="form-group">
+                    <label htmlFor="boardgame-jmin">Min Jugadores *</label>
+                    <input
+                      id="boardgame-jmin"
+                      type="number"
+                      name="jugadores_min"
+                      value={formData.jugadores_min || 1}
+                      onChange={handleChange}
+                      className="form-input"
+                      min="1"
+                    />
+                    {errors.jugadores_min && <span className="error-text">{errors.jugadores_min}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="boardgame-jmax">Max Jugadores *</label>
+                    <input
+                      id="boardgame-jmax"
+                      type="number"
+                      name="jugadores_max"
+                      value={formData.jugadores_max || 4}
+                      onChange={handleChange}
+                      className="form-input"
+                      min="1"
+                    />
+                    {errors.jugadores_max && <span className="error-text">{errors.jugadores_max}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="boardgame-dur">Duración (min) *</label>
+                    <input
+                      id="boardgame-dur"
+                      type="number"
+                      name="duracion_min"
+                      value={formData.duracion_min || 45}
+                      onChange={handleChange}
+                      className="form-input"
+                      min="1"
+                    />
+                    {errors.duracion_min && <span className="error-text">{errors.duracion_min}</span>}
+                  </div>
+                </div>
+
+                <div className="form-row-2">
+                  <div className="form-group">
+                    <label htmlFor="boardgame-edad">Edad Recomendada (+Años)</label>
+                    <input
+                      id="boardgame-edad"
+                      type="number"
+                      name="edad_recomendada"
+                      value={formData.edad_recomendada || 8}
+                      onChange={handleChange}
+                      className="form-input"
+                      min="0"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="boardgame-cant">Cantidad (Stock local)</label>
+                    <input
+                      id="boardgame-cant"
+                      type="number"
+                      name="cantidad"
+                      value={formData.cantidad || 1}
+                      onChange={handleChange}
+                      className="form-input"
+                      min="0"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="boardgame-video">URL de Video Tutorial (Opcional)</label>
+                  <input
+                    id="boardgame-video"
+                    type="url"
+                    name="video_url"
+                    value={formData.video_url || ''}
+                    onChange={handleChange}
+                    className="form-input"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="boardgame-desc">Descripción / Reglas resumidas</label>
+                  <textarea
+                    id="boardgame-desc"
+                    name="descripcion"
+                    rows="3"
+                    value={formData.descripcion || ''}
+                    onChange={handleChange}
+                    className="form-textarea"
+                    placeholder="Descripción rápida del juego..."
+                  />
                 </div>
               </>
             ) : entityType === 'comics' ? (
@@ -376,21 +503,6 @@ export const ItemFormModal = ({
                     />
                   </div>
 
-                  {entityType === 'boardgames' && (
-                    <div className="form-group">
-                      <label htmlFor="item-shelf">Ubicación / Estante</label>
-                      <input
-                        id="item-shelf"
-                        type="text"
-                        name="shelf"
-                        value={formData.shelf || ''}
-                        onChange={handleChange}
-                        className="form-input"
-                        placeholder="ESTANTE B-1"
-                      />
-                    </div>
-                  )}
-
                   {entityType === 'buffet' && (
                     <div className="form-group">
                       <label htmlFor="item-price">Precio ($)</label>
@@ -409,31 +521,75 @@ export const ItemFormModal = ({
 
                 {entityType === 'boardgames' && (
                   <div className="form-row-3">
-                    {[
-                      ['minPlayers', 'Mínimo de jugadores', 1],
-                      ['maxPlayers', 'Máximo de jugadores', 4],
-                    ].map(([name, label, fallback]) => (
-                      <div className="form-group" key={name}>
-                        <label htmlFor={`item-${name}`}>{label}</label>
-                        <input
-                          id={`item-${name}`}
-                          type="number"
-                          min="1"
-                          name={name}
-                          value={formData[name] ?? fallback}
-                          onChange={handleChange}
-                          className="form-input"
-                        />
-                      </div>
-                    ))}
-
                     <div className="form-group">
-                      <label htmlFor="item-duration">Duración</label>
+                      <label>Min Jug.</label>
                       <input
-                        id="item-duration"
+                        type="number"
+                        name="minPlayers"
+                        value={formData.minPlayers || 1}
+                        onChange={handleChange}
+                        className="form-input"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Max Jug.</label>
+                      <input
+                        type="number"
+                        name="maxPlayers"
+                        value={formData.maxPlayers || 4}
+                        onChange={handleChange}
+                        className="form-input"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Duración</label>
+                      <input
                         type="text"
                         name="duration"
                         value={formData.duration || '60 min'}
+                        onChange={handleChange}
+                        className="form-input"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {entityType === 'boardgames' && (
+                  <div className="form-group">
+                    <label>Video Explicativo (URL)</label>
+                    <input
+                      type="url"
+                      name="videoUrl"
+                      value={formData.videoUrl || ''}
+                      onChange={handleChange}
+                      className="form-input"
+                      placeholder="https://www.youtube.com/watch?v=..."
+                    />
+                    {errors.videoUrl && <span className="error-text">{errors.videoUrl}</span>}
+                    <small style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                      Opcional. Enlace a YouTube u otra plataforma para aprender a jugar.
+                    </small>
+                  </div>
+                )}
+
+                {entityType === 'events' && (
+                  <div className="form-row-2">
+                    <div className="form-group">
+                      <label>Fecha</label>
+                      <input
+                        type="date"
+                        name="date"
+                        value={formData.date || ''}
+                        onChange={handleChange}
+                        className="form-input"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Hora</label>
+                      <input
+                        type="text"
+                        name="time"
+                        value={formData.time || '19:00 hs'}
                         onChange={handleChange}
                         className="form-input"
                       />

@@ -17,6 +17,7 @@ export function LoginView() {
   const [dialogType, setDialogType] = useState('recovery');
   const recovery = useRef(null);
   const submitting = useRef(false);
+  const publicSite = import.meta.env.VITE_PUBLIC_SITE_URL || '/catalogo';
 
   function openDialog(type) {
     setDialogType(type);

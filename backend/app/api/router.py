@@ -9,6 +9,7 @@ from app.api.routes import (
     health,
     juegos,
     mangas_comics,
+    productos,
     regla,
 )
 
@@ -23,6 +24,7 @@ api_router.include_router(categorias_juego.router)
 api_router.include_router(dificultades.router)
 api_router.include_router(regla.router)
 api_router.include_router(mangas_comics.router)
+api_router.include_router(productos.router)
 
 # Registrar acá el router de cada módulo. Ejemplo:
 # from app.api.routes import juegos

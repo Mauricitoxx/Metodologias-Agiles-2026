@@ -355,6 +355,33 @@ Commitear el modelo, esquema, servicio, ruta, test, **la migración** y los dos 
 
 > ⚠ **Pendiente (HU-01):** los endpoints de admin dependen de `require_admin` (`app/api/deps.py`), que por ahora deja pasar todo. Cuando exista el login, solo hay que implementar esa función.
 
+
+### Productos de la carta (HU-11)
+
+| Capa      | Archivos                                  |
+| --------- | ----------------------------------------- |
+| Modelo    | `models/producto.py` (`Producto`, `TipoProducto`) |
+| Esquemas  | `schemas/producto.py`                     |
+| Servicio  | `services/producto.py`                    |
+| Rutas     | `api/routes/productos.py`                 |
+| Tests     | `tests/test_productos.py`                 |
+
+**Endpoints**
+
+| Método | Ruta                     | Acceso  | Descripción                                          |
+| ------ | ------------------------ | ------- | ---------------------------------------------------- |
+| GET    | `/api/productos`         | Público | Carta: productos activos ordenados por tipo y nombre |
+| GET    | `/api/productos/{id}`    | Admin   | Detalle (para cargar el formulario de edición)       |
+| POST   | `/api/productos`         | Admin   | Alta                                                 |
+| PUT    | `/api/productos/{id}`    | Admin   | Modificación                                         |
+
+**Reglas de negocio**
+
+- `nombre`, `descripcion`, `tipo` y `precio` son obligatorios; los textos en blanco se rechazan.
+- `tipo` es uno de `comida`, `bebida`, `snack`, `postre` o `combo`.
+- `precio` acepta hasta 2 decimales y debe ser mayor a cero: si no, responde 422 con el mensaje *"El precio debe ser mayor a cero"* en el campo `precio`. La base también lo impide con un `CHECK`.
+- `activo` queda en `true` al crear; la baja lógica y las ofertas se suman en HU-12 y HU-13.
+
 ---
 
 ## Migraciones

@@ -5,6 +5,7 @@ import { auth, getSessionToken, clearSessionToken } from '../services/auth';
 import { juegoService } from '../services/juegoService';
 import { mangaComicService } from '../services/mangaComicService';
 import { staffService } from '../services/staffService';
+import { getGameVideoUrl } from '../utils/gameVideo';
 
 export const AdminProvider = ({ children }) => {
   const [data, setData] = useState(() => storage.get());
@@ -62,6 +63,9 @@ export const AdminProvider = ({ children }) => {
     title: juego.nombre,
     name: juego.nombre,
     description: juego.descripcion,
+    minPlayers: juego.jugadores_min,
+    maxPlayers: juego.jugadores_max,
+    videoUrl: getGameVideoUrl(juego) || '',
     category: juego.categorias?.map((c) => c.nombre).join(', ') || 'Sin categoría',
     status: juego.activo ? (juego.disponibilidad ? 'disponible' : 'en_mesa') : 'baja',
     code: `#BG-${String(juego.id).padStart(3, '0')}`,
@@ -88,15 +92,16 @@ export const AdminProvider = ({ children }) => {
     }
   }, []);
 
-  // Cargar juegos al iniciar sesión o cuando se requiera
+  // Cargar juegos al iniciar o cambiar a la pestaña de inventario de juegos
   useEffect(() => {
-    if (session) {
+    if (session && catalogSubTab === 'boardgames') {
       cargarJuegosBackend();
     }
-  }, [session, cargarJuegosBackend]);
+  }, [session, catalogSubTab, cargarJuegosBackend]);
 
-  // Cargar mangas/cómics y staff desde la API
+  // Cargar mangas y cómics desde la API
   useEffect(() => {
+    if (!session) return;
     let cancelled = false;
 
     const loadComics = async () => {
@@ -128,37 +133,7 @@ export const AdminProvider = ({ children }) => {
       }
     };
 
-    const loadStaff = async () => {
-      const token = getSessionToken();
-      if (!token) return;
-      try {
-        const result = await staffService.list();
-        const admins = (Array.isArray(result) ? result : []).map((item) => ({
-          id: item.id,
-          code: `#USR-${String(item.id).padStart(3, '0')}`,
-          name: item.nombre,
-          email: item.email,
-          role: 'Administrador',
-          status: item.activo ? 'activo' : 'inactivo',
-          avatarEmoji: '🛡️',
-          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
-          createdAt: '2026-01-01',
-          isCurrentUser: Boolean(session && (session.id === item.id || session.email === item.email)),
-        }));
-
-        if (!cancelled) {
-          setData((prev) => ({
-            ...prev,
-            admins,
-          }));
-        }
-      } catch {
-        // Si la sesión no es válida, se ignora
-      }
-    };
-
     loadComics();
-    loadStaff();
 
     return () => {
       cancelled = true;
@@ -228,7 +203,7 @@ export const AdminProvider = ({ children }) => {
           edad_recomendada: Number(itemData.edad_recomendada) || 8,
           jugadores_min: Number(itemData.jugadores_min) || 1,
           jugadores_max: Number(itemData.jugadores_max) || 4,
-          video_url: itemData.video_url || null,
+          video_url: getGameVideoUrl(itemData),
           dificultad_id: itemData.dificultad_id ? Number(itemData.dificultad_id) : null,
           categoria_ids: itemData.categoria_ids || []
         };
@@ -270,47 +245,11 @@ export const AdminProvider = ({ children }) => {
       }
     }
 
-    // 3. Staff / Administradores (API)
-    if (entityType === 'admins') {
-      try {
-        const created = await staffService.create({
-          nombre: itemData.name || itemData.nombre,
-          email: itemData.email,
-          password: itemData.password,
-        });
-
-        const newAdmin = {
-          id: created.id,
-          code: `#USR-${String(created.id).padStart(3, '0')}`,
-          name: created.nombre,
-          email: created.email,
-          role: 'Administrador',
-          status: created.activo ? 'activo' : 'inactivo',
-          avatarEmoji: itemData.avatarEmoji || '🛡️',
-          avatar: itemData.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
-          createdAt: new Date().toLocaleDateString('en-CA'),
-          isCurrentUser: false,
-        };
-
-        setData((prev) => ({
-          ...prev,
-          admins: [newAdmin, ...(prev.admins || []).filter((a) => a.id !== created.id)],
-        }));
-
-        showToast(`Administrador "${created.nombre}" registrado con éxito`, 'success');
-        return true;
-      } catch (error) {
-        showToast(error.message || 'No se pudo registrar el administrador.', 'error');
-        return false;
-      }
-    }
-
-    // 4. Lógica para otras entidades (LocalStorage)
+    // 3. Lógica para otras entidades (LocalStorage)
     const prefixMap = {
-      boardgames: '#BG-',
       cards: '#TCG-',
       buffet: '#BF-',
-      admins: '#USR-',
+      admins: '#USR-'
     };
 
     const count = (data[entityType]?.length || 0) + 1;
@@ -348,7 +287,7 @@ export const AdminProvider = ({ children }) => {
           edad_recomendada: updatedItem.edad_recomendada ? Number(updatedItem.edad_recomendada) : undefined,
           jugadores_min: updatedItem.jugadores_min ? Number(updatedItem.jugadores_min) : undefined,
           jugadores_max: updatedItem.jugadores_max ? Number(updatedItem.jugadores_max) : undefined,
-          video_url: updatedItem.video_url || null,
+          video_url: getGameVideoUrl(updatedItem),
           dificultad_id: updatedItem.dificultad_id ? Number(updatedItem.dificultad_id) : undefined,
           categoria_ids: updatedItem.categoria_ids
         };
@@ -407,39 +346,7 @@ export const AdminProvider = ({ children }) => {
       }
     }
 
-    // 3. Staff / Administradores (API)
-    if (entityType === 'admins') {
-      try {
-        const updated = await staffService.update(updatedItem.id, {
-          nombre: updatedItem.name || updatedItem.nombre,
-          email: updatedItem.email,
-          password: updatedItem.password || undefined,
-        });
-
-        const normalized = {
-          ...updatedItem,
-          id: updated.id,
-          name: updated.nombre,
-          email: updated.email,
-          status: updated.activo ? 'activo' : 'inactivo',
-        };
-
-        setData((prev) => ({
-          ...prev,
-          admins: (prev.admins || []).map((admin) =>
-            admin.id === normalized.id ? { ...admin, ...normalized } : admin
-          ),
-        }));
-
-        showToast(`Administrador "${updated.nombre}" actualizado`);
-        return true;
-      } catch (error) {
-        showToast(error.message || 'No se pudo actualizar el administrador.', 'error');
-        return false;
-      }
-    }
-
-    // 4. Lógica para el resto de entidades en LocalStorage
+    // 3. Lógica para el resto de entidades en LocalStorage
     const saved = persistData((prev) => ({
       ...prev,
       [entityType]: (prev[entityType] || []).map((item) =>
@@ -456,7 +363,7 @@ export const AdminProvider = ({ children }) => {
     if (entityType === 'boardgames' || entityType === 'juegos') {
       try {
         const esBajaActual = item.activo === false || item.status === 'baja';
-
+        
         if (esBajaActual) {
           await juegoService.actualizar(item.id, { activo: true });
           showToast(`Reactivado: ${item.nombre || item.title}`);
@@ -530,48 +437,18 @@ export const AdminProvider = ({ children }) => {
       }
     }
 
-    // 3. Staff / Administradores (API)
+    // 3. Protección para el único Superadministrador activo
     if (entityType === 'admins') {
-      const isBaja = item.status === 'inactivo' || item.activo === false;
+      const activeSuperadmins = data.admins?.filter(
+        (admin) => admin.role === 'Superadmin' && admin.status === 'activo'
+      ) || [];
 
-      try {
-        if (isBaja) {
-          const result = await staffService.activate(item.id);
-          const updated = {
-            ...item,
-            status: 'activo',
-            activo: true,
-          };
-
-          setData((prev) => ({
-            ...prev,
-            admins: (prev.admins || []).map((admin) =>
-              admin.id === item.id ? updated : admin
-            ),
-          }));
-
-          showToast(`Reactivado: ${item.name || item.nombre}`, 'success');
-          return true;
-        }
-
-        const result = await staffService.deactivate(item.id);
-        const updated = {
-          ...item,
-          status: 'inactivo',
-          activo: false,
-        };
-
-        setData((prev) => ({
-          ...prev,
-          admins: (prev.admins || []).map((admin) =>
-            admin.id === item.id ? updated : admin
-          ),
-        }));
-
-        showToast(`Dado de baja: ${item.name || item.nombre}`, 'warning');
-        return true;
-      } catch (error) {
-        showToast(error.message || 'No se pudo modificar el estado del administrador.', 'error');
+      if (
+        item.role === 'Superadmin' &&
+        item.status === 'activo' &&
+        activeSuperadmins.length <= 1
+      ) {
+        showToast('No puedes dar de baja al único Superadministrador activo.', 'error');
         return false;
       }
     }

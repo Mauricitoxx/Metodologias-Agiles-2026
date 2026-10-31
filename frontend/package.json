@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "oxlint src vite.config.js",
+    "lint": "oxlint",
+    "test": "node --test src/tests/*.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
