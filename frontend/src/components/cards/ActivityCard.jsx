@@ -17,7 +17,7 @@ import { AgeBadge, StatusBadge, CategoryTag } from '../common/Badge';
 import { ActivityChangeNotice } from './ActivityChangeNotice';
 import { effectiveDate, formatDate, formatDuration, formatTime, frequencyLabel } from '../../utils/activity';
 
-export const ActivityCard = ({ activity, onEdit, onAction }) => {
+export const ActivityCard = ({ activity, onEdit, onAction, onShowRegistrations }) => {
   const [imageFailed, setImageFailed] = useState(false);
   const date = effectiveDate(activity);
   const isInactive = activity.estado === 'inactiva';
@@ -63,9 +63,16 @@ export const ActivityCard = ({ activity, onEdit, onAction }) => {
           <ActivityChangeNotice activity={activity} onUndoPostpone={run('undoPostpone')} />
 
           <div className="card-footer-chips">
-            <span className="slots-badge">
+            <button
+              type="button"
+              className="slots-badge activity-registrations-btn"
+              onClick={() => onShowRegistrations(activity)}
+              title="Ver inscriptos"
+              aria-label={`Ver inscriptos (${activity.inscriptos} de ${activity.cupo})`}
+            >
               <Users size={12} /> {activity.inscriptos}/{activity.cupo} inscriptos
-            </span>
+              <span className="activity-registrations-btn-label">VER</span>
+            </button>
             <span className="slots-badge">{formatDuration(activity.duracion)}</span>
             <span className="slots-badge">
               <Repeat size={12} /> {frequencyLabel(activity.frecuencia)}

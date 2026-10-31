@@ -14,6 +14,10 @@ export const activityService = {
   deactivate: (id) => api.patch(`/activities/${id}/deactivate`),
   activate: (id) => api.patch(`/activities/${id}/activate`),
   remove: (id) => api.delete(`/activities/${id}`),
+  // Sign-ups of the current date: [{ id, nombre, edad, email, creada_en }]
+  listRegistrations: (id) => api.get(`/activities/${id}/registrations`),
+  // Returns the activity with the freed spot
+  removeRegistration: (id, registrationId) => api.delete(`/activities/${id}/registrations/${registrationId}`),
 
   listSchedule: ({ search, tipo_id } = {}) => api.get('/activities/schedule', { search, tipo_id }),
   getPublic: (id) => api.get(`/activities/schedule/${id}`),

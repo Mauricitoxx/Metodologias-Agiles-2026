@@ -4,6 +4,7 @@ import { useAdmin } from '../context/useAdmin';
 import { ActivityCard } from '../components/cards/ActivityCard';
 import { DateTimePicker } from '../components/common/DateTimePicker';
 import { ActivityActionModal } from '../components/modals/ActivityActionModal';
+import { ActivityRegistrationsModal } from '../components/modals/ActivityRegistrationsModal';
 import { ActivityFormView } from './ActivityFormView';
 import { activityService, activityTypeService } from '../services/activityService';
 import { ACTIVITY_STATUSES } from '../utils/activity';
@@ -38,6 +39,7 @@ export const ActivitiesView = ({ header }) => {
 
   const [formState, setFormState] = useState(null);
   const [pendingAction, setPendingAction] = useState(null);
+  const [registrationsActivity, setRegistrationsActivity] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setSearch(searchInput.trim()), SEARCH_DEBOUNCE_MS);
@@ -87,6 +89,13 @@ export const ActivitiesView = ({ header }) => {
     showToast(...ACTION_TOASTS[type](activity));
     setPendingAction(null);
     reload();
+  };
+
+  const closeRegistrations = useCallback(() => setRegistrationsActivity(null), []);
+
+  const handleRegistrationDeleted = (registration, activity) => {
+    showToast(`Inscripción de ${registration.nombre} eliminada de "${activity.nombre}"`, 'warning');
+    reload(); // the card shows the sign-up count
   };
 
   const sortByName = (list) => [...list].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
@@ -271,6 +280,7 @@ export const ActivitiesView = ({ header }) => {
               activity={activity}
               onEdit={(item) => setFormState({ mode: 'edit', activity: item })}
               onAction={(type, item) => setPendingAction({ type, activity: item })}
+              onShowRegistrations={setRegistrationsActivity}
             />
           ))
         )}
@@ -282,6 +292,14 @@ export const ActivitiesView = ({ header }) => {
           activity={pendingAction.activity}
           onClose={closeAction}
           onDone={handleActionDone}
+        />
+      )}
+
+      {registrationsActivity && (
+        <ActivityRegistrationsModal
+          activity={registrationsActivity}
+          onChanged={handleRegistrationDeleted}
+          onClose={closeRegistrations}
         />
       )}
     </div>

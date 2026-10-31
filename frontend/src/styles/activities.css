@@ -663,3 +663,50 @@
 .app-select.compact .app-select-option svg {
   display: none;
 }
+
+/* Sign-ups (admin) */
+.activity-registrations-btn {
+  font-family: inherit;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.activity-registrations-btn:hover {
+  border-color: var(--brand-accent-blue);
+}
+
+.activity-registrations-btn-label {
+  margin-left: 2px;
+  color: var(--brand-accent-blue);
+  font-weight: 800;
+}
+
+.activity-registration-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.activity-registration-age {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.activity-registration-email {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+.activity-registration-email:hover {
+  color: var(--brand-accent-blue);
+  text-decoration: underline;
+}
