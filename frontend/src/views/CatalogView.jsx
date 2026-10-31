@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Search, Plus, ArrowLeft } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
 import { GameCard } from '../components/cards/GameCard';
 import { BuffetCard } from '../components/cards/BuffetCard';

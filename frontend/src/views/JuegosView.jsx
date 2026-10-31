@@ -62,10 +62,10 @@ export const JuegosView = ({ header } = {}) => {
     }
   }, [showToast]);
 
+  // Los juegos los carga AdminContext al entrar a la pestaña 'boardgames'
   useEffect(() => {
     cargarCategorias();
-    cargarJuegosBackend();
-  }, [cargarCategorias, cargarJuegosBackend]);
+  }, [cargarCategorias]);
 
   // Manejo de Alta y Modificación de Categoría
   const handleOpenCreateCategory = () => {
