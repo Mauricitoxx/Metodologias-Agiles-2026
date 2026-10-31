@@ -18,6 +18,11 @@ def listar(db: Session = Depends(get_db)):
 ADMIN_ONLY = [Depends(get_current_admin)]
 
 
+@router.get("/admin/todos", response_model=list[ProductoRead], dependencies=ADMIN_ONLY)
+def listar_todos(db: Session = Depends(get_db)):
+    return producto_service.listar_productos(db, incluir_inactivos=True)
+
+
 @router.get("/{producto_id}", response_model=ProductoRead, dependencies=ADMIN_ONLY)
 def obtener(producto_id: int, db: Session = Depends(get_db)):
     return producto_service.obtener_producto(db, producto_id)
@@ -40,3 +45,17 @@ def actualizar(
     db: Session = Depends(get_db),
 ):
     return producto_service.actualizar_producto(db, producto_id, datos)
+
+
+@router.patch("/{producto_id}/baja", response_model=ProductoRead, dependencies=ADMIN_ONLY)
+def dar_de_baja(producto_id: int, db: Session = Depends(get_db)):
+    return producto_service.dar_de_baja_producto(db, producto_id)
+
+
+@router.patch(
+    "/{producto_id}/reactivar",
+    response_model=ProductoRead,
+    dependencies=ADMIN_ONLY,
+)
+def reactivar(producto_id: int, db: Session = Depends(get_db)):
+    return producto_service.reactivar_producto(db, producto_id)

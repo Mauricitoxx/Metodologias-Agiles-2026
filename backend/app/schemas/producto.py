@@ -18,8 +18,8 @@ Precio = Annotated[
 class ProductoBase(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    nombre: Annotated[NonEmptyStr, Field(max_length=150)]
-    descripcion: NonEmptyStr
+    nombre: Annotated[NonEmptyStr, Field(max_length=50)]
+    descripcion: Annotated[NonEmptyStr, Field(max_length=500)]
     tipo: TipoProducto
     precio: Precio
 
@@ -32,11 +32,13 @@ class ProductoBase(BaseModel):
 
 
 class ProductoCreate(ProductoBase):
-    pass
+    # El panel puede registrar un producto ya inactivo (fuera de la carta)
+    activo: bool = True
 
 
 class ProductoUpdate(ProductoBase):
-    pass
+    # Si no se envía, el producto conserva su estado
+    activo: bool | None = None
 
 
 class ProductoRead(ProductoBase):

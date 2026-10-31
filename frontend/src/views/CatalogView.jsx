@@ -31,7 +31,7 @@ export const CatalogView = () => {
 
   // Filter and search
   const filteredItems = useMemo(() => {
-    return currentList.filter((item) => {
+    const items = currentList.filter((item) => {
       const query = searchQuery.toLowerCase().trim();
       const matchesSearch =
         !query ||
@@ -48,8 +48,12 @@ export const CatalogView = () => {
       if (filterStatus === 'baja') return item.status === 'baja' || item.status === 'en_reparacion';
 
       return true;
-    }).sort((a, b) => (a.code || '').localeCompare(b.code || '', 'es', { numeric: true }));
-  }, [currentList, searchQuery, filterStatus]);
+    });
+
+    // El buffet ya llega de la API ordenado por categoría y nombre
+    if (catalogSubTab === 'buffet') return items;
+    return items.sort((a, b) => (a.code || '').localeCompare(b.code || '', 'es', { numeric: true }));
+  }, [currentList, searchQuery, filterStatus, catalogSubTab]);
 
   // Counts for filter pills
   const counts = useMemo(() => {
@@ -60,6 +64,8 @@ export const CatalogView = () => {
       baja: currentList.filter((i) => i.status === 'baja' || i.status === 'en_reparacion').length
     };
   }, [currentList]);
+
+  const isBuffet = catalogSubTab === 'buffet';
 
   const getSubTabLabel = () => {
     if (catalogSubTab === 'comics') return 'CÓMIC / MANGA';
@@ -101,7 +107,10 @@ export const CatalogView = () => {
         <button
           type="button"
           className={`entity-pill-btn ${catalogSubTab === 'buffet' ? 'active' : ''}`}
-          onClick={() => setCatalogSubTab('buffet')}
+          onClick={() => {
+            setCatalogSubTab('buffet');
+            if (filterStatus === 'en_mesa') setFilterStatus('todos');
+          }}
         >
           <span className="entity-pill-emoji">🍔</span>
           <div className="entity-pill-texts">
@@ -174,28 +183,33 @@ export const CatalogView = () => {
           className={`filter-pill ${filterStatus === 'disponibles' ? 'active' : ''}`}
           onClick={() => setFilterStatus('disponibles')}
         >
-          DISPONIBLES ({counts.disponibles})
+          {isBuffet ? 'ACTIVOS' : 'DISPONIBLES'} ({counts.disponibles})
         </button>
-        <button
-          type="button"
-          className={`filter-pill ${filterStatus === 'en_mesa' ? 'active' : ''}`}
-          onClick={() => setFilterStatus('en_mesa')}
-        >
-          EN MESA ({counts.en_mesa})
-        </button>
+        {/* El buffet solo tiene productos activos o inactivos */}
+        {!isBuffet && (
+          <button
+            type="button"
+            className={`filter-pill ${filterStatus === 'en_mesa' ? 'active' : ''}`}
+            onClick={() => setFilterStatus('en_mesa')}
+          >
+            EN MESA ({counts.en_mesa})
+          </button>
+        )}
         <button
           type="button"
           className={`filter-pill ${filterStatus === 'baja' ? 'active' : ''}`}
           onClick={() => setFilterStatus('baja')}
         >
-          BAJA / TALLER ({counts.baja})
+          {isBuffet ? 'INACTIVOS' : 'BAJA / TALLER'} ({counts.baja})
         </button>
       </div>
 
       {/* Encabezado */}
       <div className="catalog-header-bar">
         <h3 className="catalog-active-title">CATÁLOGO ACTIVO</h3>
-        <span className="catalog-order-caption">Orden: Código asc.</span>
+        <span className="catalog-order-caption">
+          {isBuffet ? 'Orden: Categoría y nombre' : 'Orden: Código asc.'}
+        </span>
       </div>
 
       {/* Tarjetas */}
