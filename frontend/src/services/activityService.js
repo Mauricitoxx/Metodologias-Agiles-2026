@@ -16,7 +16,9 @@ export const activityService = {
   remove: (id) => api.delete(`/activities/${id}`),
 
   listSchedule: ({ search, tipo_id } = {}) => api.get('/activities/schedule', { search, tipo_id }),
-  getPublic: (id) => api.get(`/activities/schedule/${id}`)
+  getPublic: (id) => api.get(`/activities/schedule/${id}`),
+  // Returns the activity with its updated remaining spots
+  register: (id, { nombre, email }) => api.post(`/activities/schedule/${id}/registrations`, { nombre, email })
 };
 
 export const activityTypeService = {

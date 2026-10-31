@@ -28,6 +28,8 @@
 .public-catalog-search { display: flex; gap: 4px; padding-top: 8px; }
 .public-catalog-search > div { display: flex; align-items: center; gap: 8px; background: var(--bg-card); border: 2px solid var(--border-color); border-radius: var(--radius-full); padding-left: 12px; flex: 1; min-width: 0; }
 .public-catalog-search input { border: 0; background: transparent; min-width: 0; width: 100%; height: 44px; font-size: 12px; padding-right: 8px; }
+.public-catalog-search > div:focus-within { box-shadow: var(--shadow-retro-sm); }
+.public-catalog-search input:focus, .public-catalog-search input:focus-visible { outline: none; }
 .public-catalog-search input::placeholder { color: var(--text-muted); opacity: 1; }
 .public-catalog-search > button { min-height: 44px; padding-inline: 12px; }
 .public-catalog-icon { display: block; flex-shrink: 0; }

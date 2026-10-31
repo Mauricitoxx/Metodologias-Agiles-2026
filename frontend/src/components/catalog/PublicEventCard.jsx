@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { CalendarDays, ChevronRight, Clock, Repeat, Users } from 'lucide-react';
+import { CalendarDays, Clock, Repeat } from 'lucide-react';
 import { ActivityChangeNotice } from '../cards/ActivityChangeNotice';
+import { EventActions } from './PublicEventSignUp';
 import { ageLabel, ageTitle, effectiveDate, formatDuration, formatTime, frequencyLabel } from '../../utils/activity';
 import { isInProgress } from '../../utils/publicSchedule';
 
@@ -20,27 +20,29 @@ export function EventStatus({ activity }) {
   return null;
 }
 
-export function PublicEventCard({ activity, returnTo }) {
+export function PublicEventCard({ activity, returnTo, onRegistered }) {
   const date = effectiveDate(activity);
   return (
     <article className={`public-event-card ${activity.estado}`}>
       <div className="public-event-image"><EventCover activity={activity} /></div>
       <div className="public-event-body">
-        <div className="public-event-labels">
+        <div className="public-event-top">
+          <div className="public-event-labels">
+            <p className="public-game-type">{activity.tipo.nombre.toUpperCase()}</p>
+            <EventStatus activity={activity} />
+          </div>
           <time dateTime={date}>{formatTime(date)}</time>
-          <EventStatus activity={activity} />
         </div>
-        <p className="public-game-type">{activity.tipo.nombre.toUpperCase()}</p>
         <h3>{activity.nombre}</h3>
         <div className="public-game-meta">
           <span><Clock size={13} aria-hidden="true" />{formatDuration(activity.duracion)}</span>
-          <span aria-hidden="true">•</span>
-          <span><Users size={13} aria-hidden="true" />{activity.cupo}<span className="public-sr-only"> cupos</span></span>
           {activity.frecuencia !== 'unica' && <><span aria-hidden="true">•</span><span><Repeat size={13} aria-hidden="true" />{frequencyLabel(activity.frecuencia)}</span></>}
         </div>
         <div className="public-game-tags"><span title={ageTitle(activity.edad_minima)}>{ageLabel(activity.edad_minima)}</span></div>
         <ActivityChangeNotice activity={activity} />
-        <Link className="public-event-link" to={`/eventos/${activity.id}`} state={{ eventsReturnTo: returnTo }} aria-label={`Ver detalles de ${activity.nombre}`}>Ver detalles<ChevronRight size={16} aria-hidden="true" /></Link>
+        <div className="public-event-footer">
+          <EventActions activity={activity} onRegistered={onRegistered} detailTo={`/eventos/${activity.id}`} detailState={{ eventsReturnTo: returnTo }} />
+        </div>
       </div>
     </article>
   );

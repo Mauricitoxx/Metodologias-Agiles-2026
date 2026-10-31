@@ -64,7 +64,7 @@ export const ActivityCard = ({ activity, onEdit, onAction }) => {
 
           <div className="card-footer-chips">
             <span className="slots-badge">
-              <Users size={12} /> {activity.cupo} cupos
+              <Users size={12} /> {activity.inscriptos}/{activity.cupo} inscriptos
             </span>
             <span className="slots-badge">{formatDuration(activity.duracion)}</span>
             <span className="slots-badge">

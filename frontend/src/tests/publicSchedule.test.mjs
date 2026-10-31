@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { dayLabel, filterSchedule, getScheduleReturnTo, groupScheduleByDay, isInProgress, scheduleTypes } from '../utils/publicSchedule.js';
+import { dayLabel, filterSchedule, getScheduleReturnTo, groupScheduleByDay, isInProgress, scheduleTypes, signUpStatus, spotsLabel, spotsLevel } from '../utils/publicSchedule.js';
 
 const torneo = { id: 1, nombre: 'Torneo' };
 const taller = { id: 2, nombre: 'Taller' };
@@ -38,4 +38,19 @@ test('Cronograma: el regreso desde el detalle solo acepta rutas del cronograma',
   assert.equal(getScheduleReturnTo('https://evil.example/eventos'), '/eventos');
   assert.equal(getScheduleReturnTo('/admin'), '/eventos');
   assert.equal(getScheduleReturnTo(undefined), '/eventos');
+});
+
+test('Inscripción: cerrada si está cancelada, ya empezó o no quedan cupos', () => {
+  const upcoming = { ...activities[1], cupo: 10, cupos_disponibles: 4 };
+  assert.deepEqual(signUpStatus(upcoming, now), { open: true, label: 'Inscribirme' });
+  assert.equal(signUpStatus({ ...upcoming, cupos_disponibles: 0 }, now).label, 'Sin cupos');
+  assert.equal(signUpStatus({ ...activities[0], cupos_disponibles: 4 }, now).label, 'Ya comenzó');
+  assert.equal(signUpStatus({ ...activities[2], cupos_disponibles: 4 }, now).label, 'Cancelado');
+});
+
+test('Cupos: texto y nivel de la barra según los lugares restantes', () => {
+  assert.equal(spotsLabel({ cupo: 16, cupos_disponibles: 9 }), 'Quedan 9 de 16 lugares');
+  assert.equal(spotsLabel({ cupo: 16, cupos_disponibles: 1 }), '¡Queda 1 lugar de 16!');
+  assert.equal(spotsLabel({ cupo: 16, cupos_disponibles: 0 }), 'No quedan lugares');
+  assert.deepEqual([9, 4, 3, 0].map((left) => spotsLevel({ cupo: 16, cupos_disponibles: left })), ['libres', 'pocos', 'pocos', 'agotado']);
 });

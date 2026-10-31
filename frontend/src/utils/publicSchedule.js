@@ -47,6 +47,27 @@ export function isInProgress(activity, now = new Date()) {
   return start <= now && now < new Date(start.getTime() + activity.duracion * 60000);
 }
 
+// Las inscripciones cierran cuando el evento empieza; el backend aplica las mismas reglas.
+export function signUpStatus(activity, now = new Date()) {
+  if (activity.estado === 'cancelada') return { open: false, label: 'Cancelado' };
+  if (new Date(effectiveDate(activity)) <= now) return { open: false, label: 'Ya comenzó' };
+  if (activity.cupos_disponibles <= 0) return { open: false, label: 'Sin cupos' };
+  return { open: true, label: 'Inscribirme' };
+}
+
+export function spotsLabel({ cupo, cupos_disponibles: left }) {
+  if (left <= 0) return 'No quedan lugares';
+  if (left === 1) return `¡Queda 1 lugar de ${cupo}!`;
+  return `Quedan ${left} de ${cupo} lugares`;
+}
+
+// Pocos lugares: a partir de un 25 % restante (o 3 o menos) la barra pasa a modo alerta.
+export function spotsLevel({ cupo, cupos_disponibles: left }) {
+  if (left <= 0) return 'agotado';
+  if (left <= 3 || left / cupo <= 0.25) return 'pocos';
+  return 'libres';
+}
+
 export function getScheduleReturnTo(candidate) {
   if (typeof candidate !== 'string') return schedulePath;
   try {

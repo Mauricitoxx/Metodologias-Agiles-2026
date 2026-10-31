@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, Hourglass, IdCard, Repeat, Users } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Hourglass, IdCard, Repeat } from 'lucide-react';
 import { activityService } from '../services/activityService';
 import { ActivityChangeNotice } from '../components/cards/ActivityChangeNotice';
 import { EventCover, EventStatus } from '../components/catalog/PublicEventCard';
+import { EventActions } from '../components/catalog/PublicEventSignUp';
 import { ageLabel, effectiveDate, formatDate, formatDuration, formatTime, frequencyLabel } from '../utils/activity';
 import { getScheduleReturnTo } from '../utils/publicSchedule';
 
@@ -42,10 +43,12 @@ export function PublicEventDetailView() {
               <div><dt><Calendar size={18} />Fecha</dt><dd>{formatDate(date)}</dd></div>
               <div><dt><Clock size={18} />Hora</dt><dd>{formatTime(date)}</dd></div>
               <div><dt><Hourglass size={18} />Duración</dt><dd>{formatDuration(activity.duracion)}</dd></div>
-              <div><dt><Users size={18} />Cupo</dt><dd>{activity.cupo} lugares</dd></div>
               <div><dt><IdCard size={18} />Edad mínima</dt><dd>{ageLabel(activity.edad_minima)}</dd></div>
               <div><dt><Repeat size={18} />Frecuencia</dt><dd>{frequencyLabel(activity.frecuencia)}</dd></div>
             </dl>
+            <div className="public-event-detail-actions">
+              <EventActions activity={activity} onRegistered={(updated) => setResult((previous) => ({ ...previous, activity: updated }))} />
+            </div>
           </article>}
     </>
   );

@@ -29,6 +29,11 @@ export function PublicEventsView() {
   const hasFilters = Boolean(search || tipoId);
   const returnTo = `${location.pathname}${location.search}`;
 
+  // La inscripción devuelve la actividad con los cupos actualizados
+  function replaceActivity(updated) {
+    setResult((previous) => ({ ...previous, activities: previous.activities.map((activity) => (activity.id === updated.id ? updated : activity)) }));
+  }
+
   function updateParam(key, value) {
     setParams((previous) => {
       const next = new URLSearchParams(previous);
@@ -62,7 +67,7 @@ export function PublicEventsView() {
       : current.error ? <div className="public-catalog-message" role="alert"><h2>No pudimos abrir el cronograma</h2><p>{current.error}</p><button className="public-catalog-primary" onClick={() => setRetry((value) => value + 1)}>Reintentar</button></div>
         : days.length ? days.map((day) => <section key={day.key} className="public-events-day" aria-labelledby={`dia-${day.key}`}>
           <h2 id={`dia-${day.key}`}>{day.label}</h2>
-          <div className="public-events-list">{day.activities.map((activity) => <PublicEventCard key={activity.id} activity={activity} returnTo={returnTo} />)}</div>
+          <div className="public-events-list">{day.activities.map((activity) => <PublicEventCard key={activity.id} activity={activity} returnTo={returnTo} onRegistered={replaceActivity} />)}</div>
         </section>)
           : <div className="public-catalog-message"><h2>{hasFilters ? 'No encontramos eventos' : 'Pronto habrá nuevos eventos'}</h2><p>{hasFilters ? 'Probá con otro nombre o elegí un tipo diferente.' : 'No hay eventos programados en este momento. Volvé a consultar más tarde.'}</p>{hasFilters && <button className="public-catalog-primary" onClick={() => setParams(new URLSearchParams(), { replace: true })}>Limpiar filtros</button>}</div>}
   </>;
