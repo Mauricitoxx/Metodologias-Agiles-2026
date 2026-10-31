@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.schemas.juego import JuegoCreate, JuegoDetailRead, JuegoRead, JuegoUpdate
-from app.schemas.regla import ReglaCreate, ReglaRead
+from app.schemas.regla import ReglaCreate, ReglaRead, ReglaReorderItem
 from app.services import categoria_juego as categoria_service
 from app.services import dificultad as dificultad_service
 from app.services import juego as juego_service
@@ -162,3 +162,23 @@ def crear_regla_para_juego(
             detail="Juego no encontrado",
         )
     return regla_service.crear_regla(db=db, datos=datos, juego_id=juego_id)
+
+
+@router.put(
+    "/{juego_id}/reglas/reordenar",
+    response_model=list[ReglaRead],
+)
+def reordenar_reglas_para_juego(
+    juego_id: int,
+    items: list[ReglaReorderItem],
+    db: Session = Depends(get_db),
+):
+    juego = juego_service.obtener_juego_por_id(
+        db=db, juego_id=juego_id, incluir_inactivos=True
+    )
+    if not juego:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Juego no encontrado",
+        )
+    return regla_service.reordenar_reglas(db=db, juego_id=juego_id, items=items)
