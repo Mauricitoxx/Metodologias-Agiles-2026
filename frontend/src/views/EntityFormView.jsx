@@ -8,7 +8,6 @@ const types = {
   boardgames: '🎲 Juego de Mesa',
   comics: '📖 Manga y Cómic',
   cards: '🃏 Cartas',
-  buffet: '🍔 Buffet',
 };
 
 const prefixes = {

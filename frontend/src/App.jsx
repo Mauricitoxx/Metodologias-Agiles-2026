@@ -13,6 +13,7 @@ import { CatalogView } from './views/CatalogView';
 import { AdminUsersView } from './views/AdminUsersView';
 import { LoginView } from './views/LoginView';
 import { EntityFormView } from './views/EntityFormView';
+import { ProductoFormView } from './views/ProductoFormView';
 import { ItemDetailModal } from './components/modals/ItemDetailModal';
 import { ItemFormModal } from './components/modals/ItemFormModal';
 import { ConfirmBajaModal } from './components/modals/ConfirmBajaModal';
@@ -43,6 +44,7 @@ const AdminDashboard = () => {
     updateItem,
     toggleBajaItem,
     openEditModal,
+    openConfirmBajaModal,
     notification
   } = useAdmin();
 
@@ -54,10 +56,17 @@ const AdminDashboard = () => {
   const isEntityForm =
     modalState.isOpen &&
     ['create', 'edit'].includes(modalState.mode) &&
-    ['boardgames', 'comics', 'cards', 'buffet'].includes(modalState.entityType);
+    ['boardgames', 'comics', 'cards'].includes(modalState.entityType);
+
+  // El buffet tiene su propio formulario ("Registro de carta" del Figma)
+  const isProductoForm =
+    modalState.isOpen &&
+    ['create', 'edit'].includes(modalState.mode) &&
+    modalState.entityType === 'buffet';
 
   const isSubheaderRoute =
     !isEntityForm &&
+    !isProductoForm &&
     (location.pathname === '/admin/inventario' ||
       location.pathname === '/admin/catalogo' ||
       location.pathname === '/admin/staff');
@@ -72,7 +81,9 @@ const AdminDashboard = () => {
 
       {/* 3. Contenedor de Vistas Enrutadas */}
       <main className="main-content">
-        {isEntityForm ? (
+        {isProductoForm ? (
+          <ProductoFormView key={`${modalState.mode}-${modalState.item?.id || 'new'}`} />
+        ) : isEntityForm ? (
           <EntityFormView
             key={`${modalState.mode}-${modalState.item?.id || 'new'}-${modalState.entityType}`}
           />
@@ -107,13 +118,17 @@ const AdminDashboard = () => {
         item={modalState.item}
         entityType={modalState.entityType}
         onEdit={openEditModal}
-        onToggleBaja={toggleBajaItem}
+        // HU-12: la baja de un producto del buffet siempre pide confirmación
+        onToggleBaja={(type, item) =>
+          type === 'buffet' ? openConfirmBajaModal(type, item) : toggleBajaItem(type, item)
+        }
       />
 
       <ItemFormModal
         key={`${modalState.mode}-${modalState.item?.id || 'new'}-${modalState.entityType}`}
         isOpen={
           !isEntityForm &&
+          !isProductoForm &&
           modalState.isOpen &&
           (modalState.mode === 'create' || modalState.mode === 'edit')
         }
