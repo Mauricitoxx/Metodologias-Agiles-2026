@@ -30,7 +30,9 @@ export const ConfirmBajaModal = ({ isOpen, onClose, item, entityType, onConfirm 
             ) : (
               <>
                 ¿Estás seguro de que deseas dar de baja a <strong>{item.title || item.name}</strong> ({item.code})?
-                El elemento cambiará su estado a <em>Baja / Inactivo</em> y no estará disponible para préstamos o ventas activas.
+                {entityType === 'buffet'
+                  ? <> El producto pasará a <em>Inactivo</em> y dejará de mostrarse a los clientes en la carta.</>
+                  : <> El elemento cambiará su estado a <em>Baja / Inactivo</em> y no estará disponible para préstamos o ventas activas.</>}
               </>
             )}
           </p>

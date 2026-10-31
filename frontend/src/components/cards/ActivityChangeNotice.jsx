@@ -3,7 +3,7 @@ import { SCOPE_LABELS, formatDate, formatTime } from '../../utils/activity';
 
 /**
  * Everything about a cancellation or postponement in one box: what happened, which dates it
- * affects, the original date, the reason and the undo action.
+ * affects, the original date, the reason and (admin only) the undo action.
  */
 export const ActivityChangeNotice = ({ activity, onUndoPostpone }) => {
   const isCancelled = activity.estado === 'cancelada';
@@ -24,7 +24,8 @@ export const ActivityChangeNotice = ({ activity, onUndoPostpone }) => {
           {isCancelled ? 'CANCELADA' : 'POSTERGADA'}
           {scope && <span className="activity-change-scope"> · {scope.toUpperCase()}</span>}
         </span>
-        {activity.estado === 'postergada' && (
+        {/* Without `onUndoPostpone` (client schedule) the notice is read-only */}
+        {activity.estado === 'postergada' && onUndoPostpone && (
           <button className="activity-change-undo" onClick={onUndoPostpone} title="Volver a la fecha original">
             <Undo2 size={12} /> Deshacer
           </button>

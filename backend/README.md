@@ -315,7 +315,7 @@ Commitear el modelo, esquema, servicio, ruta, test, **la migración** y los dos 
 
 | Capa      | Archivos                                                                 |
 | --------- | ------------------------------------------------------------------------ |
-| Modelos   | `models/actividad.py` (`Actividad`), `models/tipo_actividad.py` (`TipoActividad`) |
+| Modelos   | `models/actividad.py` (`Actividad`), `models/tipo_actividad.py` (`TipoActividad`), `models/inscripcion.py` (`Inscripcion`) |
 | Esquemas  | `schemas/actividad.py`, `schemas/tipo_actividad.py`                      |
 | Servicios | `services/activity.py`, `services/activity_type.py`, `services/recurrence.py` |
 | Rutas     | `api/routes/activities.py`, `api/routes/activity_types.py`               |
@@ -327,6 +327,9 @@ Commitear el modelo, esquema, servicio, ruta, test, **la migración** y los dos 
 | ------ | ------------------------------------- | ------- | ------------------------------------------------------- |
 | GET    | `/api/activities/schedule`            | Público | Cronograma: próximas actividades (`search`, `tipo_id`)  |
 | GET    | `/api/activities/schedule/{id}`       | Público | Detalle (404 si está inactiva)                          |
+| POST   | `/api/activities/schedule/{id}/registrations` | Público | Inscripción de un cliente (`nombre`, `email`, `edad`); devuelve `{ token, actividad }` |
+| GET    | `/api/activities/registrations/{token}` | Público | Inscripción del token (`nombre`, `email`, `cancelable`, `actividad`) |
+| DELETE | `/api/activities/registrations/{token}` | Público | Cancela la inscripción y devuelve la actividad con el lugar liberado |
 | GET    | `/api/activities`                     | Admin   | Listado completo (`search`, `tipo_id`, `estado`, `order=asc\|desc`, `date_from`, `date_to`) |
 | GET    | `/api/activities/{id}`                | Admin   | Detalle                                                 |
 | POST   | `/api/activities`                     | Admin   | Alta                                                    |
@@ -351,12 +354,13 @@ Commitear el modelo, esquema, servicio, ruta, test, **la migración** y los dos 
 - `motivo` (opcional, lo ve el cliente) y `alcance` (`fecha` o `serie`, solo en recurrentes) describen la última cancelación o postergación; se borran cuando la actividad vuelve a `activa`.
 - El cronograma público oculta las `inactiva` y las que ya terminaron; las `cancelada` se muestran para que el cliente lo vea.
 - **Recurrentes:** antes de cada lectura, las actividades `semanal`/`quincenal` terminadas pasan a la próxima fecha (mismo día y hora) y las `mensual` al mismo N-ésimo día de la semana del mes siguiente (el 5.º pasa a ser el último). Una postergada con alcance `fecha` vuelve a su día habitual; con alcance `serie`, las próximas fechas se calculan desde la nueva. Una cancelada con alcance `fecha` saltea esa fecha y sigue; con alcance `serie` (o sin alcance) la serie se detiene.
+- **Inscripciones:** el cliente se inscribe con nombre, correo y edad, sin cuenta. Toda actividad devuelve `inscriptos` y `cupos_disponibles` (nunca negativo, aunque se baje el cupo). Se rechaza (409) si está cancelada, ya comenzó o no quedan cupos (la fila de la actividad se bloquea hasta el commit para que dos clientes no tomen el último lugar a la vez), y con 422 si la edad es menor a `edad_minima` (campo `edad`) o ese correo ya está inscripto (campo `email`). La respuesta incluye un `token` secreto, el único comprobante para cancelar: en la base solo se guarda su SHA-256. Se puede cancelar hasta que la actividad empieza. La inscripción guarda la fecha original de la ocurrencia: postergar conserva los inscriptos y, cuando una recurrente pasa a su próxima fecha, el conteo empieza de cero. Eliminar la actividad elimina sus inscripciones.
 - Los errores 422 propios (`services/errors.py`) usan el mismo formato que los de validación de FastAPI, así el frontend los muestra en el campo correspondiente.
 
 > ⚠ **Pendiente (HU-01):** los endpoints de admin dependen de `require_admin` (`app/api/deps.py`), que por ahora deja pasar todo. Cuando exista el login, solo hay que implementar esa función.
 
 
-### Productos de la carta (HU-11)
+### Productos de la carta (HU-11, HU-12)
 
 | Capa      | Archivos                                  |
 | --------- | ----------------------------------------- |
@@ -368,19 +372,25 @@ Commitear el modelo, esquema, servicio, ruta, test, **la migración** y los dos 
 
 **Endpoints**
 
-| Método | Ruta                     | Acceso  | Descripción                                          |
-| ------ | ------------------------ | ------- | ---------------------------------------------------- |
-| GET    | `/api/productos`         | Público | Carta: productos activos ordenados por tipo y nombre |
-| GET    | `/api/productos/{id}`    | Admin   | Detalle (para cargar el formulario de edición)       |
-| POST   | `/api/productos`         | Admin   | Alta                                                 |
-| PUT    | `/api/productos/{id}`    | Admin   | Modificación                                         |
+| Método | Ruta                             | Acceso  | Descripción                                          |
+| ------ | -------------------------------- | ------- | ---------------------------------------------------- |
+| GET    | `/api/productos`                 | Público | Carta: productos activos ordenados por tipo y nombre |
+| GET    | `/api/productos/admin/todos`     | Admin   | Panel: activos e inactivos, mismo orden              |
+| GET    | `/api/productos/{id}`            | Admin   | Detalle (para cargar el formulario de edición)       |
+| POST   | `/api/productos`                 | Admin   | Alta                                                 |
+| PUT    | `/api/productos/{id}`            | Admin   | Modificación                                         |
+| PATCH  | `/api/productos/{id}/baja`       | Admin   | Baja lógica (`activo = false`)                       |
+| PATCH  | `/api/productos/{id}/reactivar`  | Admin   | Vuelve a mostrarlo en la carta                       |
 
 **Reglas de negocio**
 
 - `nombre`, `descripcion`, `tipo` y `precio` son obligatorios; los textos en blanco se rechazan.
+- `nombre` tiene hasta 50 caracteres y no se repite (sin distinguir mayúsculas): si ya existe, responde 422 con *"Ya existe un producto con ese nombre"* en el campo `nombre`. `descripcion` tiene hasta 500 caracteres.
 - `tipo` es uno de `comida`, `bebida`, `snack`, `postre` o `combo`.
 - `precio` acepta hasta 2 decimales y debe ser mayor a cero: si no, responde 422 con el mensaje *"El precio debe ser mayor a cero"* en el campo `precio`. La base también lo impide con un `CHECK`.
-- `activo` queda en `true` al crear; la baja lógica y las ofertas se suman en HU-12 y HU-13.
+- `activo` es opcional: al crear vale `true` si no se envía y al modificar se conserva el estado actual. La baja es lógica: el producto se conserva, pero la carta pública solo muestra los activos.
+- Dar de baja un producto inactivo, o reactivar uno activo, responde 409; un id inexistente responde 404.
+- Las ofertas se suman en HU-13.
 
 ---
 

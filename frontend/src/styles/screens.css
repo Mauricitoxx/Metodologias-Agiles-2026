@@ -19,3 +19,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; transition:none!important; } }
 .brand-name { white-space:nowrap; font-size:18px; }.brand-block { gap:6px; }.logout-button { white-space:nowrap; }.sku-input { width:100%; }.login-view .admin-hub-notice-box p { font-size:11px; line-height:1.5; }.login-view .admin-hub-hero { margin-bottom:24px; }
 @media(max-width:380px) { .brand-name { font-size:16px; }.user-avatar-wrapper { width:26px; height:26px; }.app-header { padding-inline:12px; }.logout-button svg { display:none; } }
+
+/* Formulario de productos de la carta: ID asignado por el sistema */
+.producto-id-field { position:relative; }
+.producto-id-field .form-input { padding-right:36px; background:var(--bg-card-secondary); cursor:not-allowed; }
+.producto-id-field svg { position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); pointer-events:none; }

@@ -11,12 +11,15 @@ import { Subheader } from './components/layout/Subheader';
 import { AdminHubView } from './views/AdminHubView';
 import { CatalogView } from './views/CatalogView';
 import { AdminUsersView } from './views/AdminUsersView';
+import { ClientCatalogView } from './views/ClientCatalogView';
 import { LoginView } from './views/LoginView';
 import { EntityFormView } from './views/EntityFormView';
+import { ProductoFormView } from './views/ProductoFormView';
 import { ItemDetailModal } from './components/modals/ItemDetailModal';
 import { ItemFormModal } from './components/modals/ItemFormModal';
 import { ConfirmBajaModal } from './components/modals/ConfirmBajaModal';
 import { PublicCatalogRoutes } from './catalog/PublicCatalogRoutes';
+import { PublicEventsRoutes } from './catalog/PublicEventsRoutes';
 
 const ActivitiesRedirect = () => {
   const { setCatalogSubTab } = useAdmin();
@@ -43,21 +46,38 @@ const AdminDashboard = () => {
     updateItem,
     toggleBajaItem,
     openEditModal,
+    openConfirmBajaModal,
     notification
   } = useAdmin();
 
+  // Rutas públicas accesibles sin autenticación
+  if (location.pathname === '/' || location.pathname === '/catalogo') {
+    return <ClientCatalogView />;
+  }
+
+  if (location.pathname === '/login') {
+    if (session) return <Navigate to="/admin" replace />;
+    return <LoginView />;
+  }
+
   if (authLoading) return <div className="login-screen"><p role="status" className="login-content">Verificando sesión…</p></div>;
-  if (location.pathname === '/login') return <LoginView />;
   if (authError) return <div className="login-screen"><div className="login-content"><p role="alert">{authError}</p><button className="login-submit" onClick={retryAuth}>Reintentar</button></div></div>;
   if (!session) return <Navigate to="/login" replace />;
 
   const isEntityForm =
     modalState.isOpen &&
     ['create', 'edit'].includes(modalState.mode) &&
-    ['boardgames', 'comics', 'cards', 'buffet'].includes(modalState.entityType);
+    ['boardgames', 'comics', 'cards'].includes(modalState.entityType);
+
+  // El buffet tiene su propio formulario ("Registro de carta" del Figma)
+  const isProductoForm =
+    modalState.isOpen &&
+    ['create', 'edit'].includes(modalState.mode) &&
+    modalState.entityType === 'buffet';
 
   const isSubheaderRoute =
     !isEntityForm &&
+    !isProductoForm &&
     (location.pathname === '/admin/inventario' ||
       location.pathname === '/admin/catalogo' ||
       location.pathname === '/admin/staff');
@@ -72,7 +92,9 @@ const AdminDashboard = () => {
 
       {/* 3. Contenedor de Vistas Enrutadas */}
       <main className="main-content">
-        {isEntityForm ? (
+        {isProductoForm ? (
+          <ProductoFormView key={`${modalState.mode}-${modalState.item?.id || 'new'}`} />
+        ) : isEntityForm ? (
           <EntityFormView
             key={`${modalState.mode}-${modalState.item?.id || 'new'}-${modalState.entityType}`}
           />
@@ -107,13 +129,17 @@ const AdminDashboard = () => {
         item={modalState.item}
         entityType={modalState.entityType}
         onEdit={openEditModal}
-        onToggleBaja={toggleBajaItem}
+        // HU-12: la baja de un producto del buffet siempre pide confirmación
+        onToggleBaja={(type, item) =>
+          type === 'buffet' ? openConfirmBajaModal(type, item) : toggleBajaItem(type, item)
+        }
       />
 
       <ItemFormModal
         key={`${modalState.mode}-${modalState.item?.id || 'new'}-${modalState.entityType}`}
         isOpen={
           !isEntityForm &&
+          !isProductoForm &&
           modalState.isOpen &&
           (modalState.mode === 'create' || modalState.mode === 'edit')
         }
@@ -153,6 +179,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Navigate to="/catalogo" replace />} />
       <Route path="/catalogo/*" element={<PublicCatalogRoutes />} />
+      <Route path="/eventos/*" element={<PublicEventsRoutes />} />
       <Route path="*" element={<AdminProvider><AdminDashboard /></AdminProvider>} />
     </Routes>
   );

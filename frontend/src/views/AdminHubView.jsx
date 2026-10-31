@@ -33,13 +33,13 @@ export const AdminHubView = () => {
             <div className="admin-hub-card-info">
               <h3 className="admin-hub-card-title">INVENTARIO</h3>
               <p className="admin-hub-card-desc">
-                Organizá el catálogo y mantené cada producto al día.
+                Gestioná los juegos, los mangas y cómics, la carta y las actividades.
               </p>
             </div>
           </div>
 
           <div className="admin-hub-card-tags tags-inventario">
-            CATÁLOGO • STOCK • DISPONIBILIDAD
+            JUEGOS • MANGAS • CARTA • ACTIVIDADES
           </div>
 
           <button

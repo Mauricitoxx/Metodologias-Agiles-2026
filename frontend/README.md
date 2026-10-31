@@ -37,7 +37,15 @@ Opcionalmente copiá `.env.example` a `.env`:
 
 Las entidades y miembros de staff siguen guardándose en `localStorage` de este navegador. El staff de demostración no crea cuentas del backend. No se almacenan contraseñas de staff; la clave temporal es una vista previa para una futura integración.
 
+El panel central (`/admin`) solo ofrece dos accesos: Inventario y Staff. Inventario (`/admin/inventario`) agrupa las pestañas Juegos de mesa, Mangas & Cómics, Carta y Actividades, y abre en Actividades.
+
+Juegos de mesa (`views/JuegosView.jsx`) muestra los juegos agrupados por categoría y permite crear, editar y eliminar categorías; una categoría con juegos asociados no se puede eliminar.
+
 Inventario permite buscar, filtrar, registrar, editar, consultar fichas, dar de baja y reactivar juegos, cómics, cartas y buffet. El formulario valida SKU único y cantidad de jugadores, selecciona complejidad y carga imágenes PNG, JPG o WebP hasta 5 MB. Las portadas se reducen para el almacenamiento local.
+
+La pestaña Carta (clave interna `buffet`) usa la API de productos (`services/productoService.js`): lista activos e inactivos ordenados por categoría y nombre, con precio y estado Activo/Inactivo. La baja es lógica, siempre pide confirmación y oculta el producto de la carta pública. El alta y la edición usan su propio formulario (`views/ProductoFormView.jsx`, "Registro de carta" del Figma): nombre único de hasta 50 caracteres, descripción de hasta 500, tipo, precio con dos decimales y estado Activo/Inactivo. El precio de oferta se suma en HU-13.
+
+El cronograma público (`/eventos`, botón Eventos de la barra inferior del cliente) consume `GET /api/activities/schedule`: muestra las próximas actividades agrupadas por día, con búsqueda por nombre y filtro por tipo. Las canceladas y postergadas aparecen con su aviso (fecha original y motivo) y las que están en curso se marcan como tales. Cada evento muestra una barra con los lugares restantes y el botón Inscribirme, que abre un formulario de nombre, correo y edad (`POST /api/activities/schedule/{id}/registrations`); no deja inscribirse si no hay cupo o la edad es menor a la mínima. El botón de información lleva al detalle. Sin cuenta, el token de la inscripción se guarda en el navegador (`utils/eventSignUps.js`): la tarjeta pasa a "Estás inscripto" con el botón Cancelar inscripción. La confirmación también muestra un enlace `/eventos/inscripcion/:token` para cancelar desde cualquier dispositivo. `/eventos/:id` muestra el detalle con `GET /api/activities/schedule/{id}`; una actividad inactivada desde el panel deja de estar disponible.
 
 Staff permite alta, edición, selección de avatar y rol, búsqueda de activos, baja y reactivación. Se conserva al menos un Superadministrador activo.
 

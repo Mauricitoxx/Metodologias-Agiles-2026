@@ -8,14 +8,18 @@ export const BuffetCard = ({ item, onOpenDetail, onOpenEdit, onOpenConfirmBaja }
     <div className={`catalog-item-card ${isBaja ? 'is-baja-state' : ''}`}>
       <div className="card-main-content">
         <div className="card-thumb-container">
-          <img src={item.image} alt={item.title} className="card-thumb-img" />
+          {item.image ? (
+            <img src={item.image} alt={item.title} className="card-thumb-img" />
+          ) : (
+            <span className="staff-avatar-emoji" aria-label="Sin imagen">🍔</span>
+          )}
           <span className="shelf-badge">{item.category}</span>
         </div>
 
         <div className="card-info-container">
           <div className="card-header-row">
             <span className="item-code-chip">{item.code}</span>
-            <StatusBadge status={item.status} />
+            <StatusBadge status={isBaja ? 'inactivo' : 'activo'} />
           </div>
 
           <h3 className="card-item-title">{item.title}</h3>
