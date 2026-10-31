@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Save, Upload, RefreshCw, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Upload, RefreshCw, Trash2, BookOpen } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
 import { isValidUrl } from '../utils/validation';
 import { getGameVideoUrl } from '../utils/gameVideo';
+import { ReglasModal } from '../components/modals/ReglasModal';
 
 const types = {
   boardgames: '🎲 Juego de Mesa',
@@ -33,6 +34,8 @@ export function EntityFormView() {
 
   const [type, setType] = useState(modalState.entityType);
   const editing = modalState.mode === 'edit';
+  const [isReglasModalOpen, setIsReglasModalOpen] = useState(false);
+
   const [form, setForm] = useState(() => ({
     code: nextCode(type, data),
     category: 'Estrategia & Civilización',
@@ -63,12 +66,12 @@ export function EntityFormView() {
 
   useEffect(() => {
     const escape = event => {
-      if (event.key === 'Escape') closeModal();
+      if (event.key === 'Escape' && !isReglasModalOpen) closeModal();
     };
 
     window.addEventListener('keydown', escape);
     return () => window.removeEventListener('keydown', escape);
-  }, [closeModal]);
+  }, [closeModal, isReglasModalOpen]);
 
   const change = event => {
     const { name, value } = event.target;
@@ -288,11 +291,27 @@ export function EntityFormView() {
 
       <form onSubmit={save}>
         <section className="retro-panel form-section">
-          <h3>
-            <span className="step-number blue">1</span>
-            {' '}DATOS {type === 'boardgames' ? 'DEL JUEGO' : 'DE LA ENTIDAD'}
-            <small>FICHA OFICIAL</small>
-          </h3>
+          <div className="flex-between align-center">
+            <h3>
+              <span className="step-number blue">1</span>
+              {' '}DATOS {type === 'boardgames' ? 'DEL JUEGO' : 'DE LA ENTIDAD'}
+              <small>FICHA OFICIAL</small>
+            </h3>
+
+            {/* BOTÓN PARA ABRIR REGLAS MODAL */}
+            {type === 'boardgames' && (
+              <button
+                type="button"
+                className="btn-secondary btn-sm flex-align gap-1"
+                disabled={!editing || !form.id}
+                onClick={() => setIsReglasModalOpen(true)}
+                title={!editing ? 'Debes guardar el juego primero para gestionar sus reglas' : 'Gestionar reglas'}
+              >
+                <BookOpen size={16} />
+                <span>Gestionar Reglas</span>
+              </button>
+            )}
+          </div>
 
           <div className="sku-heading">
             <label htmlFor="entity-code">CÓDIGO / SKU *</label>
@@ -490,6 +509,15 @@ export function EntityFormView() {
           </button>
         </div>
       </form>
+
+      {/* MODAL DE GESTIÓN DE REGLAS */}
+      {isReglasModalOpen && (
+        <ReglasModal
+          isOpen={isReglasModalOpen}
+          onClose={() => setIsReglasModalOpen(false)}
+          juego={form}
+        />
+      )}
     </div>
   );
 }
