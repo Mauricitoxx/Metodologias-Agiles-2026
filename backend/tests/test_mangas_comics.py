@@ -4,7 +4,9 @@ from fastapi.testclient import TestClient
 def manga_data() -> dict:
     """Datos de prueba para crear un manga."""
     return {
+        "type": "manga",
         "title": "Spy x Family",
+        "category": "Comedia",
         "volume_number": 1,
         "pages": 200,
         "copies": 3,
