@@ -1023,3 +1023,50 @@ def test_scope_is_ignored_for_single_activities(client: TestClient, payload: dic
     response = client.patch(f"/api/activities/{activity['id']}/cancel", json={"alcance": "serie"})
 
     assert response.json()["alcance"] is None
+
+
+def test_admin_lists_the_sign_ups_of_the_current_date(client: TestClient, db: Session, payload: dict):
+    activity = create(client, payload)
+    register(client, activity["id"], nombre="Ana", email="ana@example.com", edad=30)
+    register(client, activity["id"], nombre="Beto", email="beto@example.com", edad=15)
+    # A sign-up for a date that already happened is not counted
+    db.add(
+        Inscripcion(
+            actividad_id=activity["id"], fecha_hora=in_days(-7), nombre="Vieja", email="v@example.com"
+        )
+    )
+    db.commit()
+
+    response = client.get(f"/api/activities/{activity['id']}/registrations")
+
+    assert response.status_code == 200
+    rows = [(row["nombre"], row["edad"], row["email"]) for row in response.json()]
+    assert rows == [("Ana", 30, "ana@example.com"), ("Beto", 15, "beto@example.com")]
+    assert "token_hash" not in response.json()[0]
+    assert client.get("/api/activities/999/registrations").status_code == 404
+
+
+def test_admin_deletes_a_sign_up_and_frees_the_spot(client: TestClient, payload: dict):
+    activity = create(client, payload, cupo=1)
+    token = register(client, activity["id"]).json()["token"]
+    registration_id = client.get(f"/api/activities/{activity['id']}/registrations").json()[0]["id"]
+
+    response = client.delete(f"/api/activities/{activity['id']}/registrations/{registration_id}")
+
+    assert response.status_code == 200
+    assert (response.json()["inscriptos"], response.json()["cupos_disponibles"]) == (0, 1)
+    assert client.get(f"/api/activities/{activity['id']}/registrations").json() == []
+    # The client's token no longer works
+    assert client.get(f"/api/activities/registrations/{token}").status_code == 404
+
+
+def test_admin_cannot_delete_a_sign_up_of_another_activity(client: TestClient, payload: dict):
+    first = create(client, payload)
+    second = create(client, payload, nombre="Otra")
+    register(client, first["id"])
+    registration_id = client.get(f"/api/activities/{first['id']}/registrations").json()[0]["id"]
+
+    response = client.delete(f"/api/activities/{second['id']}/registrations/{registration_id}")
+
+    assert response.status_code == 404
+    assert len(client.get(f"/api/activities/{first['id']}/registrations").json()) == 1
