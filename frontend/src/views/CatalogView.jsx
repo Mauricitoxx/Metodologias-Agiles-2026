@@ -1,13 +1,12 @@
 import React, { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Search, Plus, ArrowLeft } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
 import { GameCard } from '../components/cards/GameCard';
 import { BuffetCard } from '../components/cards/BuffetCard';
 import { ActivitiesView } from './ActivitiesView';
+import { JuegosView } from './JuegosView';
 
 export const CatalogView = () => {
-  const navigate = useNavigate();
   const {
     data,
     catalogSubTab,
@@ -23,6 +22,7 @@ export const CatalogView = () => {
   } = useAdmin();
 
   // Conteo de elementos de inventario
+  const gamesCount = (data.boardgames?.length || 0) + (data.cards?.length || 0);
   const comicsCount = data.comics?.length || 0;
   const buffetCount = data.buffet?.length || 0;
 
@@ -74,21 +74,20 @@ export const CatalogView = () => {
     return 'ELEMENTO';
   };
 
-  // Selector de Entidad de Inventario (limpio y sin pestañas deliberadas de juegos)
+  // Selector de Entidad de Inventario
   const entitySelector = (
     <div className="entity-selector-section">
       <span className="section-small-label">SELECCIONA ENTIDAD DE INVENTARIO</span>
       <div className="entity-pills-scroll">
         <button
           type="button"
-          className="entity-pill-btn"
-          onClick={() => navigate('/admin')}
-          title="Ir a la Zona de Juegos y Categorías en el Inicio de Admin"
+          className={`entity-pill-btn ${catalogSubTab === 'boardgames' ? 'active' : ''}`}
+          onClick={() => setCatalogSubTab('boardgames')}
         >
           <span className="entity-pill-emoji">🎲</span>
           <div className="entity-pill-texts">
-            <span className="entity-pill-title">ZONA JUEGOS</span>
-            <span className="entity-pill-subtitle">en inicio admin ↗</span>
+            <span className="entity-pill-title">JUEGOS DE MESA</span>
+            <span className="entity-pill-subtitle">{gamesCount} juegos</span>
           </div>
         </button>
 
@@ -114,7 +113,7 @@ export const CatalogView = () => {
         >
           <span className="entity-pill-emoji">🍔</span>
           <div className="entity-pill-texts">
-            <span className="entity-pill-title">BUFFET</span>
+            <span className="entity-pill-title">CARTA</span>
             <span className="entity-pill-subtitle">{buffetCount} productos</span>
           </div>
         </button>
@@ -135,6 +134,7 @@ export const CatalogView = () => {
   );
 
   // Subtabs con vista propia
+  if (catalogSubTab === 'boardgames') return <JuegosView header={entitySelector} />;
   if (catalogSubTab === 'actividades') return <ActivitiesView header={entitySelector} />;
 
   return (
