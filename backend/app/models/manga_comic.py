@@ -26,6 +26,19 @@ class MangaComic(Base):
         String(200),
         nullable=False,
     )
+        # tipo de publicación: manga o comic
+    type: Mapped[str] = mapped_column(
+        String(10),
+        nullable=False,
+    )
+
+    # categoría del manga o comic
+    category: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+        default="Sin categoría",
+        server_default=text("'Sin categoría'"),
+    )
     #numero de volumen del manga o comic
     volume_number: Mapped[int] = mapped_column(
         Integer,
@@ -73,5 +86,9 @@ class MangaComic(Base):
             unique=True,
             postgresql_where=text("is_active IS TRUE"),
             sqlite_where=text("is_active = 1"),
+        ),
+                CheckConstraint(
+            "type IN ('manga', 'comic')",
+            name="ck_manga_comics_type_valid",
         ),
     )

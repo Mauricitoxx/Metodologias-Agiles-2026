@@ -1,38 +1,35 @@
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-#
+
 class MangaComicBase(BaseModel):
-    #titulo* obligatorio
+    type: Literal["manga", "comic"]
     title: str = Field(min_length=1, max_length=200)
-    #numero de volumen* obligatorio, mayor a cero
+    category: str = Field(min_length=1, max_length=100)
     volume_number: int = Field(gt=0)
     pages: int = Field(gt=0)
     copies: int = Field(gt=0)
-    #sinopsis opcional
     synopsis: str | None = None
     image: str | None = None
-    
-    #reviso que el titulo no sea un espacio vacio
-    @field_validator("title")
+
+    @field_validator("title", "category")
     @classmethod
-    def validate_title(cls, value: str) -> str:
+    def validate_required_text(cls, value: str) -> str:
         value = value.strip()
-
         if not value:
-            raise ValueError("El título no puede estar vacío.")
-
+            raise ValueError("El campo no puede estar vacío.")
         return value
 
-#valida los datos para dar de alta un registro
+
 class MangaComicCreate(MangaComicBase):
-    #por ahora solo hereda los campos y validaciones de la base
     pass
 
-#valida los datos para actualizar un registro
+
 class MangaComicUpdate(MangaComicBase):
     pass
 
-#define que datos devuelve la API
+
 class MangaComicResponse(MangaComicBase):
     id: int
     is_active: bool
