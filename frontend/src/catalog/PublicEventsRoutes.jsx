@@ -2,6 +2,7 @@ import { Link, Route, Routes } from 'react-router-dom';
 import { PublicCatalogLayout } from '../views/PublicCatalogLayout';
 import { PublicEventsView } from '../views/PublicEventsView';
 import { PublicEventDetailView } from '../views/PublicEventDetailView';
+import { PublicSignUpView } from '../views/PublicSignUpView';
 import '../styles/public-events.css';
 
 function EventsNotFound() {
@@ -13,6 +14,7 @@ export function PublicEventsRoutes() {
   return <Routes><Route element={<PublicCatalogLayout className="public-events" />}>
     <Route index element={<PublicEventsView />} />
     <Route path=":id" element={<PublicEventDetailView />} />
+    <Route path="inscripcion/:token" element={<PublicSignUpView />} />
     <Route path="*" element={<EventsNotFound />} />
   </Route></Routes>;
 }

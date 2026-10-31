@@ -17,8 +17,11 @@ export const activityService = {
 
   listSchedule: ({ search, tipo_id } = {}) => api.get('/activities/schedule', { search, tipo_id }),
   getPublic: (id) => api.get(`/activities/schedule/${id}`),
-  // Returns the activity with its updated remaining spots
-  register: (id, { nombre, email }) => api.post(`/activities/schedule/${id}/registrations`, { nombre, email })
+  // Returns { token, actividad }: the token is the only way to cancel later (clients have no account)
+  register: (id, { nombre, email, edad }) => api.post(`/activities/schedule/${id}/registrations`, { nombre, email, edad }),
+  getRegistration: (token) => api.get(`/activities/registrations/${encodeURIComponent(token)}`),
+  // Returns the activity with the freed spot
+  cancelRegistration: (token) => api.delete(`/activities/registrations/${encodeURIComponent(token)}`)
 };
 
 export const activityTypeService = {

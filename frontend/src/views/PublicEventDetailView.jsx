@@ -47,7 +47,7 @@ export function PublicEventDetailView() {
               <div><dt><Repeat size={18} />Frecuencia</dt><dd>{frequencyLabel(activity.frecuencia)}</dd></div>
             </dl>
             <div className="public-event-detail-actions">
-              <EventActions activity={activity} onRegistered={(updated) => setResult((previous) => ({ ...previous, activity: updated }))} />
+              <EventActions activity={activity} onActivityChange={(updated) => setResult((previous) => ({ ...previous, activity: updated }))} />
             </div>
           </article>}
     </>

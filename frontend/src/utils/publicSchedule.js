@@ -47,10 +47,12 @@ export function isInProgress(activity, now = new Date()) {
   return start <= now && now < new Date(start.getTime() + activity.duracion * 60000);
 }
 
-// Las inscripciones cierran cuando el evento empieza; el backend aplica las mismas reglas.
+export const hasStarted = (activity, now = new Date()) => new Date(effectiveDate(activity)) <= now;
+
+// Las inscripciones (y sus cancelaciones) cierran cuando el evento empieza; el backend aplica las mismas reglas.
 export function signUpStatus(activity, now = new Date()) {
   if (activity.estado === 'cancelada') return { open: false, label: 'Cancelado' };
-  if (new Date(effectiveDate(activity)) <= now) return { open: false, label: 'Ya comenzó' };
+  if (hasStarted(activity, now)) return { open: false, label: 'Ya comenzó' };
   if (activity.cupos_disponibles <= 0) return { open: false, label: 'Sin cupos' };
   return { open: true, label: 'Inscribirme' };
 }

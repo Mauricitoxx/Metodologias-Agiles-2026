@@ -62,7 +62,35 @@
 .public-modal-done { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 8px 0 4px; text-align: center; }
 .public-modal-done > svg { color: #059669; }
 .public-modal-done p { color: var(--catalog-muted); }
-.public-modal-done button { width: 100%; }
+.public-modal-done button, .public-modal-done > a { width: 100%; }
+.public-catalog-secondary, .public-catalog-danger { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 38px; padding: 6px 10px; border: 2px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-card); font: 700 14px/20px var(--catalog-heading); box-shadow: var(--shadow-retro-sm); }
+.public-catalog-secondary:hover:not(:disabled) { background: var(--bg-card-secondary); }
+.public-catalog-danger { border-color: #991b1b; background: #dc2626; color: #fff !important; box-shadow: 2px 2px 0 #7f1d1d; }
+.public-catalog-danger:hover:not(:disabled) { background: #b91c1c; }
+.public-catalog-secondary:disabled, .public-catalog-danger:disabled { cursor: not-allowed; opacity: .6; }
+.public-event-signed-up { display: flex; align-items: center; gap: 4px; color: #059669; font: 800 12px/16px var(--catalog-heading); }
+
+/* Enlace de cancelación (inscripción sin cuenta) */
+.public-cancel-link { display: flex; flex-direction: column; gap: 6px; width: 100%; padding: 10px; border: 2px dashed var(--border-subtle); border-radius: var(--radius-sm); background: var(--bg-card-secondary); text-align: left; }
+.public-cancel-link p { font-size: 12px; line-height: 16px; color: var(--catalog-muted); }
+.public-cancel-link > div { display: flex; gap: 6px; }
+.public-cancel-link input { flex: 1; min-width: 0; min-height: 36px; padding: 6px 8px; border: 1.5px solid var(--border-color); border-radius: 6px; background: var(--bg-card); font-size: 12px; }
+.public-cancel-link input:focus { outline: none; box-shadow: var(--shadow-retro-sm); }
+.public-cancel-link button { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 36px; height: 36px; border: 1.5px solid var(--border-color); border-radius: 6px; background: var(--catalog-yellow); color: var(--catalog-yellow-ink); }
+.public-cancel-link small { color: #059669; font-weight: 700; font-size: 12px; }
+.public-modal-confirm { display: flex; flex-direction: column; gap: 12px; }
+.public-modal-confirm p { color: var(--catalog-muted); }
+.public-modal-confirm-actions { display: flex; gap: 8px; }
+.public-modal-confirm-actions > button { flex: 1; }
+
+/* Página del enlace de cancelación */
+.public-signup .public-game-detail-intro > p { margin-top: 4px; }
+.public-signup-data { display: grid; gap: 8px; margin-top: 16px; }
+.public-signup-data > div { padding: 10px 12px; border-radius: 8px; background: var(--bg-card-secondary); }
+.public-signup-data dt { color: var(--catalog-muted); font-size: 11px; }
+.public-signup-data dd { font-weight: 700; overflow-wrap: anywhere; }
+.public-signup-closed { color: var(--catalog-muted); }
+
 @media (min-width: 480px) {
   .public-modal-backdrop { align-items: center; }
 }

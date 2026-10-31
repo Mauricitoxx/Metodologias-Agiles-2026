@@ -20,7 +20,7 @@ export function EventStatus({ activity }) {
   return null;
 }
 
-export function PublicEventCard({ activity, returnTo, onRegistered }) {
+export function PublicEventCard({ activity, returnTo, onActivityChange }) {
   const date = effectiveDate(activity);
   return (
     <article className={`public-event-card ${activity.estado}`}>
@@ -41,7 +41,7 @@ export function PublicEventCard({ activity, returnTo, onRegistered }) {
         <div className="public-game-tags"><span title={ageTitle(activity.edad_minima)}>{ageLabel(activity.edad_minima)}</span></div>
         <ActivityChangeNotice activity={activity} />
         <div className="public-event-footer">
-          <EventActions activity={activity} onRegistered={onRegistered} detailTo={`/eventos/${activity.id}`} detailState={{ eventsReturnTo: returnTo }} />
+          <EventActions activity={activity} onActivityChange={onActivityChange} detailTo={`/eventos/${activity.id}`} detailState={{ eventsReturnTo: returnTo }} />
         </div>
       </div>
     </article>
