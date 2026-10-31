@@ -1,10 +1,10 @@
-import { Link, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import { CatalogIcon } from '../components/catalog/CatalogIcon';
 import '../styles/public-catalog.css';
 
-export function PublicCatalogLayout() {
+export function PublicCatalogLayout({ className = '' }) {
   return (
-    <div className="app-container public-catalog">
+    <div className={`app-container public-catalog ${className}`}>
       <a className="public-skip-link" href="#public-catalog-content">Ir al contenido</a>
       <header className="public-catalog-header">
         <Link className="public-catalog-brand" to="/catalogo" aria-label="La Frikioteca, catálogo">
@@ -17,9 +17,9 @@ export function PublicCatalogLayout() {
       </main>
       <nav className="public-catalog-bottom" aria-label="Navegación principal">
         <div>
-          <Link to="/catalogo" aria-current="page"><CatalogIcon name="2c137" /><span>Catálogo</span></Link>
+          <NavLink to="/catalogo"><CatalogIcon name="2c137" /><span>Catálogo</span></NavLink>
           <button type="button" disabled title="Próximamente"><CatalogIcon name="7c414" /><span>Buffet</span><small>Próximamente</small></button>
-          <button type="button" disabled title="Próximamente"><CatalogIcon name="bb8d1" /><span>Eventos</span><small>Próximamente</small></button>
+          <NavLink to="/eventos"><CatalogIcon name="bb8d1" /><span>Eventos</span></NavLink>
         </div>
       </nav>
     </div>

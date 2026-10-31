@@ -1,0 +1,34 @@
+/* Cronograma de Eventos (Figma: frame de 390px, fondo #FAF8FF, columna con scroll vertical) */
+.public-catalog.public-events { --catalog-background: #faf8ff; }
+.public-events-intro { padding: 8px 0 4px; }
+.public-events-intro h1 { font: 700 24px/30px var(--catalog-heading); }
+.public-events-intro p { margin-top: 2px; color: var(--catalog-muted); font-size: 13px; line-height: 18px; }
+.public-events-types { margin-bottom: 8px; }
+.public-events-day + .public-events-day { margin-top: 24px; }
+.public-events-day h2 { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font: 800 13px/18px var(--catalog-heading); letter-spacing: .4px; text-transform: uppercase; color: var(--catalog-blue); }
+.public-events-day h2::after { content: ''; flex: 1; height: 2px; border-radius: 1px; background: var(--border-subtle); }
+.public-events-list { display: flex; flex-direction: column; gap: 12px; }
+
+.public-event-card { display: flex; min-width: 0; overflow: hidden; border: 2px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-card); box-shadow: var(--shadow-retro); }
+.public-event-image { flex: 0 0 104px; min-height: 148px; background: var(--brand-blue-light); }
+.public-event-card.cancelada .public-event-image { filter: grayscale(1); opacity: .6; }
+.public-event-body { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; padding: 10px 10px 8px; }
+.public-event-body h3 { font: 700 16px/20px var(--catalog-heading); overflow-wrap: anywhere; }
+.public-event-card.cancelada h3 { text-decoration: line-through; color: var(--catalog-muted); }
+.public-event-labels { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.public-event-labels time { padding: 1px 6px; border-radius: 4px; background: var(--catalog-yellow); color: var(--catalog-yellow-ink); font: 800 12px/18px var(--catalog-heading); }
+.public-event-status { padding: 1px 6px; border-radius: 4px; font: 800 10px/16px var(--catalog-heading); letter-spacing: .5px; }
+.public-event-status.cancelada { background: #fee2e2; color: #991b1b; }
+.public-event-status.postergada { background: #fef3c7; color: #92400e; }
+.public-event-status.en-curso { background: #d1fae5; color: #065f46; }
+.public-event-body .public-game-tags { padding-top: 0; }
+.public-event-body .activity-change-notice { margin-top: 2px; font-size: 11px; line-height: 15px; }
+.public-event-link { display: inline-flex; align-items: center; align-self: flex-end; gap: 2px; min-height: 32px; margin-top: auto; font: 700 13px/18px var(--catalog-heading); color: var(--catalog-blue) !important; }
+
+.public-event-detail .public-game-detail-intro .activity-change-notice { margin-top: 12px; }
+.public-event-detail.cancelada .public-game-detail-cover { filter: grayscale(1); opacity: .6; }
+.public-event-detail .public-game-specs dd { font-size: 16px; line-height: 22px; }
+
+@media (max-width: 359px) {
+  .public-event-image { flex-basis: 84px; }
+}

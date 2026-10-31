@@ -45,6 +45,8 @@ Inventario permite buscar, filtrar, registrar, editar, consultar fichas, dar de 
 
 La pestaña Carta (clave interna `buffet`) usa la API de productos (`services/productoService.js`): lista activos e inactivos ordenados por categoría y nombre, con precio y estado Activo/Inactivo. La baja es lógica, siempre pide confirmación y oculta el producto de la carta pública. El alta y la edición usan su propio formulario (`views/ProductoFormView.jsx`, "Registro de carta" del Figma): nombre único de hasta 50 caracteres, descripción de hasta 500, tipo, precio con dos decimales y estado Activo/Inactivo. El precio de oferta se suma en HU-13.
 
+El cronograma público (`/eventos`, botón Eventos de la barra inferior del cliente) consume `GET /api/activities/schedule`: muestra las próximas actividades agrupadas por día, con búsqueda por nombre y filtro por tipo. Las canceladas y postergadas aparecen con su aviso (fecha original y motivo) y las que están en curso se marcan como tales. `/eventos/:id` muestra el detalle con `GET /api/activities/schedule/{id}`; una actividad inactivada desde el panel deja de estar disponible.
+
 Staff permite alta, edición, selección de avatar y rol, búsqueda de activos, baja y reactivación. Se conserva al menos un Superadministrador activo.
 
 La autenticación ya usa servidor y base de datos. Los demás módulos aún requieren integración con la API, autorización de roles, envío de credenciales y recuperación automática de contraseña. Los futuros endpoints de gestión deben usar la dependencia `get_current_admin` del backend.
