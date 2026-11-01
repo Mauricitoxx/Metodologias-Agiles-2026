@@ -3,17 +3,29 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.models.manga_comic import MangaComic
-from app.schemas.manga_comic import MangaComicCreate, MangaComicUpdate
 from app.models.categoria_manga_comic import CategoriaMangaComic
+from app.schemas.manga_comic import MangaComicCreate, MangaComicUpdate
 
-def validar_categoria(db: Session, categoria_id: int) -> None:
-    categoria = db.get(CategoriaMangaComic, categoria_id)
 
-    if categoria is None:
+def obtener_categorias(
+    db: Session,
+    categorias_ids: list[int],
+) -> list[CategoriaMangaComic]:
+    """Valida y obtiene todas las categorías seleccionadas."""
+    categorias = (
+        db.query(CategoriaMangaComic)
+        .filter(CategoriaMangaComic.id.in_(categorias_ids))
+        .all()
+    )
+
+    if len(categorias) != len(categorias_ids):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="La categoría seleccionada no existe.",
+            detail="Una o más categorías seleccionadas no existen.",
         )
+
+    return categorias
+
 
 def create_manga_comic(
     db: Session,
@@ -28,9 +40,8 @@ def create_manga_comic(
         )
         .first()
     )
-    validar_categoria(db, manga_data.categoria_manga_comic_id)
+
     if existing:
-        #si detecta un duplicado, devuelve un error 409
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=(
@@ -38,8 +49,13 @@ def create_manga_comic(
                 "Podés sumar las copias al registro existente."
             ),
         )
-    #si no existe crea el objeto con los datos recibidos
-    manga = MangaComic(**manga_data.model_dump())
+
+    categorias = obtener_categorias(db, manga_data.categorias_ids)
+
+    datos = manga_data.model_dump(exclude={"categorias_ids"})
+    manga = MangaComic(**datos)
+    manga.categorias = categorias
+
     db.add(manga)
 
     try:
@@ -61,7 +77,7 @@ def create_manga_comic(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Ocurrió un error al guardar los datos. Intentá nuevamente.",
         )
-    
+
     return manga
 
 
@@ -84,20 +100,20 @@ def update_manga_comic(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No se encontró un manga o cómic activo con ese ID.",
         )
-    # Validamos que la categoría seleccionada exista
-    validar_categoria(db, manga_data.categoria_manga_comic_id)
+
+    categorias = obtener_categorias(db, manga_data.categorias_ids)
+
     existing = (
         db.query(MangaComic)
         .filter(
             MangaComic.title == manga_data.title,
             MangaComic.volume_number == manga_data.volume_number,
             MangaComic.is_active.is_(True),
-            #Comprobamos que no exista otro registro activo con esos datos
             MangaComic.id != manga_id,
         )
         .first()
     )
-    #validación anticipada
+
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -106,14 +122,18 @@ def update_manga_comic(
                 "Podés sumar las copias al registro existente."
             ),
         )
-    #recorro los campos recibidos y actualizo sus valores 
-    for field, value in manga_data.model_dump().items():
+
+    datos = manga_data.model_dump(exclude={"categorias_ids"})
+
+    for field, value in datos.items():
         setattr(manga, field, value)
+
+    # Reemplaza las asociaciones anteriores por las seleccionadas.
+    manga.categorias = categorias
 
     try:
         db.commit()
         db.refresh(manga)
-    #proteccion adicional
     except IntegrityError:
         db.rollback()
         raise HTTPException(
@@ -129,7 +149,9 @@ def update_manga_comic(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Ocurrió un error al guardar los datos. Intentá nuevamente.",
         )
+
     return manga
+
 
 def list_manga_comics(db: Session) -> list[MangaComic]:
     """Devuelve los mangas y cómics activos para el catálogo."""
@@ -139,14 +161,16 @@ def list_manga_comics(db: Session) -> list[MangaComic]:
         .order_by(MangaComic.title, MangaComic.volume_number)
         .all()
     )
-#Agrego esta funcion solo para el admin 
+
+
 def list_all_manga_comics(db: Session) -> list[MangaComic]:
-    """Devuelve todos los mangas y cómics, activos e inactivos, para administración."""
+    """Devuelve todos los mangas y cómics para administración."""
     return (
         db.query(MangaComic)
         .order_by(MangaComic.title, MangaComic.volume_number)
         .all()
     )
+
 
 def get_manga_comic(
     db: Session,
@@ -176,7 +200,6 @@ def deactivate_manga_comic(
     manga_id: int,
 ) -> MangaComic:
     """Da de baja lógicamente un manga o cómic."""
-    # Si no existe o ya está inactivo, se conserva el 404.
     manga = get_manga_comic(db, manga_id)
     manga.is_active = False
 
@@ -237,4 +260,3 @@ def reactivate_manga_comic(
         )
 
     return manga
-

@@ -10,3 +10,4 @@ from app.models.juego import Juego, juegos_categorias  # noqa: F401
 from app.models.regla import Regla  # noqa: F401
 from app.models.producto import Producto  # noqa: F401
 from app.models.categoria_manga_comic import CategoriaMangaComic  # noqa: F401
+from app.models.manga_comic_categoria import MangaComicCategoria  # noqa: F401

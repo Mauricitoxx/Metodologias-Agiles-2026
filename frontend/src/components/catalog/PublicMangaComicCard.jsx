@@ -1,6 +1,27 @@
-
 import { Link } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
+
+const getCategories = (record) => {
+  const categories =
+    record.categorias?.length
+      ? record.categorias
+      : record.categories?.length
+        ? record.categories
+        : record.categoria
+          ? [record.categoria]
+          : [];
+
+  return categories.map((category, index) => {
+    if (typeof category === 'string') {
+      return { id: category, nombre: category };
+    }
+
+    return {
+      id: category.id ?? category.nombre ?? index,
+      nombre: category.nombre ?? category.name ?? 'Sin nombre',
+    };
+  });
+};
 
 export function MangaComicCover({ record }) {
   const image = record.image || record.imagen;
@@ -29,10 +50,8 @@ export function PublicMangaComicCard({
   returnTo = '/catalogo/mangas',
 }) {
   const type = record.type || record.tipo;
-  const categories = record.categoria
-  ? [record.categoria]
-  : record.categories || record.categorias || [];
-  
+  const categories = getCategories(record);
+
   return (
     <article className="public-game-card">
       <div className="public-game-image">
@@ -59,13 +78,15 @@ export function PublicMangaComicCard({
           <span>{record.copies} copias registradas</span>
         </div>
 
-        <div className="public-game-tags">
-          {categories.map((category) => (
-            <span key={category.id}>
-              {category.nombre}
-            </span>
-          ))}
-        </div>
+        {categories.length > 0 && (
+          <div className="public-game-tags">
+            {categories.map((category) => (
+              <span key={category.id}>
+                {category.nombre}
+              </span>
+            ))}
+          </div>
+        )}
 
         <Link
           className="public-catalog-primary"

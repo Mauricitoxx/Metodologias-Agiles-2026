@@ -43,10 +43,12 @@ export function EntityFormView() {
   const [form, setForm] = useState(() => ({
     code: nextCode(type, data),
     category: type === 'boardgames' ? 'Estrategia & Civilización' : '',
-    categoria_manga_comic_id:
-      modalState.item?.categoria_manga_comic_id ??
-      modalState.item?.categoria?.id ??
-      '',
+    categorias_ids: (
+      modalState.item?.categorias?.map(categoria => categoria.id) ||
+      (modalState.item?.categoria_manga_comic_id
+        ? [modalState.item.categoria_manga_comic_id]
+        : [])
+    ).map(Number),
     shelf: 'Estante A-3 · Nivel Central',
     minPlayers: 2,
     maxPlayers: 4,
@@ -63,10 +65,12 @@ export function EntityFormView() {
     image: '',
     description: '',
     ...modalState.item,
-    categoria_manga_comic_id:
-      modalState.item?.categoria_manga_comic_id ??
-      modalState.item?.categoria?.id ??
-      '',
+    categorias_ids: (
+      modalState.item?.categorias?.map(categoria => categoria.id) ||
+      (modalState.item?.categoria_manga_comic_id
+        ? [modalState.item.categoria_manga_comic_id]
+        : [])
+    ).map(Number),
     videoUrl: getGameVideoUrl(modalState.item || {}) || '',
     title: modalState.item?.title || modalState.item?.nombre || '',
     nombre: modalState.item?.nombre || modalState.item?.title || '',
@@ -132,6 +136,21 @@ export function EntityFormView() {
     }));
   };
 
+  const toggleCategoria = (categoriaId) => {
+    setForm(prev => {
+      const seleccionadas = prev.categorias_ids || [];
+      const id = Number(categoriaId);
+      const nuevasCategorias = seleccionadas.includes(id)
+        ? seleccionadas.filter(categoria => categoria !== id)
+        : [...seleccionadas, id];
+
+      return {
+        ...prev,
+        categorias_ids: nuevasCategorias,
+      };
+    });
+  };
+
   const field = (name, label, inputType = 'text', required = false) => (
     <div className="form-group" key={name}>
       <label htmlFor={`entity-${name}`}>
@@ -195,11 +214,12 @@ export function EntityFormView() {
       type === 'comics' &&
       (
         !['manga', 'comic'].includes(form.type) ||
-        !Number.isInteger(Number(form.categoria_manga_comic_id)) ||
-        Number(form.categoria_manga_comic_id) <= 0
+        !Array.isArray(form.categorias_ids) ||
+        form.categorias_ids.length === 0 ||
+        form.categorias_ids.some(id => !Number.isInteger(Number(id)) || Number(id) <= 0)
       )
     ) {
-      setError('Seleccioná el tipo de publicación y una categoría.');
+      setError('Seleccioná el tipo de publicación y al menos un género.');
       return;
     }
 
@@ -244,11 +264,10 @@ export function EntityFormView() {
 
     if (type === 'comics') {
       itemPayload.type = form.type;
-      itemPayload.categoria_manga_comic_id = Number(
-        form.categoria_manga_comic_id
-      );
+      itemPayload.categorias_ids = form.categorias_ids.map(Number);
 
-      // El backend ya no recibe category como texto para mangas y cómics.
+      // El backend recibe categorías mediante una lista de IDs.
+      delete itemPayload.categoria_manga_comic_id;
       delete itemPayload.category;
 
       itemPayload.volume_number = Number(form.volume_number);
@@ -444,35 +463,33 @@ export function EntityFormView() {
 
           {type === 'comics' ? (
             <div className="form-group">
-              <label htmlFor="entity-category">CATEGORÍA PRINCIPAL *</label>
+              <label>GÉNEROS *</label>
 
-              <select
-                id="entity-category"
-                className="form-select"
-                name="categoria_manga_comic_id"
-                value={form.categoria_manga_comic_id ?? ''}
-                onChange={change}
-                required
-                disabled={loadingCategorias}
-              >
-                <option value="">
-                  {loadingCategorias
-                    ? 'Cargando categorías...'
-                    : 'Seleccioná una categoría'}
-                </option>
-
-                {categorias.map(categoria => (
-                  <option key={categoria.id} value={categoria.id}>
-                    {categoria.nombre}
-                  </option>
-                ))}
-              </select>
-
-              {!loadingCategorias && categorias.length === 0 && (
+              {loadingCategorias ? (
+                <p>Cargando géneros...</p>
+              ) : categorias.length === 0 ? (
                 <p className="error-text">
-                  No hay categorías disponibles. Creá una categoría antes de continuar.
+                  No hay géneros disponibles. Creá uno antes de continuar.
                 </p>
+              ) : (
+                <div className="genre-checkbox-list">
+                  {categorias.map(categoria => (
+                    <label
+                      key={categoria.id}
+                      className="genre-checkbox-item"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={(form.categorias_ids || []).includes(Number(categoria.id))}
+                        onChange={() => toggleCategoria(categoria.id)}
+                      />
+                      <span>{categoria.nombre}</span>
+                    </label>
+                  ))}
+                </div>
               )}
+
+              <small>Podés seleccionar uno o varios géneros.</small>
             </div>
           ) : (
             field('category', 'CATEGORÍA PRINCIPAL', 'text', true)

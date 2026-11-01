@@ -1,4 +1,3 @@
-
 import { PublicGameCard } from '../components/catalog/PublicGameCard';
 import { PublicGameDetailView } from '../views/PublicGameDetailView';
 import { publicGameCatalogService } from '../services/publicGameCatalogService';
@@ -8,6 +7,24 @@ import { PublicMangaComicDetailView } from '../views/PublicMangaComicDetailView'
 import { publicMangaComicCatalogService } from '../services/publicMangaComicCatalogService';
 
 import { createCatalogEntry } from '../utils/catalog';
+
+// Normaliza las categorías para admitir tanto el formato nuevo
+// (varias categorías) como el formato anterior (una sola categoría).
+const getCategories = (record) => {
+  if (record.categorias?.length) {
+    return record.categorias;
+  }
+
+  if (record.categories?.length) {
+    return record.categories;
+  }
+
+  if (record.categoria) {
+    return [record.categoria];
+  }
+
+  return [];
+};
 
 // Cada módulo consulta y adapta únicamente los registros de su dominio.
 export const catalogModules = [
@@ -75,17 +92,12 @@ export const catalogModules = [
     async listEntries() {
       const records = await publicMangaComicCatalogService.list();
 
-      return records.map((record) => {
-        const categories = record.categoria
-        ? [record.categoria]
-        : record.categories?.length
-          ? record.categories
-          : record.categorias || [];
-        return createCatalogEntry('lecturas', record, {
+      return records.map((record) =>
+        createCatalogEntry('lecturas', record, {
           title: `${record.title} ${record.volume_number}`,
-          categories,
-        });
-      });
+          categories: getCategories(record),
+        })
+      );
     },
 
     selectEntries(entries, searchParams) {

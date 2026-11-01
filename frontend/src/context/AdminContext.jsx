@@ -145,9 +145,10 @@ export const AdminProvider = ({ children }) => {
           volumes: item.volume_number,
           description: item.synopsis || '',
           image: item.image || '',
-          category: item.categoria?.nombre || 'Sin categoría',
-          categoria_manga_comic_id:
-            item.categoria_manga_comic_id ?? item.categoria?.id ?? '',
+          categorias_ids: (item.categorias || []).map(categoria => categoria.id),
+          category: (item.categorias || [])
+            .map(categoria => categoria.nombre)
+            .join(', ') || 'Sin género',
         }));
 
         if (!cancelled) {
@@ -263,6 +264,10 @@ export const AdminProvider = ({ children }) => {
           volumes: created.volume_number,
           description: created.synopsis || '',
           image: created.image || '',
+          categorias_ids: (created.categorias || []).map(categoria => categoria.id),
+          category: (created.categorias || [])
+            .map(categoria => categoria.nombre)
+            .join(', ') || 'Sin género',
         };
 
         setData((prev) => ({
@@ -347,18 +352,17 @@ export const AdminProvider = ({ children }) => {
     if (entityType === 'comics') {
       try {
         const updated = await mangaComicService.update(updatedItem.id, {
-        title: updatedItem.title,
-        type: updatedItem.type,
-        categoria_manga_comic_id: Number(
-          updatedItem.categoria_manga_comic_id
-        ),
-        author: updatedItem.author?.trim() || null,
-        volume_number: Number(updatedItem.volume_number),
-        pages: Number(updatedItem.pages),
-        copies: Number(updatedItem.copies),
-        synopsis: updatedItem.synopsis || null,
-        image: updatedItem.image || null,
-      });
+          title: updatedItem.title,
+          type: updatedItem.type,
+          categorias_ids: (updatedItem.categorias_ids || []).map(Number),
+          author: updatedItem.author?.trim() || null,
+          volume_number: Number(updatedItem.volume_number),
+          pages: Number(updatedItem.pages),
+          copies: Number(updatedItem.copies),
+          synopsis: updatedItem.synopsis || null,
+          image: updatedItem.image || null,
+        });
+
         const normalized = {
           ...updated,
           code: `#MC-${String(updated.id).padStart(3, '0')}`,
@@ -366,9 +370,10 @@ export const AdminProvider = ({ children }) => {
           volumes: updated.volume_number,
           description: updated.synopsis || '',
           image: updated.image || '',
-          category: updated.categoria?.nombre || 'Sin categoría',
-          categoria_manga_comic_id:
-            updated.categoria_manga_comic_id ?? updated.categoria?.id ?? '',
+          categorias_ids: (updated.categorias || []).map(categoria => categoria.id),
+          category: (updated.categorias || [])
+            .map(categoria => categoria.nombre)
+            .join(', ') || 'Sin género',
         };
 
         setData((prev) => ({

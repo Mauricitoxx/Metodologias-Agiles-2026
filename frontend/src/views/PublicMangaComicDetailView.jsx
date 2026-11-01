@@ -6,6 +6,28 @@ import { publicMangaComicCatalogService } from '../services/publicMangaComicCata
 import { MangaComicCover } from '../components/catalog/PublicMangaComicCard';
 import { getCatalogReturnTo } from '../utils/catalog';
 
+const getCategories = (record) => {
+  const categories =
+    record.categorias?.length
+      ? record.categorias
+      : record.categories?.length
+        ? record.categories
+        : record.categoria
+          ? [record.categoria]
+          : [];
+
+  return categories.map((category, index) => {
+    if (typeof category === 'string') {
+      return { id: category, nombre: category };
+    }
+
+    return {
+      id: category.id ?? category.nombre ?? index,
+      nombre: category.nombre ?? category.name ?? 'Sin nombre',
+    };
+  });
+};
+
 export function PublicMangaComicDetailView() {
   const { id } = useParams();
   const { state } = useLocation();
@@ -41,7 +63,7 @@ export function PublicMangaComicDetailView() {
 
   const record = current?.record;
   const type = record?.type || record?.tipo;
-  const categories = record?.categories || record?.categorias || [];
+  const categories = record ? getCategories(record) : [];
 
   return (
     <>
@@ -78,11 +100,15 @@ export function PublicMangaComicDetailView() {
 
             <h1>{record.title}</h1>
 
-            <div className="public-game-tags">
-              {categories.map((category) => (
-                <span key={category.id}>{category.nombre}</span>
-              ))}
-            </div>
+            {categories.length > 0 && (
+              <div className="public-game-tags">
+                {categories.map((category) => (
+                  <span key={category.id}>
+                    {category.nombre}
+                  </span>
+                ))}
+              </div>
+            )}
 
             <p>
               {record.synopsis || 'Este tomo todavía no tiene una sinopsis cargada.'}

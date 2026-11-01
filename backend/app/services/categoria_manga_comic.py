@@ -2,7 +2,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.categoria_manga_comic import CategoriaMangaComic
-from app.models.manga_comic import MangaComic
+from app.models.manga_comic_categoria import MangaComicCategoria
 from app.schemas.categoria_manga_comic import (
     CategoriaMangaComicCreate,
     CategoriaMangaComicUpdate,
@@ -36,12 +36,16 @@ def obtener_categoria_por_nombre(
     )
 
 
-def categoria_tiene_mangas_comics(db: Session, categoria_id: int) -> bool:
+def categoria_tiene_mangas_comics(
+    db: Session,
+    categoria_id: int,
+) -> bool:
     total = db.scalar(
         select(func.count())
-        .select_from(MangaComic)
-        .where(MangaComic.categoria_manga_comic_id == categoria_id)
+        .select_from(MangaComicCategoria)
+        .where(MangaComicCategoria.categoria_id == categoria_id)
     ) or 0
+
     return total > 0
 
 
@@ -57,6 +61,7 @@ def crear_categoria(
     db.add(categoria)
     db.commit()
     db.refresh(categoria)
+
     return categoria
 
 
@@ -74,6 +79,7 @@ def actualizar_categoria(
 
     db.commit()
     db.refresh(categoria)
+
     return categoria
 
 

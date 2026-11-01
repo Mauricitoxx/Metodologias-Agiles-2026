@@ -26,7 +26,8 @@ class CategoriaMangaComic(Base):
     )
 
     mangas_comics: Mapped[list["MangaComic"]] = relationship(
-        back_populates="categoria",
+        secondary="manga_comic_categorias",
+        back_populates="categorias",
         lazy="selectin",
     )
 
