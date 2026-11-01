@@ -29,8 +29,10 @@ export function PublicMangaComicCard({
   returnTo = '/catalogo/mangas',
 }) {
   const type = record.type || record.tipo;
-  const categories = record.categories || record.categorias || [];
-
+  const categories = record.categoria
+  ? [record.categoria]
+  : record.categories || record.categorias || [];
+  
   return (
     <article className="public-game-card">
       <div className="public-game-image">

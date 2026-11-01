@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { AlertTriangle, AlertOctagon, X, Trash2 } from 'lucide-react';
 
@@ -6,18 +7,25 @@ export const ConfirmDeleteCategoryModal = ({
   onClose,
   categoria,
   onConfirm,
+  entityLabel = 'juego',
+  countField = 'juegos_count',
 }) => {
   const [deleting, setDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   if (!isOpen || !categoria) return null;
 
-  const juegosCount = categoria.juegos_count || (categoria.juegos ? categoria.juegos.length : 0);
-  const tieneJuegos = juegosCount > 0;
+  const count = categoria[countField] ?? 0;
+  const tieneElementos = count > 0;
+  const entityLabelPlural = entityLabel === 'manga o cómic'
+    ? 'mangas o cómics'
+    : `${entityLabel}s`;
 
   const handleConfirm = async () => {
-    if (tieneJuegos) {
-      setErrorMessage('No se puede eliminar esta categoría porque hay juegos usándola');
+    if (tieneElementos) {
+      setErrorMessage(
+        `No se puede eliminar esta categoría porque hay ${entityLabelPlural} usándola.`
+      );
       return;
     }
 
@@ -28,7 +36,7 @@ export const ConfirmDeleteCategoryModal = ({
       onClose();
     } catch (err) {
       setErrorMessage(
-        err.message || 'No se puede eliminar esta categoría porque hay juegos usándola'
+        err.message || `No se puede eliminar esta categoría porque hay ${entityLabelPlural} usándola.`
       );
     } finally {
       setDeleting(false);
@@ -44,16 +52,18 @@ export const ConfirmDeleteCategoryModal = ({
         aria-modal="true"
         aria-labelledby="confirm-delete-title"
       >
-        {/* Header */}
         <div className="modal-header">
           <div className="modal-header-icon-title">
-            <div className={`alert-circle-icon ${tieneJuegos ? 'warning' : 'danger'}`}>
-              {tieneJuegos ? <AlertOctagon size={22} /> : <AlertTriangle size={22} />}
+            <div className={`alert-circle-icon ${tieneElementos ? 'warning' : 'danger'}`}>
+              {tieneElementos
+                ? <AlertOctagon size={22} />
+                : <AlertTriangle size={22} />}
             </div>
             <h3 id="confirm-delete-title" className="modal-title">
-              {tieneJuegos ? 'Acción Bloqueada' : 'Confirmar Eliminación'}
+              {tieneElementos ? 'Acción Bloqueada' : 'Confirmar Eliminación'}
             </h3>
           </div>
+
           <button
             type="button"
             className="modal-close-btn"
@@ -64,20 +74,23 @@ export const ConfirmDeleteCategoryModal = ({
           </button>
         </div>
 
-        {/* Body */}
         <div className="modal-body">
-          {tieneJuegos ? (
+          {tieneElementos ? (
             <div className="category-blocked-alert" role="alert">
               <div className="category-blocked-banner">
                 <AlertOctagon size={20} className="blocked-icon" />
                 <p className="blocked-title">
-                  No se puede eliminar esta categoría porque hay juegos usándola
+                  No se puede eliminar esta categoría porque hay {entityLabelPlural} usándola.
                 </p>
               </div>
+
               <p className="blocked-detail">
                 La categoría <strong>"{categoria.nombre}"</strong> tiene{' '}
-                <strong>{juegosCount}</strong> {juegosCount === 1 ? 'juego asignado' : 'juegos asignados'}.
-                Debes desvincularla o reasignar esos juegos antes de poder eliminarla del sistema.
+                <strong>{count}</strong>{' '}
+                {count === 1
+                  ? `${entityLabel} asignado`
+                  : `${entityLabelPlural} asignados`}.
+                Debes desvincularlos o reasignarlos antes de eliminar la categoría.
               </p>
             </div>
           ) : (
@@ -100,7 +113,6 @@ export const ConfirmDeleteCategoryModal = ({
           )}
         </div>
 
-        {/* Footer */}
         <div className="modal-footer">
           <button
             type="button"
@@ -108,10 +120,10 @@ export const ConfirmDeleteCategoryModal = ({
             onClick={onClose}
             disabled={deleting}
           >
-            {tieneJuegos ? 'Entendido / Cerrar' : 'Cancelar'}
+            {tieneElementos ? 'Entendido / Cerrar' : 'Cancelar'}
           </button>
 
-          {!tieneJuegos && (
+          {!tieneElementos && (
             <button
               type="button"
               className="btn-confirm btn-confirm-danger"

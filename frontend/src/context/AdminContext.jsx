@@ -145,6 +145,9 @@ export const AdminProvider = ({ children }) => {
           volumes: item.volume_number,
           description: item.synopsis || '',
           image: item.image || '',
+          category: item.categoria?.nombre || 'Sin categoría',
+          categoria_manga_comic_id:
+            item.categoria_manga_comic_id ?? item.categoria?.id ?? '',
         }));
 
         if (!cancelled) {
@@ -346,7 +349,10 @@ export const AdminProvider = ({ children }) => {
         const updated = await mangaComicService.update(updatedItem.id, {
         title: updatedItem.title,
         type: updatedItem.type,
-        category: updatedItem.category,
+        categoria_manga_comic_id: Number(
+          updatedItem.categoria_manga_comic_id
+        ),
+        author: updatedItem.author?.trim() || null,
         volume_number: Number(updatedItem.volume_number),
         pages: Number(updatedItem.pages),
         copies: Number(updatedItem.copies),
@@ -360,6 +366,9 @@ export const AdminProvider = ({ children }) => {
           volumes: updated.volume_number,
           description: updated.synopsis || '',
           image: updated.image || '',
+          category: updated.categoria?.nombre || 'Sin categoría',
+          categoria_manga_comic_id:
+            updated.categoria_manga_comic_id ?? updated.categoria?.id ?? '',
         };
 
         setData((prev) => ({

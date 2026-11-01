@@ -3,8 +3,27 @@ export const catalogPath = '/catalogo';
 // Las identidades incluyen el módulo: un juego y un manga pueden compartir ID.
 export function createCatalogEntry(moduleId, record, { title, categories = [], duration = null }) {
   return {
-    key: `${moduleId}:${record.id}`, moduleId, record, title, duration,
-    categories: categories.map((category) => ({ ...category, key: `${moduleId}:${category.id}` })),
+    key: `${moduleId}:${record.id}`,
+    moduleId,
+    record,
+    title,
+    duration,
+    categories: categories.map((category) => {
+      const nombre = typeof category === 'string'
+        ? category
+        : category.nombre || category.name || '';
+
+      const id = typeof category === 'string'
+        ? category
+        : category.id ?? nombre;
+
+      return {
+        ...(typeof category === 'object' && category !== null ? category : {}),
+        id,
+        nombre,
+        key: `${moduleId}:${id}`,
+      };
+    }).filter((category) => category.nombre),
   };
 }
 

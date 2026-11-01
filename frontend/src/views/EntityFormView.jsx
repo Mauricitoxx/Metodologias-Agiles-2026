@@ -1,9 +1,11 @@
+
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Save, Upload, RefreshCw, Trash2, BookOpen } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
 import { isValidUrl } from '../utils/validation';
 import { getGameVideoUrl } from '../utils/gameVideo';
 import { ReglasModal } from '../components/modals/ReglasModal';
+import { categoriaMangaComicService } from '../services/categoriaMangaComicService';
 
 const types = {
   boardgames: '🎲 Juego de Mesa',
@@ -35,9 +37,16 @@ export function EntityFormView() {
   const editing = modalState.mode === 'edit';
   const [isReglasModalOpen, setIsReglasModalOpen] = useState(false);
 
+  const [categorias, setCategorias] = useState([]);
+  const [loadingCategorias, setLoadingCategorias] = useState(false);
+
   const [form, setForm] = useState(() => ({
     code: nextCode(type, data),
-    category: 'Estrategia & Civilización',
+    category: type === 'boardgames' ? 'Estrategia & Civilización' : '',
+    categoria_manga_comic_id:
+      modalState.item?.categoria_manga_comic_id ??
+      modalState.item?.categoria?.id ??
+      '',
     shelf: 'Estante A-3 · Nivel Central',
     minPlayers: 2,
     maxPlayers: 4,
@@ -54,10 +63,14 @@ export function EntityFormView() {
     image: '',
     description: '',
     ...modalState.item,
+    categoria_manga_comic_id:
+      modalState.item?.categoria_manga_comic_id ??
+      modalState.item?.categoria?.id ??
+      '',
     videoUrl: getGameVideoUrl(modalState.item || {}) || '',
     title: modalState.item?.title || modalState.item?.nombre || '',
     nombre: modalState.item?.nombre || modalState.item?.title || '',
-    type: modalState.item?.type || 'manga'
+    type: modalState.item?.type || 'manga',
   }));
 
   const [error, setError] = useState('');
@@ -73,13 +86,49 @@ export function EntityFormView() {
     return () => window.removeEventListener('keydown', escape);
   }, [closeModal, isReglasModalOpen]);
 
+  // Cargar las categorías cuando el formulario corresponde a mangas y cómics.
+  useEffect(() => {
+    if (type !== 'comics') return;
+
+    let cancelled = false;
+
+    async function cargarCategorias() {
+      setLoadingCategorias(true);
+
+      try {
+        const response = await categoriaMangaComicService.listar();
+
+        if (!cancelled) {
+          setCategorias(
+            Array.isArray(response) ? response : []
+          );
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError('No se pudieron cargar las categorías.');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingCategorias(false);
+        }
+      }
+    }
+
+    cargarCategorias();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [type]);
+
   const change = event => {
     const { name, value } = event.target;
+
     setForm(prev => ({
       ...prev,
       [name]: value,
       ...(name === 'title' ? { nombre: value } : {}),
-      ...(name === 'nombre' ? { title: value } : {})
+      ...(name === 'nombre' ? { title: value } : {}),
     }));
   };
 
@@ -106,6 +155,7 @@ export function EntityFormView() {
     setError('');
 
     const titleVal = form.title?.trim() || form.nombre?.trim();
+
     if (!titleVal) {
       setError('Ingresá el nombre de la entidad.');
       return;
@@ -131,34 +181,48 @@ export function EntityFormView() {
     }
 
     const trimmedVideoUrl = form.videoUrl ? form.videoUrl.trim() : '';
-    if (type === 'boardgames' && trimmedVideoUrl && !isValidUrl(trimmedVideoUrl)) {
+
+    if (
+      type === 'boardgames' &&
+      trimmedVideoUrl &&
+      !isValidUrl(trimmedVideoUrl)
+    ) {
       setError('Debe ingresar una URL web válida');
       return;
     }
 
     if (
       type === 'comics' &&
-      (!['manga', 'comic'].includes(form.type) ||
-        !form.category?.trim())
+      (
+        !['manga', 'comic'].includes(form.type) ||
+        !Number.isInteger(Number(form.categoria_manga_comic_id)) ||
+        Number(form.categoria_manga_comic_id) <= 0
+      )
     ) {
-      setError('Seleccioná el tipo de publicación e ingresá una categoría.');
+      setError('Seleccioná el tipo de publicación y una categoría.');
       return;
     }
 
     if (
       type === 'comics' &&
-      (!Number.isInteger(Number(form.volume_number)) ||
+      (
+        !Number.isInteger(Number(form.volume_number)) ||
         Number(form.volume_number) < 1 ||
         !Number.isInteger(Number(form.pages)) ||
         Number(form.pages) < 1 ||
         !Number.isInteger(Number(form.copies)) ||
-        Number(form.copies) < 1)
+        Number(form.copies) < 1
+      )
     ) {
       setError('Volumen, páginas y ejemplares deben ser números enteros positivos.');
       return;
     }
 
-    const durParsed = parseInt(String(form.duration || form.duracion_min || '30').replace(/\D/g, ''), 10) || 30;
+    const durParsed =
+      parseInt(
+        String(form.duration || form.duracion_min || '30').replace(/\D/g, ''),
+        10
+      ) || 30;
 
     const itemPayload = {
       ...form,
@@ -175,12 +239,18 @@ export function EntityFormView() {
       duracion_min: durParsed,
       price: Number(form.price || 0),
       videoUrl: trimmedVideoUrl,
-      ...(type === 'boardgames' ? { video_url: trimmedVideoUrl || null } : {})
+      ...(type === 'boardgames' ? { video_url: trimmedVideoUrl || null } : {}),
     };
 
     if (type === 'comics') {
       itemPayload.type = form.type;
-      itemPayload.category = form.category.trim();
+      itemPayload.categoria_manga_comic_id = Number(
+        form.categoria_manga_comic_id
+      );
+
+      // El backend ya no recibe category como texto para mangas y cómics.
+      delete itemPayload.category;
+
       itemPayload.volume_number = Number(form.volume_number);
       itemPayload.pages = Number(form.pages);
       itemPayload.copies = Number(form.copies);
@@ -309,7 +379,6 @@ export function EntityFormView() {
               <small>FICHA OFICIAL</small>
             </h3>
 
-            {/* BOTÓN PARA ABRIR REGLAS MODAL */}
             {type === 'boardgames' && (
               <button
                 type="button"
@@ -373,7 +442,42 @@ export function EntityFormView() {
             </div>
           )}
 
-          {field('category', 'CATEGORÍA PRINCIPAL', 'text', true)}
+          {type === 'comics' ? (
+            <div className="form-group">
+              <label htmlFor="entity-category">CATEGORÍA PRINCIPAL *</label>
+
+              <select
+                id="entity-category"
+                className="form-select"
+                name="categoria_manga_comic_id"
+                value={form.categoria_manga_comic_id ?? ''}
+                onChange={change}
+                required
+                disabled={loadingCategorias}
+              >
+                <option value="">
+                  {loadingCategorias
+                    ? 'Cargando categorías...'
+                    : 'Seleccioná una categoría'}
+                </option>
+
+                {categorias.map(categoria => (
+                  <option key={categoria.id} value={categoria.id}>
+                    {categoria.nombre}
+                  </option>
+                ))}
+              </select>
+
+              {!loadingCategorias && categorias.length === 0 && (
+                <p className="error-text">
+                  No hay categorías disponibles. Creá una categoría antes de continuar.
+                </p>
+              )}
+            </div>
+          ) : (
+            field('category', 'CATEGORÍA PRINCIPAL', 'text', true)
+          )}
+
           {field('shelf', 'UBICACIÓN EN LA FRIKIOTECA')}
 
           {type === 'comics' && (
@@ -529,7 +633,7 @@ export function EntityFormView() {
 
           <button
             className="btn-primary"
-            disabled={uploading || saving}
+            disabled={uploading || saving || (type === 'comics' && loadingCategorias)}
             type="submit"
           >
             <Save size={16} />
@@ -538,7 +642,6 @@ export function EntityFormView() {
         </div>
       </form>
 
-      {/* MODAL DE GESTIÓN DE REGLAS */}
       {isReglasModalOpen && (
         <ReglasModal
           isOpen={isReglasModalOpen}

@@ -61,7 +61,7 @@ export const catalogModules = [
     ],
     sections: [
       {
-        to: '/catalogo/mangas',
+        to: '/catalogo/mangas?tipo=manga',
         label: '📖 Manga',
         queryKeys: ['tipo'],
       },
@@ -76,8 +76,11 @@ export const catalogModules = [
       const records = await publicMangaComicCatalogService.list();
 
       return records.map((record) => {
-        const categories = record.categories || record.categorias || [];
-
+        const categories = record.categoria
+        ? [record.categoria]
+        : record.categories?.length
+          ? record.categories
+          : record.categorias || [];
         return createCatalogEntry('lecturas', record, {
           title: `${record.title} ${record.volume_number}`,
           categories,

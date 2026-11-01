@@ -4,6 +4,16 @@ from sqlalchemy.orm import Session
 
 from app.models.manga_comic import MangaComic
 from app.schemas.manga_comic import MangaComicCreate, MangaComicUpdate
+from app.models.categoria_manga_comic import CategoriaMangaComic
+
+def validar_categoria(db: Session, categoria_id: int) -> None:
+    categoria = db.get(CategoriaMangaComic, categoria_id)
+
+    if categoria is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="La categoría seleccionada no existe.",
+        )
 
 def create_manga_comic(
     db: Session,
@@ -18,7 +28,7 @@ def create_manga_comic(
         )
         .first()
     )
-
+    validar_categoria(db, manga_data.categoria_manga_comic_id)
     if existing:
         #si detecta un duplicado, devuelve un error 409
         raise HTTPException(
@@ -74,7 +84,8 @@ def update_manga_comic(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No se encontró un manga o cómic activo con ese ID.",
         )
-
+    # Validamos que la categoría seleccionada exista
+    validar_categoria(db, manga_data.categoria_manga_comic_id)
     existing = (
         db.query(MangaComic)
         .filter(
