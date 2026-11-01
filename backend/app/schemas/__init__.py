@@ -5,6 +5,12 @@ from app.schemas.categoria_juego import (
     CategoriaJuegoRead,
     CategoriaJuegoUpdate,
 )
+from app.schemas.categoria_manga_comic import (
+    CategoriaMangaComicBase,
+    CategoriaMangaComicCreate,
+    CategoriaMangaComicRead,
+    CategoriaMangaComicUpdate,
+)
 from app.schemas.dificultad import (
     DificultadBase,
     DificultadCreate,
@@ -37,6 +43,11 @@ __all__ = [
     "AdministradorCreate",
     "AdministradorRead",
     "AdministradorUpdate",
+    # CategoriaMangaComic
+    "CategoriaMangaComicBase",
+    "CategoriaMangaComicCreate",
+    "CategoriaMangaComicRead",
+    "CategoriaMangaComicUpdate",
     # CategoriaJuego
     "CategoriaJuegoBase",
     "CategoriaJuegoCreate",
