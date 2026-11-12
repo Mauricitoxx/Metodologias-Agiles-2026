@@ -13,12 +13,13 @@ const getCategories = (record) => {
 
   return categories.map((category, index) => {
     if (typeof category === 'string') {
-      return { id: category, nombre: category };
+      return { id: category, nombre: category, descripcion: '' };
     }
 
     return {
       id: category.id ?? category.nombre ?? index,
       nombre: category.nombre ?? category.name ?? 'Sin nombre',
+      descripcion: category.descripcion ?? category.description ?? '',
     };
   });
 };
@@ -79,13 +80,14 @@ export function PublicMangaComicCard({
         </div>
 
         {categories.length > 0 && (
-          <div className="public-game-tags">
-            {categories.map((category) => (
-              <span key={category.id}>
-                {category.nombre}
-              </span>
-            ))}
-          </div>
+          <section className="public-manga-card-categories" aria-label="Categorías">
+            <h3>Categorías</h3>
+            <div className="public-game-tags">
+              {categories.map((category) => (
+                <span key={category.id}>{category.nombre}</span>
+              ))}
+            </div>
+          </section>
         )}
 
         <Link

@@ -1,10 +1,28 @@
 
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Copy, FileText } from 'lucide-react';
+import { ArrowLeft, BookOpen, Copy, FileText, X } from 'lucide-react';
 import { publicMangaComicCatalogService } from '../services/publicMangaComicCatalogService';
 import { MangaComicCover } from '../components/catalog/PublicMangaComicCard';
 import { getCatalogReturnTo } from '../utils/catalog';
+
+const DEMOGRAPHIC_CATEGORIES = new Set([
+  'shonen',
+  'shōnen',
+  'shojo',
+  'shōjo',
+  'seinen',
+  'josei',
+  'kodomo',
+  'kodomomuke',
+]);
+
+const normalizeCategoryName = (name = '') =>
+  name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLocaleLowerCase();
 
 const getCategories = (record) => {
   const categories =
@@ -18,15 +36,19 @@ const getCategories = (record) => {
 
   return categories.map((category, index) => {
     if (typeof category === 'string') {
-      return { id: category, nombre: category };
+      return { id: category, nombre: category, descripcion: '' };
     }
 
     return {
       id: category.id ?? category.nombre ?? index,
       nombre: category.nombre ?? category.name ?? 'Sin nombre',
+      descripcion: category.descripcion ?? category.description ?? '',
     };
   });
 };
+
+const isDemographicCategory = (category) =>
+  DEMOGRAPHIC_CATEGORIES.has(normalizeCategoryName(category.nombre));
 
 export function PublicMangaComicDetailView() {
   const { id } = useParams();
@@ -34,11 +56,23 @@ export function PublicMangaComicDetailView() {
 
   const [result, setResult] = useState(null);
   const [retry, setRetry] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   const backTo = getCatalogReturnTo(
     state?.catalogReturnTo,
     '/catalogo/mangas'
   );
+
+  useEffect(() => {
+    if (!selectedCategory) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setSelectedCategory(null);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedCategory]);
 
   useEffect(() => {
     let cancelled = false;
@@ -64,6 +98,8 @@ export function PublicMangaComicDetailView() {
   const record = current?.record;
   const type = record?.type || record?.tipo;
   const categories = record ? getCategories(record) : [];
+  const demographicCategories = categories.filter(isDemographicCategory);
+  const genreCategories = categories.filter((category) => !isDemographicCategory(category));
 
   return (
     <>
@@ -100,19 +136,58 @@ export function PublicMangaComicDetailView() {
 
             <h1>{record.title}</h1>
 
-            {categories.length > 0 && (
-              <div className="public-game-tags">
-                {categories.map((category) => (
-                  <span key={category.id}>
-                    {category.nombre}
-                  </span>
-                ))}
-              </div>
+            {record.author && (
+              <p className="public-manga-author">
+                <span>Por</span> {record.author}
+              </p>
             )}
 
-            <p>
-              {record.synopsis || 'Este tomo todavía no tiene una sinopsis cargada.'}
-            </p>
+            {demographicCategories.length > 0 && (
+              <section className="public-manga-classification" aria-label="Clasificación demográfica">
+                <span className="public-manga-section-label">Clasificación demográfica</span>
+                <div className="public-game-tags">
+                  {demographicCategories.map((category) => (
+                    <button
+                      className="public-game-tag-demographic public-manga-category-button"
+                      key={category.id}
+                      type="button"
+                      onClick={() => setSelectedCategory(category)}
+                      disabled={!category.descripcion}
+                      aria-label={category.descripcion ? `Ver descripción de ${category.nombre}` : category.nombre}
+                    >
+                      {category.nombre}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {genreCategories.length > 0 && (
+              <section className="public-manga-genres" aria-label="Géneros y categorías">
+                <span className="public-manga-section-label">Géneros y categorías</span>
+                <div className="public-game-tags">
+                  {genreCategories.map((category) => (
+                    <button
+                      className="public-manga-category-button"
+                      key={category.id}
+                      type="button"
+                      onClick={() => setSelectedCategory(category)}
+                      disabled={!category.descripcion}
+                      aria-label={category.descripcion ? `Ver descripción de ${category.nombre}` : category.nombre}
+                    >
+                      {category.nombre}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {record.synopsis && (
+              <section className="public-manga-synopsis" aria-labelledby="public-manga-synopsis-title">
+                <h2 id="public-manga-synopsis-title">Sinopsis</h2>
+                <p>{record.synopsis}</p>
+              </section>
+            )}
           </div>
 
           <dl className="public-game-specs">
@@ -137,6 +212,34 @@ export function PublicMangaComicDetailView() {
             </div>
           </dl>
         </article>
+      )}
+
+      {selectedCategory && (
+        <div
+          className="public-manga-category-modal-backdrop"
+          onClick={() => setSelectedCategory(null)}
+        >
+          <section
+            className="public-manga-category-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="public-manga-category-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="public-manga-category-modal-heading">
+              <h2 id="public-manga-category-modal-title">{selectedCategory.nombre}</h2>
+              <button
+                type="button"
+                className="public-manga-category-modal-close"
+                onClick={() => setSelectedCategory(null)}
+                aria-label="Cerrar descripción"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <p>{selectedCategory.descripcion}</p>
+          </section>
+        </div>
       )}
     </>
   );
