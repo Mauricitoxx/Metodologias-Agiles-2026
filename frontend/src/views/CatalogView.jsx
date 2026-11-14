@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Plus } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
 import { GameCard } from '../components/cards/GameCard';
@@ -7,6 +8,7 @@ import { ActivitiesView } from './ActivitiesView';
 import { JuegosView } from './JuegosView';
 
 export const CatalogView = () => {
+  const navigate = useNavigate();
   const {
     data,
     catalogSubTab,
@@ -141,7 +143,7 @@ export const CatalogView = () => {
     <div className="view-content-wrapper">
       {entitySelector}
 
-      {/* Botón de Alta */}
+      {/* Acciones del inventario */}
       <div className="catalog-action-row">
         <button
           type="button"
@@ -153,6 +155,16 @@ export const CatalogView = () => {
           </span>
           NUEVO {getSubTabLabel()}
         </button>
+
+        {catalogSubTab === 'comics' && (
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => navigate('/admin/categorias-manga-comic')}
+          >
+            GESTIONAR CATEGORÍAS
+          </button>
+        )}
       </div>
 
       {/* Barra de Búsqueda */}

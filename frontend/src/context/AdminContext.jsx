@@ -145,6 +145,10 @@ export const AdminProvider = ({ children }) => {
           volumes: item.volume_number,
           description: item.synopsis || '',
           image: item.image || '',
+          categorias_ids: (item.categorias || []).map(categoria => categoria.id),
+          category: (item.categorias || [])
+            .map(categoria => categoria.nombre)
+            .join(', ') || 'Sin género',
         }));
 
         if (!cancelled) {
@@ -260,6 +264,10 @@ export const AdminProvider = ({ children }) => {
           volumes: created.volume_number,
           description: created.synopsis || '',
           image: created.image || '',
+          categorias_ids: (created.categorias || []).map(categoria => categoria.id),
+          category: (created.categorias || [])
+            .map(categoria => categoria.nombre)
+            .join(', ') || 'Sin género',
         };
 
         setData((prev) => ({
@@ -344,15 +352,17 @@ export const AdminProvider = ({ children }) => {
     if (entityType === 'comics') {
       try {
         const updated = await mangaComicService.update(updatedItem.id, {
-        title: updatedItem.title,
-        type: updatedItem.type,
-        category: updatedItem.category,
-        volume_number: Number(updatedItem.volume_number),
-        pages: Number(updatedItem.pages),
-        copies: Number(updatedItem.copies),
-        synopsis: updatedItem.synopsis || null,
-        image: updatedItem.image || null,
-      });
+          title: updatedItem.title,
+          type: updatedItem.type,
+          categorias_ids: (updatedItem.categorias_ids || []).map(Number),
+          author: updatedItem.author?.trim() || null,
+          volume_number: Number(updatedItem.volume_number),
+          pages: Number(updatedItem.pages),
+          copies: Number(updatedItem.copies),
+          synopsis: updatedItem.synopsis || null,
+          image: updatedItem.image || null,
+        });
+
         const normalized = {
           ...updated,
           code: `#MC-${String(updated.id).padStart(3, '0')}`,
@@ -360,6 +370,10 @@ export const AdminProvider = ({ children }) => {
           volumes: updated.volume_number,
           description: updated.synopsis || '',
           image: updated.image || '',
+          categorias_ids: (updated.categorias || []).map(categoria => categoria.id),
+          category: (updated.categorias || [])
+            .map(categoria => categoria.nombre)
+            .join(', ') || 'Sin género',
         };
 
         setData((prev) => ({

@@ -78,7 +78,14 @@
 .public-game-detail-cover { height: 240px; background: var(--brand-blue-light); }
 .public-game-detail-intro { padding: 20px 16px 16px; }
 .public-game-detail h1 { font: 700 28px/32px var(--catalog-heading); margin-top: 6px; }
-.public-game-detail-intro > p { margin-top: 16px; white-space: pre-line; color: var(--catalog-muted); }
+.public-manga-author { margin-top: 8px; color: var(--catalog-ink); font-size: 14px; font-weight: 700; }
+.public-manga-author span { color: var(--catalog-muted); font-weight: 500; }
+.public-manga-classification, .public-manga-genres { margin-top: 12px; }
+.public-manga-section-label { display: block; margin-bottom: 4px; color: var(--catalog-muted); font-size: 10px; font-weight: 700; letter-spacing: .55px; text-transform: uppercase; }
+.public-game-tag-demographic { color: var(--catalog-blue) !important; background: var(--brand-blue-light) !important; font-weight: 700; }
+.public-manga-synopsis { margin-top: 18px; padding: 14px; border-left: 3px solid var(--catalog-yellow); border-radius: 0 8px 8px 0; background: var(--bg-card-secondary); }
+.public-game-detail .public-manga-synopsis h2 { margin: 0 0 6px; font: 700 15px/20px var(--catalog-heading); }
+.public-manga-synopsis p { margin: 0; white-space: pre-line; color: var(--catalog-muted); font-size: 13px; line-height: 1.65; }
 .public-game-specs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 0 16px 20px; }
 .public-game-specs > div { padding: 12px; border-radius: 8px; background: var(--bg-card-secondary); }
 .public-game-specs dt { display: flex; align-items: center; gap: 6px; color: var(--catalog-muted); font-size: 11px; }
@@ -104,4 +111,50 @@
   .public-game-body > a { font-size: 14px !important; padding-inline: 4px; }
   .public-game-specs > div { padding: 8px; }
   .public-game-specs dt { gap: 3px; font-size: 10px; }
+}
+
+/* HU-22: mejora de legibilidad para la ficha de mangas y cómics */
+.public-game-detail-intro { padding: 22px 18px 18px; }
+.public-game-detail .public-game-type { font-size: 12px; line-height: 18px; }
+.public-game-detail h1 { color: var(--catalog-ink); font-size: 30px; line-height: 1.12; letter-spacing: -.35px; }
+.public-manga-author { margin-top: 12px; color: var(--catalog-ink); font-size: 16px; line-height: 24px; }
+.public-manga-author span { color: #475569; }
+.public-manga-classification, .public-manga-genres { margin-top: 16px; }
+.public-manga-section-label { margin-bottom: 7px; color: #475569; font-size: 12px; line-height: 17px; letter-spacing: .6px; }
+.public-game-detail .public-game-tags { gap: 7px; padding-top: 2px; }
+.public-game-detail .public-game-tags > span { padding: 5px 9px; border: 1px solid #d9e2f0; border-radius: 6px; color: #263b5b; background: #f0f4fb; font-size: 12px; line-height: 17px; }
+.public-game-detail .public-game-tags > .public-game-tag-demographic { color: #064b9b !important; background: #e3efff !important; border-color: #bdd7fa; }
+.public-manga-synopsis { margin-top: 20px; padding: 16px; border-left-width: 4px; border-radius: 0 10px 10px 0; background: #f2f4fc; }
+.public-game-detail .public-manga-synopsis h2 { margin-bottom: 8px; color: #102b50; font-size: 17px; line-height: 23px; }
+.public-manga-synopsis p { color: #334a68; font-size: 15px; line-height: 1.7; }
+.public-game-specs { gap: 9px; padding-inline: 18px; }
+.public-game-specs > div { padding: 13px; }
+.public-game-specs dt { gap: 7px; color: #475569; font-size: 13px; line-height: 19px; }
+.public-game-specs dd { margin-top: 5px; color: #0759ad; font-size: 20px; line-height: 26px; }
+
+/* HU-22: las tarjetas muestran nombres; las descripciones se consultan en el detalle. */
+.public-manga-card-categories { display: flex; flex-direction: column; gap: 4px; margin: 8px 0 12px; }
+.public-manga-card-categories h3 { color: var(--catalog-ink); font-size: 13px; line-height: 18px; font-weight: 700; }
+.public-manga-card-categories .public-game-tags { padding-top: 0; }
+.public-manga-card-categories .public-game-tags > span { color: #263b5b; background: #f0f4fb; border: 1px solid #d9e2f0; font-size: 11px; line-height: 16px; padding: 3px 6px; }
+
+/* HU-22: popup con la descripción real de la categoría seleccionada. */
+.public-manga-category-button { appearance: none; border: 1px solid #d9e2f0; border-radius: 6px; padding: 5px 9px; color: #263b5b; background: #f0f4fb; font: 500 12px/17px var(--font-family); cursor: pointer; }
+.public-manga-category-button:disabled { cursor: default; opacity: 1; }
+.public-game-detail .public-game-tags > .public-manga-category-button { display: inline-flex; align-items: center; }
+.public-game-detail .public-game-tags > .public-manga-category-button:disabled { cursor: default; }
+.public-game-detail .public-game-tags > .public-manga-category-button:not(:disabled):active { background: #dceaff; }
+.public-manga-category-modal-backdrop { position: fixed; z-index: 100; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgb(15 23 42 / 55%); }
+.public-manga-category-modal { width: min(100%, 360px); padding: 20px; border: 2px solid var(--border-color); border-radius: 12px; background: var(--bg-card); color: var(--catalog-ink); box-shadow: 5px 5px 0 #0f172a; }
+.public-manga-category-modal-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.public-manga-category-modal-heading h2 { margin: 0; color: #102b50; font: 700 20px/26px var(--catalog-heading); }
+.public-manga-category-modal-close { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 36px; width: 36px; height: 36px; margin: -5px -5px 0 0; border: 1px solid #d9e2f0; border-radius: 8px; background: #f0f4fb; color: #263b5b; }
+.public-manga-category-modal > p { margin: 0; color: #334a68; font-size: 15px; line-height: 1.65; white-space: pre-line; }
+
+@media (max-width: 380px) {
+  .public-game-detail-intro { padding-inline: 14px; }
+  .public-game-detail h1 { font-size: 27px; }
+  .public-game-specs { padding-inline: 14px; }
+  .public-game-specs dt { font-size: 12px; }
+  .public-game-specs dd { font-size: 19px; }
 }

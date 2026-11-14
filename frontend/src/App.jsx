@@ -20,6 +20,7 @@ import { ItemFormModal } from './components/modals/ItemFormModal';
 import { ConfirmBajaModal } from './components/modals/ConfirmBajaModal';
 import { PublicCatalogRoutes } from './catalog/PublicCatalogRoutes';
 import { PublicEventsRoutes } from './catalog/PublicEventsRoutes';
+import { CategoriasMangaComicView } from './views/CategoriasMangaComicView';
 
 const ActivitiesRedirect = () => {
   const { setCatalogSubTab } = useAdmin();
@@ -80,8 +81,8 @@ const AdminDashboard = () => {
     !isProductoForm &&
     (location.pathname === '/admin/inventario' ||
       location.pathname === '/admin/catalogo' ||
-      location.pathname === '/admin/staff');
-
+      location.pathname === '/admin/staff' ||
+      location.pathname === '/admin/categorias-manga-comic');
   return (
     <div className="app-container">
       {/* 1. Header con identidad de marca y usuario */}
@@ -115,6 +116,10 @@ const AdminDashboard = () => {
             {/* Alias /admin/actividades: pestaña Actividades del inventario */}
             <Route path="/admin/actividades" element={<ActivitiesRedirect />} />
 
+            <Route
+              path="/admin/categorias-manga-comic"
+              element={<CategoriasMangaComicView />}
+            />
             {/* Redirección por defecto a /admin */}
             <Route path="/" element={<Navigate to="/admin" replace />} />
             <Route path="*" element={<Navigate to="/admin" replace />} />

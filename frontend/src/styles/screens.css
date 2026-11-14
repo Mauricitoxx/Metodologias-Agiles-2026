@@ -24,3 +24,54 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .producto-id-field { position:relative; }
 .producto-id-field .form-input { padding-right:36px; background:var(--bg-card-secondary); cursor:not-allowed; }
 .producto-id-field svg { position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); pointer-events:none; }
+
+/* Selector de múltiples géneros */
+.genre-checkbox-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 10px;
+}
+
+.entity-form-view .genre-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  margin: 0;
+  padding: 11px 12px;
+  border: 1.5px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-main);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.entity-form-view .genre-checkbox-item:hover {
+  border-color: var(--brand-accent-blue);
+  background: var(--bg-card-secondary);
+}
+
+.entity-form-view .genre-checkbox-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--brand-accent-blue);
+  cursor: pointer;
+}
+
+.entity-form-view .genre-checkbox-item:has(input:checked) {
+  border-color: var(--brand-accent-blue);
+  background: var(--bg-card-secondary);
+}
+
+.genre-checkbox-list + p {
+  margin-top: 9px;
+  font-size: 10px;
+  color: var(--text-muted);
+}

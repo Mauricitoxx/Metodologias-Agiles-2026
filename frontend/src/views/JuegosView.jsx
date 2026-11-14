@@ -537,6 +537,8 @@ export const JuegosView = ({ header } = {}) => {
         onClose={() => setDeletingCategory(null)}
         categoria={deletingCategory}
         onConfirm={handleConfirmDeleteCategory}
+        entityLabel="juego"
+        countField="juegos_count"
       />
     </div>
   );

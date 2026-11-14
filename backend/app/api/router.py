@@ -5,6 +5,7 @@ from app.api.routes import (
     administradores,
     auth,
     categorias_juego,
+    categorias_manga_comic,
     dificultades,
     health,
     juegos,
@@ -21,6 +22,7 @@ api_router.include_router(activities.router)
 api_router.include_router(activity_types.router)
 api_router.include_router(juegos.router)
 api_router.include_router(categorias_juego.router)
+api_router.include_router(categorias_manga_comic.router)
 api_router.include_router(dificultades.router)
 api_router.include_router(regla.router)
 api_router.include_router(mangas_comics.router)
