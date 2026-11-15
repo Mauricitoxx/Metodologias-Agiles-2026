@@ -15,6 +15,8 @@ const mapProductoFromBackend = (producto) => ({
   description: producto.descripcion,
   category: TIPOS_PRODUCTO[producto.tipo] || producto.tipo,
   price: producto.precio,
+  // HU-13: null cuando el producto no tiene oferta
+  offerPrice: producto.precio_oferta ?? null,
   status: producto.activo ? 'disponible' : 'baja',
   code: `#BF-${String(producto.id).padStart(3, '0')}`
 });
