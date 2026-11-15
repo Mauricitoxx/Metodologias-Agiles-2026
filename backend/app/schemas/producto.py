@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, field_validator
+from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, ValidationInfo, field_validator
 
 from app.models.producto import TipoProducto
 
@@ -22,12 +22,27 @@ class ProductoBase(BaseModel):
     descripcion: Annotated[NonEmptyStr, Field(max_length=500)]
     tipo: TipoProducto
     precio: Precio
+    # HU-13: oferta opcional. Si no se envía o llega vacía, el producto no tiene oferta
+    precio_oferta: Precio | None = None
 
     @field_validator("precio")
     @classmethod
     def validate_precio(cls, value: Decimal) -> Decimal:
         if value <= 0:
             raise ValueError("El precio debe ser mayor a cero")
+        return value
+
+    @field_validator("precio_oferta")
+    @classmethod
+    def validate_precio_oferta(cls, value: Decimal | None, info: ValidationInfo) -> Decimal | None:
+        if value is None:
+            return value
+        if value <= 0:
+            raise ValueError("El precio de oferta debe ser mayor a cero")
+        # Si el precio no pasó su propia validación, ese error ya se informa aparte
+        precio = info.data.get("precio")
+        if precio is not None and value >= precio:
+            raise ValueError("El precio de oferta debe ser menor al precio actual")
         return value
 
 
