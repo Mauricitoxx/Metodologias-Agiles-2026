@@ -391,6 +391,7 @@ Commitear el modelo, esquema, servicio, ruta, test, **la migración** y los dos 
 - `activo` es opcional: al crear vale `true` si no se envía y al modificar se conserva el estado actual. La baja es lógica: el producto se conserva, pero la carta pública solo muestra los activos.
 - Dar de baja un producto inactivo, o reactivar uno activo, responde 409; un id inexistente responde 404.
 - `precio_oferta` es opcional (HU-13). Si se envía, acepta hasta 2 decimales, debe ser mayor a cero (*"El precio de oferta debe ser mayor a cero"*) y estrictamente menor al precio original: si es mayor o igual, responde 422 con *"El precio de oferta debe ser menor al precio actual"* en el campo `precio_oferta`. La base también lo impide con un `CHECK`.
+- `imagen` es opcional: una URL web (`http` o `https`) de hasta 500 caracteres, igual que en actividades. Si no lo es, responde 422 con *"Debe ingresar una URL web válida"* en el campo `imagen`. Una imagen vacía o en `null` en el `PUT` quita la foto; si no se envía, se conserva.
 - Para quitar una oferta se envía `precio_oferta: null` en el `PUT`; el producto queda solo con su precio original. Si el `PUT` no incluye `precio_oferta`, la oferta se conserva, y no se puede bajar el precio a un valor igual o menor que esa oferta.
 
 ---
