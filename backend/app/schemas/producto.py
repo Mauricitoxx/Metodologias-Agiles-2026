@@ -1,9 +1,19 @@
 from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, ValidationInfo, field_validator
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    BeforeValidator,
+    ConfigDict,
+    Field,
+    PlainSerializer,
+    ValidationInfo,
+    field_validator,
+)
 
 from app.models.producto import TipoProducto
+from app.schemas.actividad import ensure_web_url
 
 NonEmptyStr = Annotated[str, Field(min_length=1)]
 # Hasta 8 enteros y 2 decimales, igual que la columna Numeric(10, 2).
@@ -12,6 +22,12 @@ Precio = Annotated[
     Decimal,
     Field(max_digits=10, decimal_places=2),
     PlainSerializer(float, return_type=float, when_used="json"),
+]
+# URL web de la foto, igual que en actividades. Vacía significa "sin foto"
+ImagenUrl = Annotated[str, Field(max_length=500), AfterValidator(ensure_web_url)]
+ImagenOpcional = Annotated[
+    ImagenUrl | None,
+    BeforeValidator(lambda value: (value.strip() or None) if isinstance(value, str) else value),
 ]
 
 
@@ -24,6 +40,7 @@ class ProductoBase(BaseModel):
     precio: Precio
     # HU-13: oferta opcional. Si no se envía o llega vacía, el producto no tiene oferta
     precio_oferta: Precio | None = None
+    imagen: ImagenOpcional = None
 
     @field_validator("precio")
     @classmethod
