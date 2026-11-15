@@ -1,5 +1,6 @@
 import { Eye, Edit3, Trash2, RotateCcw, Sparkles } from 'lucide-react';
 import { StatusBadge } from '../common/Badge';
+import { formatPrecio } from '../../utils/precio';
 
 export const BuffetCard = ({ item, onOpenDetail, onOpenEdit, onOpenConfirmBaja }) => {
   const isBaja = item.status === 'baja';
@@ -25,7 +26,7 @@ export const BuffetCard = ({ item, onOpenDetail, onOpenEdit, onOpenConfirmBaja }
           <h3 className="card-item-title">{item.title}</h3>
 
           <div className="card-meta-row">
-            <span className="meta-price-tag">${item.price?.toLocaleString()}</span>
+            <span className="meta-price-tag">{formatPrecio(item.price)}</span>
             {item.isPopular && (
               <span className="popular-badge">
                 <Sparkles size={12} /> Popular

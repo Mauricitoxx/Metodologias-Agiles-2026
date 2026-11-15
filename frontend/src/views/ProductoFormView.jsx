@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Lock, Save } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
 import { productoService, TIPOS_PRODUCTO } from '../services/productoService';
+import { parsePrecio, precioParaInput } from '../utils/precio';
 
 // Límites del backend (schemas/producto.py)
 const NOMBRE_MAX_LENGTH = 50;
@@ -16,8 +17,8 @@ const formFromProducto = (producto) => ({
   nombre: producto?.nombre ?? '',
   descripcion: producto?.descripcion ?? '',
   tipo: producto?.tipo ?? '',
-  // Mismo formato que el diseño: 8500,00
-  precio: producto ? Number(producto.precio).toFixed(2).replace('.', ',') : '',
+  // Sin centavos, igual que en la carta: 10.000
+  precio: precioParaInput(producto?.precio),
   activo: producto?.activo ?? true
 });
 
@@ -32,9 +33,9 @@ const validate = (form) => {
     errors.descripcion = `Máximo ${DESCRIPCION_MAX_LENGTH} caracteres`;
   }
   if (!errors.precio) {
-    const precio = form.precio.trim().replace(',', '.');
-    if (!/^\d+(\.\d{1,2})?$/.test(precio)) errors.precio = 'Ingresá un importe con hasta dos decimales';
-    else if (Number(precio) <= 0) errors.precio = 'El precio debe ser mayor a cero';
+    const precio = parsePrecio(form.precio);
+    if (precio === null) errors.precio = 'Ingresá un importe válido, por ejemplo 10.000';
+    else if (precio <= 0) errors.precio = 'El precio debe ser mayor a cero';
   }
   return errors;
 };
@@ -78,7 +79,7 @@ export function ProductoFormView() {
       nombre: form.nombre.trim(),
       descripcion: form.descripcion.trim(),
       tipo: form.tipo,
-      precio: Number(form.precio.trim().replace(',', '.')),
+      precio: parsePrecio(form.precio),
       activo: form.activo
     };
 
@@ -206,10 +207,10 @@ export function ProductoFormView() {
               type="text"
               inputMode="decimal"
               className={`form-input ${invalid('precio')}`}
-              placeholder="Ej.: 8500,00"
+              placeholder="Ej.: 10.000"
               {...fieldProps('precio')}
             />
-            <span className="activity-form-hint">Importe con dos decimales.</span>
+            <span className="activity-form-hint">Importe en pesos, sin centavos.</span>
             {fieldError('precio')}
           </div>
         </section>
