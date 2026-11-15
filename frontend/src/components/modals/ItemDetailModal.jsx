@@ -111,6 +111,11 @@ export const ItemDetailModal = ({ isOpen, onClose, item, entityType, onEdit, onT
                 <span>Precio: <strong>{formatPrecio(item.price)}</strong></span>
               </div>
             )}
+            {item.offerPrice !== null && item.offerPrice !== undefined && (
+              <div className="detail-item">
+                <span>Precio de oferta: <strong>{formatPrecio(item.offerPrice)}</strong></span>
+              </div>
+            )}
             {item.date && (
               <div className="detail-item">
                 <Calendar size={16} />

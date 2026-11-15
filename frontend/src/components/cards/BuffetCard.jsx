@@ -1,9 +1,11 @@
 import { Eye, Edit3, Trash2, RotateCcw, Sparkles } from 'lucide-react';
 import { StatusBadge } from '../common/Badge';
-import { formatPrecio } from '../../utils/precio';
+import { formatPrecio, porcentajeDescuento } from '../../utils/precio';
 
 export const BuffetCard = ({ item, onOpenDetail, onOpenEdit, onOpenConfirmBaja }) => {
   const isBaja = item.status === 'baja';
+  // HU-13: con oferta se muestra el precio original tachado junto al de oferta
+  const hasOffer = item.offerPrice !== null && item.offerPrice !== undefined;
 
   return (
     <div className={`catalog-item-card ${isBaja ? 'is-baja-state' : ''}`}>
@@ -26,7 +28,19 @@ export const BuffetCard = ({ item, onOpenDetail, onOpenEdit, onOpenConfirmBaja }
           <h3 className="card-item-title">{item.title}</h3>
 
           <div className="card-meta-row">
-            <span className="meta-price-tag">{formatPrecio(item.price)}</span>
+            {hasOffer ? (
+              <>
+                <s className="meta-price-original" aria-label={`Precio original ${formatPrecio(item.price)}`}>
+                  {formatPrecio(item.price)}
+                </s>
+                <span className="meta-price-offer" aria-label={`Precio de oferta ${formatPrecio(item.offerPrice)}`}>
+                  {formatPrecio(item.offerPrice)}
+                </span>
+                <span className="offer-badge">-{porcentajeDescuento(item.price, item.offerPrice)}% OFF</span>
+              </>
+            ) : (
+              <span className="meta-price-tag">{formatPrecio(item.price)}</span>
+            )}
             {item.isPopular && (
               <span className="popular-badge">
                 <Sparkles size={12} /> Popular

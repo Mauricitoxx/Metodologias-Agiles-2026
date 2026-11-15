@@ -560,6 +560,36 @@
   color: #059669;
 }
 
+/* HU-13: oferta junto al precio original, como en la carta del Figma */
+.meta-price-original {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.meta-price-offer {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #0b1e36;
+  background-color: var(--primary-yellow);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 0 6px;
+  box-shadow: var(--shadow-retro-hover);
+}
+
+.offer-badge {
+  display: inline-flex;
+  align-items: center;
+  background-color: #dc2626;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.3px;
+}
+
 .popular-badge {
   display: inline-flex;
   align-items: center;
