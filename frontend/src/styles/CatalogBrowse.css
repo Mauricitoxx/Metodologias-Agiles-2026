@@ -1,0 +1,72 @@
+.public-catalog-genres {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.public-catalog-filter-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.public-catalog-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.public-catalog-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 20px;
+  padding: 4px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  background: #fff;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.public-catalog-tag:hover {
+  border-color: #285b43;
+  color: #285b43;
+}
+
+.public-catalog-tag.is-selected {
+  background: #285b43;
+  border-color: #285b43;
+  color: #fff;
+}
+
+.public-catalog-tag:focus-visible {
+  outline: 3px solid rgba(40, 91, 67, 0.3);
+  outline-offset: 3px;
+}
+
+.public-catalog-clear-tags {
+  align-self: flex-start;
+  border: none;
+  background: transparent;
+  color: #285b43;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+@media (max-width: 600px) {
+  .public-catalog-tags {
+    gap: 8px;
+  }
+
+  .public-catalog-tag {
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+  }
+}
