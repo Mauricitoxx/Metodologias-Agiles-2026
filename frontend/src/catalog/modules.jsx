@@ -1,3 +1,4 @@
+
 import { PublicGameCard } from '../components/catalog/PublicGameCard';
 import { PublicGameDetailView } from '../views/PublicGameDetailView';
 import { publicGameCatalogService } from '../services/publicGameCatalogService';
@@ -11,22 +12,18 @@ import { createCatalogEntry } from '../utils/catalog';
 // Normaliza las categorías para admitir tanto el formato nuevo
 // (varias categorías) como el formato anterior (una sola categoría).
 const getCategories = (record) => {
-  if (record.categorias?.length) {
-    return record.categorias;
-  }
-
-  if (record.categories?.length) {
-    return record.categories;
-  }
-
-  if (record.categoria) {
-    return [record.categoria];
-  }
+  if (record.categorias?.length) return record.categorias;
+  if (record.categories?.length) return record.categories;
+  if (record.categoria) return [record.categoria];
 
   return [];
 };
 
-// Cada módulo consulta y adapta únicamente los registros de su dominio.
+const nameSortOptions = [
+  { value: 'nombre', label: 'Nombre A–Z' },
+  { value: 'nombre-desc', label: 'Nombre Z–A' },
+];
+
 export const catalogModules = [
   {
     id: 'juegos',
@@ -36,11 +33,14 @@ export const catalogModules = [
     singular: 'juego',
     plural: 'juegos',
     searchLabel: 'Buscar juegos por título',
+    categoryLabel: 'Categorías',
     enabled: true,
+
     sortOptions: [
-      { value: 'nombre', label: 'Nombre A–Z' },
+      ...nameSortOptions,
       { value: 'duracion', label: 'Duración' },
     ],
+
     sections: [
       { to: '/catalogo/juegos', label: '🎲 Juegos de Mesa' },
     ],
@@ -72,10 +72,16 @@ export const catalogModules = [
     singular: 'tomo',
     plural: 'tomos',
     searchLabel: 'Buscar por nombre de serie',
+    categoryLabel: 'Géneros',
     enabled: true,
-    sortOptions: [
-      { value: 'nombre', label: 'Nombre A–Z' },
+
+    typeOptions: [
+      { value: 'manga', label: 'Manga' },
+      { value: 'comic', label: 'Cómic' },
     ],
+
+    sortOptions: nameSortOptions,
+
     sections: [
       {
         to: '/catalogo/mangas?tipo=manga',
