@@ -302,3 +302,140 @@ def test_modificar_estado_desde_el_formulario(client: TestClient, admin_headers:
     # Sin "activo" en el cuerpo, el producto conserva su estado
     response = client.put(url, json=producto_data(precio=100), headers=admin_headers)
     assert response.json()["activo"] is False
+
+
+# --- HU-13: precio de oferta ---
+
+
+def test_producto_sin_oferta_por_defecto(client: TestClient, admin_headers: dict[str, str]):
+    producto = crear_producto(client, admin_headers)
+
+    assert producto["precio_oferta"] is None
+
+
+def test_registrar_oferta_se_muestra_en_la_carta(
+    client: TestClient,
+    admin_headers: dict[str, str],
+):
+    producto = crear_producto(client, admin_headers, precio_oferta="7500.25")
+
+    assert producto["precio_oferta"] == 7500.25
+    carta = client.get("/api/productos").json()
+    assert [(p["precio"], p["precio_oferta"]) for p in carta] == [(8500.50, 7500.25)]
+
+
+def test_agregar_oferta_al_modificar(client: TestClient, admin_headers: dict[str, str]):
+    producto = crear_producto(client, admin_headers)
+
+    response = client.put(
+        f"/api/productos/{producto['id']}",
+        json=producto_data(precio_oferta=6999.99),
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["precio_oferta"] == 6999.99
+
+
+@pytest.mark.parametrize("precio_oferta", [0, -10, "0.00"])
+def test_rechaza_oferta_cero_o_negativa(
+    client: TestClient,
+    admin_headers: dict[str, str],
+    precio_oferta,
+):
+    response = client.post(
+        "/api/productos",
+        json=producto_data(precio_oferta=precio_oferta),
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 422
+    error = response.json()["detail"][0]
+    assert error["loc"] == ["body", "precio_oferta"]
+    assert "El precio de oferta debe ser mayor a cero" in error["msg"]
+
+
+@pytest.mark.parametrize("precio_oferta", [8500.50, 9000])
+def test_rechaza_oferta_mayor_o_igual_al_precio(
+    client: TestClient,
+    admin_headers: dict[str, str],
+    precio_oferta,
+):
+    response = client.post(
+        "/api/productos",
+        json=producto_data(precio_oferta=precio_oferta),
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 422
+    error = response.json()["detail"][0]
+    assert error["loc"] == ["body", "precio_oferta"]
+    assert "El precio de oferta debe ser menor al precio actual" in error["msg"]
+    assert client.get("/api/productos").json() == []
+
+
+def test_oferta_invalida_al_modificar_no_cambia_el_producto(
+    client: TestClient,
+    admin_headers: dict[str, str],
+):
+    producto = crear_producto(client, admin_headers, precio_oferta=7000)
+
+    response = client.put(
+        f"/api/productos/{producto['id']}",
+        json=producto_data(precio_oferta=8500.50),
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 422
+    assert "El precio de oferta debe ser menor al precio actual" in response.json()["detail"][0]["msg"]
+    assert client.get("/api/productos").json()[0]["precio_oferta"] == 7000
+
+
+def test_eliminar_oferta_deja_solo_el_precio_original(
+    client: TestClient,
+    admin_headers: dict[str, str],
+):
+    producto = crear_producto(client, admin_headers, precio_oferta=7000)
+
+    response = client.put(
+        f"/api/productos/{producto['id']}",
+        json=producto_data(precio_oferta=None),
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["precio_oferta"] is None
+    carta = client.get("/api/productos").json()
+    assert [(p["precio"], p["precio_oferta"]) for p in carta] == [(8500.50, None)]
+
+
+def test_modificar_sin_enviar_oferta_la_conserva(
+    client: TestClient,
+    admin_headers: dict[str, str],
+):
+    producto = crear_producto(client, admin_headers, precio_oferta=7000)
+    datos = producto_data(nombre="Hamburguesa Triple")
+
+    response = client.put(f"/api/productos/{producto['id']}", json=datos, headers=admin_headers)
+
+    assert response.status_code == 200
+    assert response.json()["precio_oferta"] == 7000
+
+
+def test_bajar_el_precio_por_debajo_de_la_oferta_vigente(
+    client: TestClient,
+    admin_headers: dict[str, str],
+):
+    producto = crear_producto(client, admin_headers, precio_oferta=7000)
+
+    response = client.put(
+        f"/api/productos/{producto['id']}",
+        json=producto_data(precio=6500),
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 422
+    error = response.json()["detail"][0]
+    assert error["loc"] == ["body", "precio_oferta"]
+    assert error["msg"] == "El precio de oferta debe ser menor al precio actual"
+    assert client.get("/api/productos").json()[0]["precio"] == 8500.50

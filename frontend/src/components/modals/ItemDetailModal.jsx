@@ -3,6 +3,7 @@ import { X, Calendar, Clock, Users, MapPin, Award, FileText, Video, Play, Extern
 import { StatusBadge, CategoryTag } from '../common/Badge';
 import { getYouTubeEmbedUrl } from '../../utils/validation';
 import { reglaJuegoService } from '../../services/reglaJuegoService';
+import { formatPrecio } from '../../utils/precio';
 
 export const ItemDetailModal = ({ isOpen, onClose, item, entityType, onEdit, onToggleBaja }) => {
   const [reglas, setReglas] = useState([]);
@@ -107,7 +108,12 @@ export const ItemDetailModal = ({ isOpen, onClose, item, entityType, onEdit, onT
             )}
             {item.price && (
               <div className="detail-item">
-                <span>Precio: <strong>${item.price.toLocaleString()}</strong></span>
+                <span>Precio: <strong>{formatPrecio(item.price)}</strong></span>
+              </div>
+            )}
+            {item.offerPrice !== null && item.offerPrice !== undefined && (
+              <div className="detail-item">
+                <span>Precio de oferta: <strong>{formatPrecio(item.offerPrice)}</strong></span>
               </div>
             )}
             {item.date && (

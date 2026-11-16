@@ -360,7 +360,7 @@ Commitear el modelo, esquema, servicio, ruta, test, **la migración** y los dos 
 > ⚠ **Pendiente (HU-01):** los endpoints de admin dependen de `require_admin` (`app/api/deps.py`), que por ahora deja pasar todo. Cuando exista el login, solo hay que implementar esa función.
 
 
-### Productos de la carta (HU-11, HU-12)
+### Productos de la carta (HU-11, HU-12, HU-13)
 
 | Capa      | Archivos                                  |
 | --------- | ----------------------------------------- |
@@ -390,7 +390,8 @@ Commitear el modelo, esquema, servicio, ruta, test, **la migración** y los dos 
 - `precio` acepta hasta 2 decimales y debe ser mayor a cero: si no, responde 422 con el mensaje *"El precio debe ser mayor a cero"* en el campo `precio`. La base también lo impide con un `CHECK`.
 - `activo` es opcional: al crear vale `true` si no se envía y al modificar se conserva el estado actual. La baja es lógica: el producto se conserva, pero la carta pública solo muestra los activos.
 - Dar de baja un producto inactivo, o reactivar uno activo, responde 409; un id inexistente responde 404.
-- Las ofertas se suman en HU-13.
+- `precio_oferta` es opcional (HU-13). Si se envía, acepta hasta 2 decimales, debe ser mayor a cero (*"El precio de oferta debe ser mayor a cero"*) y estrictamente menor al precio original: si es mayor o igual, responde 422 con *"El precio de oferta debe ser menor al precio actual"* en el campo `precio_oferta`. La base también lo impide con un `CHECK`.
+- Para quitar una oferta se envía `precio_oferta: null` en el `PUT`; el producto queda solo con su precio original. Si el `PUT` no incluye `precio_oferta`, la oferta se conserva, y no se puede bajar el precio a un valor igual o menor que esa oferta.
 
 ---
 

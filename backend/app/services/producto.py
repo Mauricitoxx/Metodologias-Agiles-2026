@@ -50,7 +50,18 @@ def actualizar_producto(
     producto = obtener_producto(db, producto_id)
     validar_nombre_unico(db, datos.nombre, producto_id)
 
-    for clave, valor in datos.model_dump(exclude_none=True).items():
+    # Con "precio_oferta" en null se quita la oferta; si no se envía, se conserva
+    cambios = datos.model_dump(exclude_unset=True)
+    # Sin "activo" (o en null), el producto conserva su estado
+    if cambios.get("activo") is None:
+        cambios.pop("activo", None)
+
+    # Una oferta conservada tampoco puede quedar igual o por encima del nuevo precio
+    precio_oferta = cambios.get("precio_oferta", producto.precio_oferta)
+    if precio_oferta is not None and precio_oferta >= datos.precio:
+        raise field_error("precio_oferta", "El precio de oferta debe ser menor al precio actual")
+
+    for clave, valor in cambios.items():
         setattr(producto, clave, valor)
 
     db.commit()
