@@ -22,10 +22,14 @@ const withAuth = async (method, path, body) => {
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
+    // Errores de validación (422): FastAPI devuelve una lista; se muestra el primer mensaje
+    const validationMessage = Array.isArray(error.detail)
+      ? error.detail[0]?.msg?.replace(/^Value error, /, '')
+      : null;
     throw new Error(
       typeof error.detail === 'string'
         ? error.detail
-        : 'No se pudo completar la operación con el staff.'
+        : validationMessage || 'No se pudo completar la operación con el staff.'
     );
   }
 

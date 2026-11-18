@@ -1,21 +1,19 @@
 import { useState } from 'react';
-import { ShieldCheck, Users, UserPlus, Search } from 'lucide-react';
+import { ShieldCheck, Users, UserPlus, Search, RefreshCw } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
 import { AdminUserCard } from '../components/cards/AdminUserCard';
 import { StaffForm } from '../components/StaffForm';
 
 export function AdminUsersView() {
-  const { data, currentUser, openDetailModal, openConfirmBajaModal } = useAdmin();
+  const { staff, loadingStaff, cargarStaff, currentUser, openConfirmBajaModal } = useAdmin();
   const [tab, setTab] = useState('new');
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState(null);
 
-  const adminsList = data.admins || [];
-  const active = adminsList.filter((item) => item.status === 'activo' || item.activo === true);
-  const list = (tab === 'active' ? active : adminsList).filter((item) =>
-    `${item.name || item.nombre || ''} ${item.email || ''} ${item.role || ''}`
-      .toLowerCase()
-      .includes(query.toLowerCase().trim())
+  const active = staff.filter((item) => item.status === 'activo');
+  const search = query.toLowerCase().trim();
+  const list = (tab === 'active' ? active : staff).filter((item) =>
+    `${item.name} ${item.email}`.toLowerCase().includes(search)
   );
 
   function edit(_type, item) {
@@ -67,9 +65,17 @@ export function AdminUsersView() {
 
       <div className="catalog-header-bar">
         <h3 className="catalog-active-title">
-          <ShieldCheck size={18} /> STAFF REGISTRADO
+          <ShieldCheck size={18} /> {tab === 'active' ? 'STAFF ACTIVO' : 'STAFF REGISTRADO'}
         </h3>
-        <span className="item-code-chip">{active.length} ACTIVOS</span>
+        <button
+          type="button"
+          className="item-code-chip staff-reload"
+          onClick={cargarStaff}
+          disabled={loadingStaff}
+          title="Recargar staff"
+        >
+          <RefreshCw size={12} /> {active.length} ACTIVOS
+        </button>
       </div>
 
       <div className="search-bar-container">
@@ -78,7 +84,7 @@ export function AdminUsersView() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           aria-label="Buscar staff"
-          placeholder="Buscar por nombre, correo o rol…"
+          placeholder="Buscar por nombre o correo…"
         />
         <span className="search-btn-blue">
           <Search size={16} />
@@ -86,13 +92,14 @@ export function AdminUsersView() {
       </div>
 
       <div className="cards-stack">
-        {list.length ? (
+        {loadingStaff && !staff.length ? (
+          <div className="empty-state-box" role="status">Cargando staff…</div>
+        ) : list.length ? (
           list.map((item) => (
             <AdminUserCard
               key={item.id}
               item={item}
-              isCurrentLoggedUser={item.id === currentUser?.id || item.email === currentUser?.email}
-              onOpenDetail={openDetailModal}
+              isCurrentLoggedUser={item.id === currentUser?.id}
               onOpenEdit={edit}
               onOpenConfirmBaja={openConfirmBajaModal}
             />
@@ -105,7 +112,8 @@ export function AdminUsersView() {
       </div>
 
       <p className="staff-footnote">
-        Las cuentas y contraseñas temporales se registran en tiempo real en la base de datos central.
+        Cada miembro es una cuenta administrativa real: inicia sesión con su correo y la clave temporal que se le
+        entregue. Al darlo de baja pierde el acceso de inmediato.
       </p>
     </div>
   );
