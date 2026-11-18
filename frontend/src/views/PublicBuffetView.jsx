@@ -56,6 +56,7 @@ function BuffetSection({ id, titulo, productos, ocultarTitulo = false }) {
 }
 
 export function PublicBuffetView() {
+  const [filtro, setFiltro] = useState('todos');
   const [resultado, setResultado] = useState(null);
   const [intento, setIntento] = useState(0);
 
@@ -73,8 +74,9 @@ export function PublicBuffetView() {
 
   const productos = resultado?.productos ?? [];
   const tipos = Object.entries(TIPOS_PRODUCTO).filter(([tipo]) => productos.some((producto) => producto.tipo === tipo));
-  const ofertas = productos.filter(tieneOferta);
-  const sinOferta = productos.filter((producto) => !tieneOferta(producto));
+  const filtrados = productos.filter((producto) => filtro === 'todos' || filtro === 'ofertas' || producto.tipo === filtro);
+  const ofertas = filtrados.filter(tieneOferta);
+  const sinOferta = filtrados.filter((producto) => !tieneOferta(producto));
 
   function reintentar() {
     setResultado(null);
@@ -96,13 +98,32 @@ export function PublicBuffetView() {
         <p className="public-catalog-message" role="status">Por el momento no hay productos disponibles.</p>
       )}
 
-      {ofertas.length > 0 && <BuffetSection id="buffet-ofertas" titulo="Ofertas" productos={ofertas} ocultarTitulo />}
-      {tipos.map(([tipo, nombre]) => {
-        const productosDelTipo = sinOferta.filter((producto) => producto.tipo === tipo);
-        return productosDelTipo.length > 0 && (
-          <BuffetSection key={tipo} id={"buffet-" + tipo} titulo={nombre} productos={productosDelTipo} />
-        );
-      })}
+      {productos.length > 0 && (
+        <>
+          <div className="public-catalog-sections public-buffet-filters" role="group" aria-label="Filtrar la carta">
+            <button type="button" className="public-buffet-offers-filter" aria-pressed={filtro === 'ofertas'} onClick={() => setFiltro('ofertas')}>
+              <CatalogIcon name="19686" /> Descuentos
+            </button>
+            <button type="button" className={filtro === 'todos' ? 'active' : ''} aria-pressed={filtro === 'todos'} onClick={() => setFiltro('todos')}>Todos</button>
+            {tipos.map(([tipo, nombre]) => (
+              <button type="button" key={tipo} className={filtro === tipo ? 'active' : ''} aria-pressed={filtro === tipo} onClick={() => setFiltro(tipo)}>
+                <span aria-hidden="true">{ICONOS_TIPO[tipo]}</span> {nombre}
+              </button>
+            ))}
+          </div>
+
+          {ofertas.length > 0 && <BuffetSection id="buffet-ofertas" titulo="Ofertas" productos={ofertas} ocultarTitulo />}
+          {filtro === 'ofertas' && ofertas.length === 0 && (
+            <p className="public-catalog-message" role="status">Por el momento no hay productos en oferta.</p>
+          )}
+          {filtro !== 'ofertas' && tipos.map(([tipo, nombre]) => {
+            const productosDelTipo = sinOferta.filter((producto) => producto.tipo === tipo);
+            return productosDelTipo.length > 0 && (
+              <BuffetSection key={tipo} id={`buffet-${tipo}`} titulo={nombre} productos={productosDelTipo} />
+            );
+          })}
+        </>
+      )}
     </div>
   );
 }

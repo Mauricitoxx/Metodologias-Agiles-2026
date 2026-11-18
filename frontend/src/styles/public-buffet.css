@@ -2,6 +2,26 @@
   --buffet-offer-red: #b91a24;
 }
 
+.public-buffet .public-buffet-filters {
+  margin-top: 0;
+}
+
+.public-buffet-filters button {
+  border-radius: var(--radius-full);
+  min-height: 36px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.public-buffet-filters button.public-buffet-offers-filter {
+  background: var(--buffet-offer-red);
+  color: #fff;
+}
+
+.public-buffet-offers-filter[aria-pressed='true'] {
+  box-shadow: inset 0 0 0 2px var(--catalog-yellow), var(--shadow-retro-sm);
+}
+
 .public-buffet-section + .public-buffet-section {
   margin-top: 20px;
 }
