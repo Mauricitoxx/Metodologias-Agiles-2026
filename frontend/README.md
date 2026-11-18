@@ -41,7 +41,7 @@ El panel central (`/admin`) solo ofrece dos accesos: Inventario y Staff. Inventa
 
 Juegos de mesa (`views/JuegosView.jsx`) muestra los juegos agrupados por categoría y permite crear, editar y eliminar categorías; una categoría con juegos asociados no se puede eliminar.
 
-La sección **Carátula de portada** del formulario de juegos se guarda en el backend (campo `imagen`): la foto se reduce a 600 px y se envía como data URL. El catálogo público (`/catalogo/juegos`) la muestra en la tarjeta y en el detalle; sin portada se ve el ícono de dados. El botón **Quitar portada** la elimina al guardar.
+La sección **Carátula de portada** del formulario de juegos pide la URL web de la imagen (opcional, con vista previa), igual que en actividades y la carta, y se guarda en el backend (campo `imagen`). El catálogo público (`/catalogo/juegos`) la muestra en la tarjeta y en el detalle; si el campo queda vacío se ve el ícono de dados. Mangas y cómics siguen subiendo la portada como archivo.
 
 Inventario permite buscar, filtrar, registrar, editar, consultar fichas, dar de baja y reactivar juegos, cómics, cartas y buffet. El formulario valida SKU único y cantidad de jugadores, selecciona complejidad y carga imágenes PNG, JPG o WebP hasta 5 MB. Las portadas se reducen para el almacenamiento local.
 

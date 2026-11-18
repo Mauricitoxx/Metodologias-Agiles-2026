@@ -79,6 +79,7 @@ export function EntityFormView() {
 
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [coverFailed, setCoverFailed] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -210,6 +211,13 @@ export function EntityFormView() {
       return;
     }
 
+    const trimmedImage = form.image ? form.image.trim() : '';
+
+    if (type === 'boardgames' && trimmedImage && !isValidUrl(trimmedImage)) {
+      setError('La URL de la imagen debe ser una URL web válida');
+      return;
+    }
+
     if (
       type === 'comics' &&
       (
@@ -259,7 +267,7 @@ export function EntityFormView() {
       duracion_min: durParsed,
       price: Number(form.price || 0),
       videoUrl: trimmedVideoUrl,
-      ...(type === 'boardgames' ? { video_url: trimmedVideoUrl || null } : {}),
+      ...(type === 'boardgames' ? { video_url: trimmedVideoUrl || null, image: trimmedImage } : {}),
     };
 
     if (type === 'comics') {
@@ -590,9 +598,38 @@ export function EntityFormView() {
           <h3>
             <span className="step-number pink">3</span>
             {' '}CARÁTULA DE PORTADA
-            <small>Máx. 5 MB</small>
+            {type !== 'boardgames' && <small>Máx. 5 MB</small>}
           </h3>
 
+          {type === 'boardgames' ? (
+            // Juegos: URL web de la portada, como en actividades y productos
+            <div className="cover-upload">
+              <div className="cover-preview">
+                {isValidUrl(form.image) && !coverFailed
+                  ? <img src={form.image.trim()} alt="Vista previa de portada" onError={() => setCoverFailed(true)} />
+                  : <span aria-hidden="true">🎲</span>}
+              </div>
+              <div className="form-group activity-image-field">
+                <label htmlFor="entity-image">URL DE LA IMAGEN</label>
+                <input
+                  id="entity-image"
+                  name="image"
+                  type="url"
+                  placeholder="https://..."
+                  className="form-input"
+                  maxLength={500}
+                  value={form.image || ''}
+                  onChange={event => {
+                    setCoverFailed(false);
+                    change(event);
+                  }}
+                />
+                <span className="activity-form-hint">Opcional · Dejala vacía para mostrar el ícono.</span>
+                {coverFailed && <span className="activity-form-hint">No se pudo cargar la vista previa. Revisá la URL.</span>}
+              </div>
+            </div>
+          ) : (
+          <>
           <div
             className="cover-upload"
             onDragOver={event => event.preventDefault()}
@@ -627,6 +664,8 @@ export function EntityFormView() {
             >
               <Trash2 size={15} /> Quitar portada
             </button>
+          )}
+          </>
           )}
 
           {type !== 'comics' && (
