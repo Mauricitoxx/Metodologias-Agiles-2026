@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
+import { CatalogIcon } from '../components/catalog/CatalogIcon';
 import { productoService, TIPOS_PRODUCTO } from '../services/productoService';
-import { formatPrecio } from '../utils/precio';
+import { formatPrecio, porcentajeDescuento } from '../utils/precio';
 import '../styles/public-buffet.css';
 
 const ICONOS_TIPO = {
@@ -11,25 +12,42 @@ const ICONOS_TIPO = {
   combo: '🍱',
 };
 
+const tieneOferta = (producto) => producto.precio_oferta != null;
+
 function BuffetCard({ producto }) {
+  const enOferta = tieneOferta(producto);
+  const descuento = porcentajeDescuento(producto.precio, producto.precio_oferta);
   const precio = formatPrecio(producto.precio, { conservarCentavos: true });
 
   return (
     <article className="public-buffet-card">
+      {enOferta && (
+        <span className="public-buffet-badge">
+          <CatalogIcon name="e68e1" />
+          {descuento > 0 && descuento < 100 ? `${descuento}% de descuento` : 'Oferta'}
+        </span>
+      )}
       <div className="public-buffet-illustration" aria-hidden="true">{ICONOS_TIPO[producto.tipo]}</div>
       <div className="public-buffet-card-content">
         <h3>{producto.nombre}</h3>
         <p className="public-buffet-description">{producto.descripcion}</p>
-        <p className="public-buffet-prices">{precio}</p>
+        <p className="public-buffet-prices">
+          {enOferta ? (
+            <>
+              <span><span className="public-sr-only">Precio original </span><s>{precio}</s></span>
+              <strong><span className="public-sr-only">Precio de oferta </span>{formatPrecio(producto.precio_oferta, { conservarCentavos: true })}</strong>
+            </>
+          ) : precio}
+        </p>
       </div>
     </article>
   );
 }
 
-function BuffetSection({ id, titulo, productos }) {
+function BuffetSection({ id, titulo, productos, ocultarTitulo = false }) {
   return (
     <section className="public-buffet-section" aria-labelledby={id}>
-      <h2 id={id}>{titulo}</h2>
+      <h2 id={id} className={ocultarTitulo ? 'public-sr-only' : undefined}>{titulo}</h2>
       <div className="public-buffet-list">
         {productos.map((producto) => <BuffetCard key={producto.id} producto={producto} />)}
       </div>
@@ -55,6 +73,8 @@ export function PublicBuffetView() {
 
   const productos = resultado?.productos ?? [];
   const tipos = Object.entries(TIPOS_PRODUCTO).filter(([tipo]) => productos.some((producto) => producto.tipo === tipo));
+  const ofertas = productos.filter(tieneOferta);
+  const sinOferta = productos.filter((producto) => !tieneOferta(producto));
 
   function reintentar() {
     setResultado(null);
@@ -76,8 +96,9 @@ export function PublicBuffetView() {
         <p className="public-catalog-message" role="status">Por el momento no hay productos disponibles.</p>
       )}
 
+      {ofertas.length > 0 && <BuffetSection id="buffet-ofertas" titulo="Ofertas" productos={ofertas} ocultarTitulo />}
       {tipos.map(([tipo, nombre]) => {
-        const productosDelTipo = productos.filter((producto) => producto.tipo === tipo);
+        const productosDelTipo = sinOferta.filter((producto) => producto.tipo === tipo);
         return productosDelTipo.length > 0 && (
           <BuffetSection key={tipo} id={"buffet-" + tipo} titulo={nombre} productos={productosDelTipo} />
         );
