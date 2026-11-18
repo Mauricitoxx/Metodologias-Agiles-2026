@@ -1,0 +1,17 @@
+backend/frikioteca.db.bak
+backend/seed_ejemplos.py
+frontend/package-lock.json
+frontend/public/ejemplos/actividades/campaña-de-rol--dungeons---dragons.svg
+frontend/public/ejemplos/actividades/noche-de-juegos-de-mesa.svg
+frontend/public/ejemplos/actividades/presentación--novedades-del-mes.svg
+frontend/public/ejemplos/actividades/taller-de-pintura-de-miniaturas.svg
+frontend/public/ejemplos/actividades/torneo-de-catan.svg
+frontend/public/ejemplos/actividades/torneo-de-magic--the-gathering.svg
+frontend/public/ejemplos/mangas/akira-1.svg
+frontend/public/ejemplos/mangas/batman--año-uno-1.svg
+frontend/public/ejemplos/mangas/berserk-1.svg
+frontend/public/ejemplos/mangas/mafalda-1.svg
+frontend/public/ejemplos/mangas/naruto-1.svg
+frontend/public/ejemplos/mangas/one-piece-1.svg
+frontend/public/ejemplos/mangas/spy-x-family-1.svg
+frontend/public/ejemplos/mangas/watchmen-1.svg
