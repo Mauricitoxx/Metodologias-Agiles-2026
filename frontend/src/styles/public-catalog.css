@@ -97,6 +97,9 @@
 .public-game-rules p { padding-bottom: 16px; white-space: pre-line; color: var(--catalog-muted); }
 .public-game-video p { color: var(--catalog-muted); margin-bottom: 16px; }
 .public-game-video a { width: 100%; }
+@media (max-width: 767px) {
+  .public-catalog-bottom { width: 100%; max-width: none; }
+}
 @media (min-width: 768px) {
   .public-catalog-bottom { bottom: 20px; border-radius: 0 0 10px 10px; }
 }
