@@ -1,9 +1,10 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String, Text, func, select
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from app.db.base import Base
+from app.models.manga_comic_categoria import MangaComicCategoria
 
 if TYPE_CHECKING:
     from app.models.manga_comic import MangaComic
@@ -25,12 +26,17 @@ class CategoriaMangaComic(Base):
         nullable=False,
     )
 
+    # Sin carga automática: cada tomo trae sus categorías, y cargar acá los tomos de cada categoría
+    # dispararía consultas en cascada solo para contarlos
     mangas_comics: Mapped[list["MangaComic"]] = relationship(
         secondary="manga_comic_categorias",
         back_populates="categorias",
-        lazy="selectin",
     )
 
-    @property
-    def mangas_comics_count(self) -> int:
-        return len(self.mangas_comics) if self.mangas_comics is not None else 0
+    # Se cuenta en SQL dentro de la misma consulta que trae la categoría
+    mangas_comics_count: Mapped[int] = column_property(
+        select(func.count())
+        .where(MangaComicCategoria.categoria_id == id)
+        .correlate_except(MangaComicCategoria)
+        .scalar_subquery()
+    )
