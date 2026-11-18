@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { X, Plus, Edit2, Trash2, ArrowUp, ArrowDown, FileText, Check, AlertCircle } from 'lucide-react';
 import { reglaJuegoService } from '../../services/reglaJuegoService';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import '../../styles/reglas.css';
 
 export const ReglasModal = ({ isOpen, onClose, juego }) => {
@@ -20,6 +21,9 @@ export const ReglasModal = ({ isOpen, onClose, juego }) => {
 
   // Mensajes de error en tiempo real
   const [error, setError] = useState('');
+
+  // Regla pendiente de confirmar su eliminación
+  const [reglaAEliminar, setReglaAEliminar] = useState(null);
 
   const resetForm = (nextOrden = 1) => {
     setEditingId(null);
@@ -217,14 +221,10 @@ export const ReglasModal = ({ isOpen, onClose, juego }) => {
   };
 
   // 6. Eliminar sección
-  const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas eliminar esta sección de reglas?')) return;
-    try {
-      await reglaJuegoService.eliminar(id);
-      await cargarReglas();
-    } catch (err) {
-      setError(err.message);
-    }
+  // Si falla, el error se muestra en el modal de confirmación
+  const handleEliminar = async () => {
+    await reglaJuegoService.eliminar(reglaAEliminar.id);
+    await cargarReglas();
   };
 
   const handleEditClick = (regla) => {
@@ -238,6 +238,7 @@ export const ReglasModal = ({ isOpen, onClose, juego }) => {
   if (!isOpen) return null;
 
   return (
+    <>
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-window reglas-modal" onClick={(e) => e.stopPropagation()}>
         {/* ENCABEZADO */}
@@ -412,7 +413,7 @@ export const ReglasModal = ({ isOpen, onClose, juego }) => {
                     <button
                       type="button"
                       className="reglas-icon-btn danger"
-                      onClick={() => handleEliminar(regla.id)}
+                      onClick={() => setReglaAEliminar(regla)}
                       title="Eliminar"
                       aria-label={`Eliminar ${regla.titulo}`}
                     >
@@ -433,5 +434,19 @@ export const ReglasModal = ({ isOpen, onClose, juego }) => {
         </div>
       </div>
     </div>
+
+    {/* Fuera del fondo del modal de reglas: un clic en su fondo no cierra también las reglas */}
+    <ConfirmDeleteModal
+      isOpen={Boolean(reglaAEliminar)}
+      onClose={() => setReglaAEliminar(null)}
+      onConfirm={handleEliminar}
+      title="Eliminar sección"
+      message={
+        <>
+          ¿Seguro que querés eliminar la sección <strong>"{reglaAEliminar?.titulo}"</strong>?
+        </>
+      }
+    />
+    </>
   );
 };
