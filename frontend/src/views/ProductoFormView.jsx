@@ -13,6 +13,14 @@ const ESTADOS = [
   { value: false, label: 'INACTIVO', hint: 'No se muestra en la carta. Podés reactivarlo cuando quieras.' }
 ];
 
+const isWebUrl = (value) => {
+  try {
+    return ['http:', 'https:'].includes(new URL(value).protocol);
+  } catch {
+    return false;
+  }
+};
+
 const formFromProducto = (producto) => ({
   nombre: producto?.nombre ?? '',
   descripcion: producto?.descripcion ?? '',
@@ -21,7 +29,9 @@ const formFromProducto = (producto) => ({
   precio: precioParaInput(producto?.precio),
   // HU-13: vacío significa que el producto no tiene oferta
   precio_oferta: precioParaInput(producto?.precio_oferta),
-  activo: producto?.activo ?? true
+  activo: producto?.activo ?? true,
+  // URL web de la foto, opcional (como en actividades)
+  imagen: producto?.imagen ?? ''
 });
 
 const validate = (form) => {
@@ -41,6 +51,7 @@ const validate = (form) => {
   }
   const ofertaError = validarPrecioOferta(form.precio, form.precio_oferta);
   if (ofertaError) errors.precio_oferta = ofertaError;
+  if (form.imagen.trim() && !isWebUrl(form.imagen.trim())) errors.imagen = 'Debe ingresar una URL web válida';
   return errors;
 };
 
@@ -54,6 +65,7 @@ export function ProductoFormView() {
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -67,6 +79,7 @@ export function ProductoFormView() {
   const setField = (name, value) => {
     setForm((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: undefined }));
+    if (name === 'imagen') setImageFailed(false);
   };
 
   const save = async (event) => {
@@ -86,7 +99,9 @@ export function ProductoFormView() {
       precio: parsePrecio(form.precio),
       // null quita la oferta y deja solo el precio original
       precio_oferta: form.precio_oferta.trim() ? parsePrecio(form.precio_oferta) : null,
-      activo: form.activo
+      activo: form.activo,
+      // Vacía quita la foto
+      imagen: form.imagen.trim() || null
     };
 
     setSaving(true);
@@ -269,6 +284,34 @@ export function ProductoFormView() {
               ))}
             </div>
             <span className="activity-form-hint">{estadoActual.hint}</span>
+          </div>
+        </section>
+
+        <section className="retro-panel form-section">
+          <h3>
+            <span className="step-number pink">4</span> IMAGEN
+          </h3>
+          <div className="cover-upload">
+            <div className="cover-preview">
+              {form.imagen && isWebUrl(form.imagen.trim()) && !imageFailed ? (
+                <img src={form.imagen.trim()} alt="Vista previa del producto" onError={() => setImageFailed(true)} />
+              ) : (
+                <span aria-hidden="true">🍔</span>
+              )}
+            </div>
+            <div className="form-group activity-image-field">
+              <label htmlFor="producto-imagen">URL DE LA IMAGEN</label>
+              <input
+                type="url"
+                placeholder="https://..."
+                className={`form-input ${invalid('imagen')}`}
+                maxLength={500}
+                {...fieldProps('imagen')}
+              />
+              <span className="activity-form-hint">Opcional · Dejala vacía para mostrar el ícono.</span>
+              {fieldError('imagen')}
+              {imageFailed && <span className="activity-form-hint">No se pudo cargar la vista previa. Revisá la URL.</span>}
+            </div>
           </div>
         </section>
 

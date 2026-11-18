@@ -15,6 +15,8 @@ const mapProductoFromBackend = (producto) => ({
   description: producto.descripcion,
   category: TIPOS_PRODUCTO[producto.tipo] || producto.tipo,
   price: producto.precio,
+  // Foto opcional: sin URL, la tarjeta muestra el ícono
+  image: producto.imagen || null,
   // HU-13: null cuando el producto no tiene oferta
   offerPrice: producto.precio_oferta ?? null,
   status: producto.activo ? 'disponible' : 'baja',
