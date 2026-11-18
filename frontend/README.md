@@ -41,6 +41,8 @@ El panel central (`/admin`) solo ofrece dos accesos: Inventario y Staff. Inventa
 
 Juegos de mesa (`views/JuegosView.jsx`) muestra los juegos agrupados por categoría y permite crear, editar y eliminar categorías; una categoría con juegos asociados no se puede eliminar.
 
+La sección **Carátula de portada** del formulario de juegos se guarda en el backend (campo `imagen`): la foto se reduce a 600 px y se envía como data URL. El catálogo público (`/catalogo/juegos`) la muestra en la tarjeta y en el detalle; sin portada se ve el ícono de dados. El botón **Quitar portada** la elimina al guardar.
+
 Inventario permite buscar, filtrar, registrar, editar, consultar fichas, dar de baja y reactivar juegos, cómics, cartas y buffet. El formulario valida SKU único y cantidad de jugadores, selecciona complejidad y carga imágenes PNG, JPG o WebP hasta 5 MB. Las portadas se reducen para el almacenamiento local.
 
 La pestaña Carta (clave interna `buffet`) usa la API de productos (`services/productoService.js`): lista activos e inactivos ordenados por categoría y nombre, con precio y estado Activo/Inactivo. La baja es lógica, siempre pide confirmación y oculta el producto de la carta pública. El alta y la edición usan su propio formulario (`views/ProductoFormView.jsx`, "Registro de carta" del Figma): nombre único de hasta 50 caracteres, descripción de hasta 500, tipo, precio y estado Activo/Inactivo. Los precios se muestran en pesos sin centavos (`utils/precio.js`, por ejemplo $10.000), aunque la API acepta hasta dos decimales.

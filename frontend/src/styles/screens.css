@@ -77,3 +77,4 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   font-size: 10px;
   color: var(--text-muted);
 }
+.cover-remove { margin:-6px 0 16px; }

@@ -619,6 +619,16 @@ export function EntityFormView() {
             </label>
           </div>
 
+          {form.image && (
+            <button
+              type="button"
+              className="btn-secondary cover-remove"
+              onClick={() => setForm(prev => ({ ...prev, image: '' }))}
+            >
+              <Trash2 size={15} /> Quitar portada
+            </button>
+          )}
+
           {type !== 'comics' && (
             <div className="form-group">
               <label htmlFor="entity-description">OBSERVACIONES</label>

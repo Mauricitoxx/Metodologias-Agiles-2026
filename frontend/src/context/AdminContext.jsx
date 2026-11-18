@@ -83,6 +83,8 @@ export const AdminProvider = ({ children }) => {
     minPlayers: juego.jugadores_min,
     maxPlayers: juego.jugadores_max,
     videoUrl: getGameVideoUrl(juego) || '',
+    // Portada opcional: el formulario y las tarjetas del panel la leen de `image`
+    image: juego.imagen || '',
     category: juego.categorias?.map((c) => c.nombre).join(', ') || 'Sin categoría',
     status: juego.activo ? (juego.disponibilidad ? 'disponible' : 'en_mesa') : 'baja',
     code: `#BG-${String(juego.id).padStart(3, '0')}`,
@@ -242,6 +244,7 @@ export const AdminProvider = ({ children }) => {
           jugadores_min: Number(itemData.jugadores_min) || 1,
           jugadores_max: Number(itemData.jugadores_max) || 4,
           video_url: getGameVideoUrl(itemData),
+          imagen: itemData.image || null,
           dificultad_id: itemData.dificultad_id ? Number(itemData.dificultad_id) : null,
           categoria_ids: itemData.categoria_ids || []
         };
@@ -330,6 +333,8 @@ export const AdminProvider = ({ children }) => {
           jugadores_min: updatedItem.jugadores_min ? Number(updatedItem.jugadores_min) : undefined,
           jugadores_max: updatedItem.jugadores_max ? Number(updatedItem.jugadores_max) : undefined,
           video_url: getGameVideoUrl(updatedItem),
+          // Vacía quita la portada
+          imagen: updatedItem.image || null,
           dificultad_id: updatedItem.dificultad_id ? Number(updatedItem.dificultad_id) : undefined,
           categoria_ids: updatedItem.categoria_ids
         };
