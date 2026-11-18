@@ -24,7 +24,7 @@ def test_login_me_logout(client, db, admin):
     assert response.status_code == 200
     assert response.headers["cache-control"] == "no-store"
     data = response.json()
-    assert data["administrador"] == {"id": admin.id, "nombre": "Bautista", "email": admin.email}
+    assert data["administrador"] == {"id": admin.id, "nombre": "Bautista", "email": admin.email, "avatar": "🛡️"}
     assert "password_hash" not in data["administrador"]
     token = data["access_token"]
     stored = db.scalar(select(SesionAdministrador))

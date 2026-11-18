@@ -14,6 +14,8 @@ class Administrador(Base):
     email: Mapped[str] = mapped_column(String(254), unique=True)
     password_hash: Mapped[str] = mapped_column(String(256))
     activo: Mapped[bool] = mapped_column(default=True)
+    # Emoji que identifica al miembro del staff en el panel (ver AVATARES en schemas/administrador.py)
+    avatar: Mapped[str] = mapped_column(String(16), default="🛡️", server_default="🛡️")
 
 
 class SesionAdministrador(Base):
