@@ -105,7 +105,7 @@
   .public-catalog-bottom { width: 100%; max-width: none; }
 }
 @media (min-width: 768px) {
-  .public-catalog-bottom { bottom: 20px; border-radius: 0 0 10px 10px; }
+  .public-catalog-bottom { max-width: 420px; }
 }
 @media (max-width: 380px) {
   .public-catalog-header { padding-inline: 12px; }
