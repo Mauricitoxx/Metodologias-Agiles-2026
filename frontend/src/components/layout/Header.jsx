@@ -23,20 +23,16 @@ export const Header = () => {
       </div>
 
       <div className="header-actions">
-
+        {currentUser && (
+          <span className="header-user-name" title={currentUser.email}>
+            {currentUser.name}
+          </span>
+        )}
         {session && (
           <button className="logout-button" onClick={handleLogout}>
             <LogOut size={14} /> Cerrar sesión
           </button>
         )}
-        <div className="user-avatar-wrapper" title={`${currentUser.name} (${currentUser.role})`}>
-          <img
-            src={currentUser.avatar}
-            alt={currentUser.name}
-            className="user-avatar-img"
-          />
-          <span className="user-status-dot" />
-        </div>
       </div>
     </header>
   );

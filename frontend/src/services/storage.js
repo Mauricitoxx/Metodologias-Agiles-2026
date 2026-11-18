@@ -191,38 +191,6 @@ export const INITIAL_DATA = {
       isPopular: false,
       image: 'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=400&q=80'
     }
-  ],
-  admins: [
-    {
-      id: 'usr-001',
-      name: 'Lucas Martínez',
-      email: 'lucas.admin@frikioteca.com',
-      role: 'Superadmin', // Superadmin, Gestor de Inventario, Staff Buffet
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
-      status: 'activo', // activo, inactivo
-      createdAt: '2024-11-01',
-      isCurrentUser: true
-    },
-    {
-      id: 'usr-002',
-      name: 'Camila Rossi',
-      email: 'camila.inventario@frikioteca.com',
-      role: 'Gestor de Inventario',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
-      status: 'activo',
-      createdAt: '2025-01-05',
-      isCurrentUser: false
-    },
-    {
-      id: 'usr-003',
-      name: 'Tomás Gómez',
-      email: 'tomas.buffet@frikioteca.com',
-      role: 'Staff Buffet',
-      avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80',
-      status: 'activo',
-      createdAt: '2025-02-15',
-      isCurrentUser: false
-    }
   ]
 };
 
@@ -233,7 +201,9 @@ export const storage = {
     try {
       const data = localStorage.getItem(STORAGE_KEY);
       if (data) {
-        return JSON.parse(data);
+        // El staff ahora viene del backend: se descartan los administradores de prueba guardados antes
+        const { admins: _legacyAdmins, ...rest } = JSON.parse(data);
+        return rest;
       }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_DATA));
       return INITIAL_DATA;
