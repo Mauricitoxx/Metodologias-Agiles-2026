@@ -229,7 +229,7 @@ export function EntityFormView() {
     }
 
     if (type === 'boardgames' && (form.categorias_ids || []).length === 0) {
-      setError('Seleccioná al menos una categoría.');
+      setError('Seleccioná una categoría.');
       return;
     }
 
@@ -477,17 +477,43 @@ export function EntityFormView() {
             </div>
           )}
 
-          {usaCategorias ? (
+          {type === 'boardgames' ? (
             <div className="form-group">
-              <label>{type === 'comics' ? 'GÉNEROS *' : 'CATEGORÍAS *'}</label>
+              <label htmlFor="entity-categoria">CATEGORÍA *</label>
 
               {loadingCategorias ? (
-                <p>{type === 'comics' ? 'Cargando géneros...' : 'Cargando categorías...'}</p>
+                <p>Cargando categorías...</p>
               ) : categorias.length === 0 ? (
                 <p className="error-text">
-                  {type === 'comics'
-                    ? 'No hay géneros disponibles. Creá uno antes de continuar.'
-                    : 'No hay categorías disponibles. Creá una desde la pestaña Juegos de mesa antes de continuar.'}
+                  No hay categorías disponibles. Creá una desde la pestaña Juegos de mesa antes de continuar.
+                </p>
+              ) : (
+                <select
+                  id="entity-categoria"
+                  className="form-select"
+                  value={form.categorias_ids?.[0] ?? ''}
+                  onChange={event => {
+                    const id = event.target.value;
+                    setForm(prev => ({ ...prev, categorias_ids: id ? [Number(id)] : [] }));
+                  }}
+                  required
+                >
+                  <option value="">Seleccioná una categoría</option>
+                  {categorias.map(categoria => (
+                    <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+          ) : usaCategorias ? (
+            <div className="form-group">
+              <label>GÉNEROS *</label>
+
+              {loadingCategorias ? (
+                <p>Cargando géneros...</p>
+              ) : categorias.length === 0 ? (
+                <p className="error-text">
+                  No hay géneros disponibles. Creá uno antes de continuar.
                 </p>
               ) : (
                 <div className="genre-checkbox-list">
@@ -507,11 +533,7 @@ export function EntityFormView() {
                 </div>
               )}
 
-              <small>
-                {type === 'comics'
-                  ? 'Podés seleccionar uno o varios géneros.'
-                  : 'Podés seleccionar una o varias categorías.'}
-              </small>
+              <small>Podés seleccionar uno o varios géneros.</small>
             </div>
           ) : (
             field('category', 'CATEGORÍA PRINCIPAL', 'text', true)
