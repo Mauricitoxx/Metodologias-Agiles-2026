@@ -91,4 +91,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 @media(max-width:380px) { .avatar-choices button { width:48px; height:48px; font-size:24px; } }
 .header-user-avatar { flex-shrink:0; width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; border:2px solid var(--border-color); border-radius:var(--radius-full); background:var(--bg-card-secondary); box-shadow:var(--shadow-retro-sm); font-size:18px; line-height:1; }
 @media(max-width:380px) { .header-user-avatar { width:28px; height:28px; font-size:15px; } }
+.header-user-avatar { padding:0; color:var(--text-main); cursor:pointer; }
+.header-user-avatar:focus-visible { outline:2px solid var(--primary-yellow); outline-offset:2px; }
+.header-user-menu { position:relative; display:flex; }
+.header-user-popover { position:absolute; top:calc(100% + 10px); right:0; z-index:50; min-width:170px; max-width:min(240px, calc(100vw - 32px)); padding:10px 12px; background:var(--bg-card); color:var(--text-main); border:2px solid var(--border-color); border-radius:var(--radius-sm); box-shadow:var(--shadow-retro-sm); text-align:left; }
+.header-user-popover::before { content:''; position:absolute; top:-7px; right:11px; width:10px; height:10px; background:var(--bg-card); border-left:2px solid var(--border-color); border-top:2px solid var(--border-color); transform:rotate(45deg); }
+.header-user-popover-name { margin:0 0 2px; font-size:13px; font-weight:900; overflow-wrap:anywhere; }
+.header-user-popover-email { margin:0; font-size:11px; color:var(--text-muted); overflow-wrap:anywhere; }
 .cover-remove { margin:-6px 0 16px; }
