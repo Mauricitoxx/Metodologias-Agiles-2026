@@ -33,6 +33,11 @@ export const Header = () => {
             <LogOut size={14} /> Cerrar sesión
           </button>
         )}
+        {currentUser && (
+          <span className="header-user-avatar" role="img" aria-label={`Avatar de ${currentUser.name}`}>
+            {currentUser.avatar}
+          </span>
+        )}
       </div>
     </header>
   );

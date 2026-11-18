@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { RefreshCw, ShieldCheck, Copy, Check, KeyRound } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
 import { generateTempPassword } from '../utils/tempPassword';
+import { STAFF_AVATARS, DEFAULT_STAFF_AVATAR } from '../utils/staffAvatars';
 
 function TemporaryKey({ password, onRegenerate, hint }) {
   const [copied, setCopied] = useState(false);
@@ -61,6 +62,7 @@ export function StaffForm({ initialItem, onDone }) {
 
   const [name, setName] = useState(initialItem?.name || '');
   const [email, setEmail] = useState(initialItem?.email || '');
+  const [avatar, setAvatar] = useState(initialItem?.avatar || DEFAULT_STAFF_AVATAR);
   const [password, setPassword] = useState(generateTempPassword);
   // Al editar, la contraseña solo cambia si se pide restablecerla
   const [resetPassword, setResetPassword] = useState(false);
@@ -91,6 +93,7 @@ export function StaffForm({ initialItem, onDone }) {
         id: initialItem?.id,
         nombre: nameTrimmed,
         email: emailTrimmed,
+        avatar,
         ...(sendsPassword ? { password } : {}),
       };
 
@@ -135,6 +138,23 @@ export function StaffForm({ initialItem, onDone }) {
     <form className="staff-form" onSubmit={submit}>
       <fieldset className="retro-panel">
         <legend className="profile-legend">▣ IDENTIDAD DE STAFF</legend>
+
+        <span className="section-small-label" id="staff-avatar-label">AVATAR DE STAFF</span>
+        <div className="avatar-choices" role="radiogroup" aria-labelledby="staff-avatar-label">
+          {STAFF_AVATARS.map((option) => (
+            <button
+              type="button"
+              key={option}
+              role="radio"
+              aria-checked={avatar === option}
+              aria-label={`Avatar ${option}`}
+              className={avatar === option ? 'selected' : ''}
+              onClick={() => setAvatar(option)}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
 
         <div className="form-group">
           <label htmlFor="staff-name">NOMBRE COMPLETO</label>

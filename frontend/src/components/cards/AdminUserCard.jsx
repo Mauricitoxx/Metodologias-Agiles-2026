@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit3, Trash2, RotateCcw, ShieldCheck, Mail } from 'lucide-react';
+import { Edit3, Trash2, RotateCcw, Mail } from 'lucide-react';
 import { StatusBadge } from '../common/Badge';
 
 export const AdminUserCard = ({ item, isCurrentLoggedUser, onOpenEdit, onOpenConfirmBaja }) => {
@@ -9,7 +9,7 @@ export const AdminUserCard = ({ item, isCurrentLoggedUser, onOpenEdit, onOpenCon
     <div className={`catalog-item-card ${isInactivo ? 'is-baja-state' : ''}`}>
       <div className="card-main-content">
         <div className="card-thumb-container card-thumb-avatar" aria-hidden="true">
-          <ShieldCheck size={30} className="staff-card-icon" />
+          <span className="staff-avatar-emoji">{item.avatar}</span>
         </div>
 
         <div className="card-info-container">

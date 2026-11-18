@@ -56,7 +56,7 @@ Staff (`/admin/staff`, `views/AdminUsersView.jsx`) usa la API de administradores
 - **Alta:** nombre y correo. Se genera una clave temporal (`utils/tempPassword.js`, con `crypto.getRandomValues`) que se muestra al guardar para copiarla y entregarla; después no se vuelve a ver.
 - **Edición:** nombre y correo. Opcionalmente, *Restablecer la contraseña* genera y guarda una clave temporal nueva.
 - **Baja y reactivación:** al darlo de baja no puede iniciar sesión y sus sesiones abiertas dejan de valer. El backend impide dar de baja al único administrador activo, y la tarjeta propia no muestra el botón de baja.
-- El encabezado muestra el nombre del usuario logueado (sin foto). No hay roles ni avatares: el backend no los tiene.
+- **Avatar:** cada miembro elige un emoji (`utils/staffAvatars.js`; tiene que coincidir con `AVATARES` del backend, lo verifica `tests/staffAvatars.test.mjs`). El encabezado muestra el nombre y el avatar del usuario logueado, y se actualiza al editar la cuenta propia. No hay roles: el backend no los tiene.
 
 La autenticación ya usa servidor y base de datos. Los demás módulos aún requieren integración con la API, autorización de roles, envío de credenciales y recuperación automática de contraseña. Los futuros endpoints de gestión deben usar la dependencia `get_current_admin` del backend.
 

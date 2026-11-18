@@ -7,6 +7,7 @@ import { mangaComicService } from '../services/mangaComicService';
 import { staffService } from '../services/staffService';
 import { getGameVideoUrl } from '../utils/gameVideo';
 import { productoService, TIPOS_PRODUCTO } from '../services/productoService';
+import { DEFAULT_STAFF_AVATAR } from '../utils/staffAvatars';
 
 // Adapta un producto de la carta del backend al formato de las tarjetas del Buffet
 const mapProductoFromBackend = (producto) => ({
@@ -30,6 +31,7 @@ const mapAdminFromBackend = (admin) => ({
   nombre: admin.nombre,
   email: admin.email,
   activo: admin.activo,
+  avatar: admin.avatar || DEFAULT_STAFF_AVATAR,
   status: admin.activo ? 'activo' : 'inactivo',
   code: `#USR-${String(admin.id).padStart(3, '0')}`
 });
@@ -251,7 +253,14 @@ export const AdminProvider = ({ children }) => {
   };
 
   const currentUser = useMemo(
-    () => (session ? { id: session.id, name: session.nombre, email: session.email } : null),
+    () => (session
+      ? {
+        id: session.id,
+        name: session.nombre,
+        email: session.email,
+        avatar: session.avatar || DEFAULT_STAFF_AVATAR
+      }
+      : null),
     [session]
   );
 
@@ -265,7 +274,8 @@ export const AdminProvider = ({ children }) => {
       const created = await staffService.create({
         nombre: itemData.nombre,
         email: itemData.email,
-        password: itemData.password
+        password: itemData.password,
+        avatar: itemData.avatar
       });
       await cargarStaff();
       showToast(`Miembro "${created.nombre}" dado de alta`);
@@ -364,8 +374,13 @@ export const AdminProvider = ({ children }) => {
       const updated = await staffService.update(updatedItem.id, {
         nombre: updatedItem.nombre,
         email: updatedItem.email,
+        avatar: updatedItem.avatar,
         ...(updatedItem.password ? { password: updatedItem.password } : {})
       });
+      // Si es la cuenta propia, el encabezado muestra el nombre y el avatar nuevos sin recargar
+      setSession((prev) => (prev && prev.id === updated.id
+        ? { ...prev, nombre: updated.nombre, email: updated.email, avatar: updated.avatar }
+        : prev));
       await cargarStaff();
       showToast(`Miembro "${updated.nombre}" actualizado`);
       return updated;
