@@ -18,7 +18,7 @@ export function PublicCatalogLayout({ className = '' }) {
       <nav className="public-catalog-bottom" aria-label="Navegación principal">
         <div>
           <NavLink to="/catalogo"><CatalogIcon name="2c137" /><span>Catálogo</span></NavLink>
-          <button type="button" disabled title="Próximamente"><CatalogIcon name="7c414" /><span>Buffet</span><small>Próximamente</small></button>
+          <NavLink to="/buffet"><CatalogIcon name="7c414" /><span>Buffet</span></NavLink>
           <NavLink to="/eventos"><CatalogIcon name="bb8d1" /><span>Eventos</span></NavLink>
         </div>
       </nav>

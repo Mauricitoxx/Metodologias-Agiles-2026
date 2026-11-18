@@ -20,6 +20,8 @@ import { ItemFormModal } from './components/modals/ItemFormModal';
 import { ConfirmBajaModal } from './components/modals/ConfirmBajaModal';
 import { PublicCatalogRoutes } from './catalog/PublicCatalogRoutes';
 import { PublicEventsRoutes } from './catalog/PublicEventsRoutes';
+import { PublicCatalogLayout } from './views/PublicCatalogLayout';
+import { PublicBuffetView } from './views/PublicBuffetView';
 import { CategoriasMangaComicView } from './views/CategoriasMangaComicView';
 
 const ActivitiesRedirect = () => {
@@ -184,6 +186,9 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Navigate to="/catalogo" replace />} />
       <Route path="/catalogo/*" element={<PublicCatalogRoutes />} />
+      <Route element={<PublicCatalogLayout />}>
+        <Route path="/buffet" element={<PublicBuffetView />} />
+      </Route>
       <Route path="/eventos/*" element={<PublicEventsRoutes />} />
       <Route path="*" element={<AdminProvider><AdminDashboard /></AdminProvider>} />
     </Routes>

@@ -17,6 +17,13 @@ describe('Precios de la carta (HU-13)', () => {
     assert.equal(formatPrecio(null), '');
   });
 
+  it('conserva los centavos en la carta pública para distinguir ofertas cercanas al precio original', () => {
+    const formatoCarta = { conservarCentavos: true };
+    assert.equal(formatPrecio(10000, formatoCarta), '$10.000');
+    assert.equal(formatPrecio(9999.99, formatoCarta), '$9.999,99');
+    assert.equal(formatPrecio(0.01, formatoCarta), '$0,01');
+  });
+
   it('prepara el valor inicial del formulario sin perder centavos', () => {
     assert.equal(precioParaInput(10000), '10.000');
     assert.equal(precioParaInput(8500.5), '8.500,50');
