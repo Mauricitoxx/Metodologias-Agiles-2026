@@ -6,6 +6,7 @@ import { isValidUrl } from '../utils/validation';
 import { getGameVideoUrl } from '../utils/gameVideo';
 import { ReglasModal } from '../components/modals/ReglasModal';
 import { categoriaMangaComicService } from '../services/categoriaMangaComicService';
+import { categoriaService } from '../services/categoriaService';
 
 const types = {
   boardgames: '🎲 Juego de Mesa',
@@ -90,9 +91,11 @@ export function EntityFormView() {
     return () => window.removeEventListener('keydown', escape);
   }, [closeModal, isReglasModalOpen]);
 
-  // Cargar las categorías cuando el formulario corresponde a mangas y cómics.
+  // Juegos y mangas eligen entre las categorías existentes (cada uno tiene las suyas).
+  const usaCategorias = type === 'comics' || type === 'boardgames';
+
   useEffect(() => {
-    if (type !== 'comics') return;
+    if (type !== 'comics' && type !== 'boardgames') return;
 
     let cancelled = false;
 
@@ -100,7 +103,9 @@ export function EntityFormView() {
       setLoadingCategorias(true);
 
       try {
-        const response = await categoriaMangaComicService.listar();
+        const response = type === 'comics'
+          ? await categoriaMangaComicService.listar()
+          : await categoriaService.listar();
 
         if (!cancelled) {
           setCategorias(
@@ -223,6 +228,11 @@ export function EntityFormView() {
       return;
     }
 
+    if (type === 'boardgames' && (form.categorias_ids || []).length === 0) {
+      setError('Seleccioná al menos una categoría.');
+      return;
+    }
+
     if (
       type === 'comics' &&
       (
@@ -261,6 +271,12 @@ export function EntityFormView() {
       videoUrl: trimmedVideoUrl,
       ...(type === 'boardgames' ? { video_url: trimmedVideoUrl || null } : {}),
     };
+
+    if (type === 'boardgames') {
+      // La API de juegos recibe las categorías elegidas como `categoria_ids`
+      itemPayload.categoria_ids = form.categorias_ids.map(Number);
+      delete itemPayload.category;
+    }
 
     if (type === 'comics') {
       itemPayload.type = form.type;
@@ -461,15 +477,17 @@ export function EntityFormView() {
             </div>
           )}
 
-          {type === 'comics' ? (
+          {usaCategorias ? (
             <div className="form-group">
-              <label>GÉNEROS *</label>
+              <label>{type === 'comics' ? 'GÉNEROS *' : 'CATEGORÍAS *'}</label>
 
               {loadingCategorias ? (
-                <p>Cargando géneros...</p>
+                <p>{type === 'comics' ? 'Cargando géneros...' : 'Cargando categorías...'}</p>
               ) : categorias.length === 0 ? (
                 <p className="error-text">
-                  No hay géneros disponibles. Creá uno antes de continuar.
+                  {type === 'comics'
+                    ? 'No hay géneros disponibles. Creá uno antes de continuar.'
+                    : 'No hay categorías disponibles. Creá una desde la pestaña Juegos de mesa antes de continuar.'}
                 </p>
               ) : (
                 <div className="genre-checkbox-list">
@@ -489,7 +507,11 @@ export function EntityFormView() {
                 </div>
               )}
 
-              <small>Podés seleccionar uno o varios géneros.</small>
+              <small>
+                {type === 'comics'
+                  ? 'Podés seleccionar uno o varios géneros.'
+                  : 'Podés seleccionar una o varias categorías.'}
+              </small>
             </div>
           ) : (
             field('category', 'CATEGORÍA PRINCIPAL', 'text', true)
@@ -650,7 +672,7 @@ export function EntityFormView() {
 
           <button
             className="btn-primary"
-            disabled={uploading || saving || (type === 'comics' && loadingCategorias)}
+            disabled={uploading || saving || (usaCategorias && loadingCategorias)}
             type="submit"
           >
             <Save size={16} />
