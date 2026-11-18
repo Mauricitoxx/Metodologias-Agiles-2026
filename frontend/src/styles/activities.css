@@ -643,6 +643,27 @@
   color: #0b1e36;
 }
 
+/* Selección múltiple: casilla a la izquierda de cada opción */
+.app-select.multiple .app-select-option {
+  justify-content: flex-start;
+}
+
+.app-select-option-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.app-select-checkbox {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+}
+
 .app-select.compact .app-select-trigger {
   gap: 4px;
   padding: 6px 8px;

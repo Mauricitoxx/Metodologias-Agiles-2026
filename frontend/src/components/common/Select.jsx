@@ -12,6 +12,10 @@ const normalize = (text) =>
 
 const sameValue = (a, b) => String(a) === String(b);
 
+/**
+ * Desplegable accesible. Con `multiple`, `value` es un array: cada clic marca o desmarca una opción
+ * sin cerrar la lista, y `onChange` recibe el array nuevo.
+ */
 export const Select = ({
   id,
   value,
@@ -21,6 +25,7 @@ export const Select = ({
   invalid = false,
   disabled = false,
   compact = false,
+  multiple = false,
   className = '',
   'aria-label': ariaLabel,
   'aria-describedby': describedBy
@@ -35,8 +40,11 @@ export const Select = ({
   const [activeIndex, setActiveIndex] = useState(-1);
   const [placement, setPlacement] = useState('down');
 
-  const selectedIndex = options.findIndex((option) => sameValue(option.value, value));
-  const selected = options[selectedIndex];
+  const values = multiple ? (Array.isArray(value) ? value : []) : [value];
+  const isSelected = (option) => values.some((item) => sameValue(item, option.value));
+  const selectedIndex = options.findIndex(isSelected);
+  const selectedLabels = options.filter(isSelected).map((option) => option.label);
+  const label = selectedLabels.length ? selectedLabels.join(', ') : placeholder;
   const optionId = (index) => `${listId}-option-${index}`;
 
   useEffect(() => {
@@ -65,6 +73,15 @@ export const Select = ({
 
   const choose = (index) => {
     const option = options[index];
+    if (multiple) {
+      // Marca o desmarca y deja la lista abierta para seguir eligiendo
+      if (option) {
+        onChange(isSelected(option)
+          ? values.filter((item) => !sameValue(item, option.value))
+          : [...values, option.value]);
+      }
+      return;
+    }
     if (option && !sameValue(option.value, value)) onChange(option.value);
     setOpen(false);
     triggerRef.current?.focus();
@@ -93,7 +110,7 @@ export const Select = ({
       if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key)) {
         event.preventDefault();
         openList();
-      } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      } else if (!multiple && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
         const index = findByTypeahead(event.key);
         if (index >= 0) onChange(options[index].value);
       }
@@ -139,12 +156,12 @@ export const Select = ({
   };
 
   return (
-    <div className={`app-select ${compact ? 'compact' : ''} ${className}`} ref={rootRef}>
+    <div className={`app-select ${compact ? 'compact' : ''} ${multiple ? 'multiple' : ''} ${className}`} ref={rootRef}>
       <button
         type="button"
         id={id}
         ref={triggerRef}
-        className={`form-select app-select-trigger ${invalid ? 'is-invalid' : ''} ${selected ? '' : 'is-empty'}`}
+        className={`form-select app-select-trigger ${invalid ? 'is-invalid' : ''} ${selectedLabels.length ? '' : 'is-empty'}`}
         role="combobox"
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -157,27 +174,45 @@ export const Select = ({
         onClick={() => (open ? setOpen(false) : openList())}
         onKeyDown={handleKeyDown}
       >
-        <span className="app-select-label">{selected ? selected.label : placeholder}</span>
+        <span className="app-select-label" title={selectedLabels.length ? label : undefined}>{label}</span>
         <ChevronDown size={compact ? 13 : 15} className={`app-select-chevron ${open ? 'open' : ''}`} aria-hidden="true" />
       </button>
 
       {open && (
-        <ul id={listId} ref={listRef} className={`app-select-list ${placement}`} role="listbox" aria-label={ariaLabel}>
+        <ul
+          id={listId}
+          ref={listRef}
+          className={`app-select-list ${placement}`}
+          role="listbox"
+          aria-label={ariaLabel}
+          aria-multiselectable={multiple || undefined}
+        >
           {options.map((option, index) => {
-            const isSelected = index === selectedIndex;
+            const checked = isSelected(option);
             return (
               <li
                 key={option.value}
                 id={optionId(index)}
                 role="option"
-                aria-selected={isSelected}
-                className={`app-select-option ${isSelected ? 'selected' : ''} ${index === activeIndex ? 'active' : ''}`}
+                aria-selected={checked}
+                className={`app-select-option ${checked ? 'selected' : ''} ${index === activeIndex ? 'active' : ''}`}
                 onMouseDown={(event) => event.preventDefault()}
                 onMouseEnter={() => setActiveIndex(index)}
                 onClick={() => choose(index)}
               >
-                <span>{option.label}</span>
-                {isSelected && <Check size={compact ? 12 : 14} aria-hidden="true" />}
+                {multiple ? (
+                  <>
+                    <span className="app-select-checkbox" aria-hidden="true">
+                      {checked && <Check size={12} strokeWidth={3} />}
+                    </span>
+                    <span className="app-select-option-text">{option.label}</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{option.label}</span>
+                    {checked && <Check size={compact ? 12 : 14} aria-hidden="true" />}
+                  </>
+                )}
               </li>
             );
           })}
