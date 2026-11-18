@@ -75,11 +75,6 @@ export const catalogModules = [
     categoryLabel: 'Géneros',
     enabled: true,
 
-    typeOptions: [
-      { value: 'manga', label: 'Manga' },
-      { value: 'comic', label: 'Cómic' },
-    ],
-
     sortOptions: nameSortOptions,
 
     sections: [
