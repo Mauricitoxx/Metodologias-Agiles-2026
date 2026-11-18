@@ -31,6 +31,8 @@ class Juego(Base):
     jugadores_min: Mapped[int] = mapped_column(Integer, nullable=False)
     jugadores_max: Mapped[int] = mapped_column(Integer, nullable=False)
     video_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # Portada opcional: data URL subida desde el formulario o URL web. Sin portada, el catálogo muestra un ícono
+    imagen: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Baja lógica
     activo: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
