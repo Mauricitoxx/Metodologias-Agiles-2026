@@ -15,6 +15,8 @@ const ICONOS_TIPO = {
 const tieneOferta = (producto) => producto.precio_oferta != null;
 
 function BuffetCard({ producto }) {
+  const [imagenFallida, setImagenFallida] = useState(null);
+  const imagen = producto.imagen;
   const enOferta = tieneOferta(producto);
   const descuento = porcentajeDescuento(producto.precio, producto.precio_oferta);
   const precio = formatPrecio(producto.precio, { conservarCentavos: true });
@@ -27,7 +29,13 @@ function BuffetCard({ producto }) {
           {descuento > 0 && descuento < 100 ? `${descuento}% de descuento` : 'Oferta'}
         </span>
       )}
-      <div className="public-buffet-illustration" aria-hidden="true">{ICONOS_TIPO[producto.tipo]}</div>
+      <div className="public-buffet-illustration">
+        {imagen && imagen !== imagenFallida ? (
+          <img src={imagen} alt={`Foto de ${producto.nombre}`} loading="lazy" onError={() => setImagenFallida(imagen)} />
+        ) : (
+          <span aria-hidden="true">{ICONOS_TIPO[producto.tipo]}</span>
+        )}
+      </div>
       <div className="public-buffet-card-content">
         <h3>{producto.nombre}</h3>
         <p className="public-buffet-description">{producto.descripcion}</p>
