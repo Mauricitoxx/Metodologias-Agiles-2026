@@ -53,11 +53,16 @@ def iniciar_sesion(db: Session, datos: LoginRequest) -> tuple[str, Administrador
 
 
 def obtener_sesion(db: Session, token: str) -> tuple[SesionAdministrador, Administrador]:
-    session = db.get(SesionAdministrador, hashlib.sha256(token.encode()).hexdigest())
-    if session is None or session.expires_at <= datetime.now(timezone.utc).replace(tzinfo=None):
+    # Una sola consulta: se ejecuta en cada request administrativo
+    row = db.execute(
+        select(SesionAdministrador, Administrador)
+        .join(Administrador, Administrador.id == SesionAdministrador.administrador_id)
+        .where(SesionAdministrador.token_hash == hashlib.sha256(token.encode()).hexdigest())
+    ).first()
+    if row is None:
         raise _unauthorized()
-    admin = db.get(Administrador, session.administrador_id)
-    if admin is None or not admin.activo:
+    session, admin = row
+    if session.expires_at <= datetime.now(timezone.utc).replace(tzinfo=None) or not admin.activo:
         raise _unauthorized()
     return session, admin
 
