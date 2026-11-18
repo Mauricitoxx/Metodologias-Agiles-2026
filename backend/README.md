@@ -394,6 +394,13 @@ Commitear el modelo, esquema, servicio, ruta, test, **la migración** y los dos 
 - `imagen` es opcional: una URL web (`http` o `https`) de hasta 500 caracteres, igual que en actividades. Si no lo es, responde 422 con *"Debe ingresar una URL web válida"* en el campo `imagen`. Una imagen vacía o en `null` en el `PUT` quita la foto; si no se envía, se conserva.
 - Para quitar una oferta se envía `precio_oferta: null` en el `PUT`; el producto queda solo con su precio original. Si el `PUT` no incluye `precio_oferta`, la oferta se conserva, y no se puede bajar el precio a un valor igual o menor que esa oferta.
 
+### Juegos: imagen de portada
+
+- `imagen` es opcional en `POST /api/juegos` y `PUT /api/juegos/{id}`, y se devuelve en el listado y el detalle (el catálogo público la muestra; sin imagen se ve un ícono).
+- Es una URL web (`http` o `https`) de hasta 500 caracteres, igual que en actividades y productos. Si no lo es, responde 422 con *"Debe ingresar una URL web válida"* en el campo `imagen`.
+- En el `PUT`, si no se envía se conserva; vacía o `null` la quita.
+- Tests: `tests/test_juegos_imagen.py`.
+
 ---
 
 ## Migraciones

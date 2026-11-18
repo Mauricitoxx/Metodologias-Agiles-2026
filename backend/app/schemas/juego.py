@@ -1,9 +1,17 @@
-from typing import Self
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from typing import Annotated, Self
 
+from pydantic import AfterValidator, BaseModel, BeforeValidator, ConfigDict, Field, model_validator
+
+from app.schemas.actividad import ensure_web_url
 from app.schemas.categoria_juego import CategoriaJuegoRead
 from app.schemas.dificultad import DificultadRead
 from app.schemas.regla import ReglaRead
+
+# Portada: URL web de hasta 500 caracteres, igual que en actividades y productos. Vacía significa "sin portada"
+ImagenJuego = Annotated[
+    Annotated[str, Field(max_length=500), AfterValidator(ensure_web_url)] | None,
+    BeforeValidator(lambda value: (value.strip() or None) if isinstance(value, str) else value),
+]
 
 
 class JuegoBase(BaseModel):
@@ -17,6 +25,7 @@ class JuegoBase(BaseModel):
     jugadores_max: int = Field(..., ge=1, description="Cantidad máxima de jugadores")
     video_url: str | None = Field(default=None, max_length=500, description="URL opcional de video explicativo")
     dificultad_id: int | None = Field(default=None, description="ID del nivel de dificultad asociado")
+    imagen: ImagenJuego = Field(default=None, description="URL web de la portada")
 
     @model_validator(mode="after")
     def validate_jugadores(self) -> Self:
@@ -41,6 +50,8 @@ class JuegoUpdate(BaseModel):
     video_url: str | None = Field(default=None, max_length=500)
     activo: bool | None = None
     dificultad_id: int | None = None
+    # Si no se envía se conserva; vacía o null quita la portada
+    imagen: ImagenJuego = None
     categoria_ids: list[int] | None = None
 
     @model_validator(mode="after")

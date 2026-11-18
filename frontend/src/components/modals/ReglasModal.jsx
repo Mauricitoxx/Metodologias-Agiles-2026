@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, Plus, Edit2, Trash2, ArrowUp, ArrowDown, FileText, Check, AlertCircle } from 'lucide-react';
 import { reglaJuegoService } from '../../services/reglaJuegoService';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
+import '../../styles/reglas.css';
 
 export const ReglasModal = ({ isOpen, onClose, juego }) => {
   const [reglas, setReglas] = useState([]);
@@ -20,17 +22,23 @@ export const ReglasModal = ({ isOpen, onClose, juego }) => {
   // Mensajes de error en tiempo real
   const [error, setError] = useState('');
 
-  // 1. Cargar reglas al abrir el modal
-  useEffect(() => {
-    if (isOpen && juego?.id) {
-      cargarReglas();
-    }
-  }, [isOpen, juego]);
+  // Regla pendiente de confirmar su eliminación
+  const [reglaAEliminar, setReglaAEliminar] = useState(null);
 
-  const cargarReglas = async () => {
+  const resetForm = (nextOrden = 1) => {
+    setEditingId(null);
+    setFormTitulo('');
+    setFormContenido('');
+    setFormOrden(nextOrden);
+    setError('');
+  };
+
+  const juegoId = juego?.id;
+
+  const cargarReglas = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await reglaJuegoService.listarPorJuego(juego.id);
+      const data = await reglaJuegoService.listarPorJuego(juegoId);
       // Ordenar localmente por la propiedad `orden`
       const ordenadas = [...data].sort((a, b) => a.orden - b.orden);
       setReglas(ordenadas);
@@ -40,15 +48,14 @@ export const ReglasModal = ({ isOpen, onClose, juego }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [juegoId]);
 
-  const resetForm = (nextOrden = 1) => {
-    setEditingId(null);
-    setFormTitulo('');
-    setFormContenido('');
-    setFormOrden(nextOrden);
-    setError('');
-  };
+  // 1. Cargar reglas al abrir el modal
+  useEffect(() => {
+    if (isOpen && juegoId) {
+      cargarReglas();
+    }
+  }, [isOpen, juegoId, cargarReglas]);
 
   // 2. Validaciones en tiempo real
   const validarSeccion = (titulo, contenido, idActual = null) => {
@@ -214,14 +221,10 @@ export const ReglasModal = ({ isOpen, onClose, juego }) => {
   };
 
   // 6. Eliminar sección
-  const handleEliminar = async (id) => {
-    if (!window.confirm('¿Seguro que deseas eliminar esta sección de reglas?')) return;
-    try {
-      await reglaJuegoService.eliminar(id);
-      await cargarJuegos();
-    } catch (err) {
-      setError(err.message);
-    }
+  // Si falla, el error se muestra en el modal de confirmación
+  const handleEliminar = async () => {
+    await reglaJuegoService.eliminar(reglaAEliminar.id);
+    await cargarReglas();
   };
 
   const handleEditClick = (regla) => {
@@ -235,65 +238,67 @@ export const ReglasModal = ({ isOpen, onClose, juego }) => {
   if (!isOpen) return null;
 
   return (
+    <>
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-window modal-lg" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-window reglas-modal" onClick={(e) => e.stopPropagation()}>
         {/* ENCABEZADO */}
         <div className="modal-header">
           <h3 className="modal-title">
-            📜 Reglas del Juego: <span className="highlight-text">{juego?.nombre}</span>
+            📜 Reglas del juego: <span className="reglas-modal-highlight">{juego?.nombre}</span>
           </h3>
-          <button className="modal-close-btn" onClick={onClose}>
+          <button type="button" className="modal-close-btn" onClick={onClose} aria-label="Cerrar">
             <X size={18} />
           </button>
         </div>
 
-        <div className="modal-body" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
+        <div className="modal-body">
           {/* BOTÓN MODO CARGA MASIVA EN TEXTO PLANO */}
-          <div className="flex-between mb-3">
-            <span className="section-small-label">SECCIONES REGISTRADAS ({reglas.length})</span>
+          <div className="reglas-toolbar">
+            <span className="section-small-label">Secciones registradas ({reglas.length})</span>
             <button
               type="button"
-              className="btn-secondary btn-sm"
+              className="btn-secondary"
               onClick={() => setShowBulkMode(!showBulkMode)}
             >
-              <FileText size={14} /> {showBulkMode ? 'Ver Formulario Normal' : 'Importar Texto Plano'}
+              <FileText size={14} /> {showBulkMode ? 'Ver formulario normal' : 'Importar texto plano'}
             </button>
           </div>
 
           {/* MODO CARGA MASIVA DE TEXTO PLANO */}
           {showBulkMode ? (
-            <div className="retro-panel p-3 mb-4">
-              <h4>Importar Reglas desde Texto Plano</h4>
-              <p className="small-text text-muted mb-2">
+            <div className="retro-panel reglas-panel">
+              <h4>Importar reglas desde texto plano</h4>
+              <p className="reglas-hint">
                 Pegue las reglas completas. Si inician con números (ej: <code>1. Preparación</code>),
                 el sistema las dividirá e interpretará su orden automáticamente.
               </p>
               <textarea
-                className="form-textarea"
-                rows={6}
+                className="form-textarea reglas-textarea-bulk"
+                aria-label="Reglas en texto plano"
                 value={bulkText}
                 onChange={(e) => setBulkText(e.target.value)}
                 placeholder={"1. Preparación\nColocar el tablero al centro...\n\n2. Desarrollo del Turno\nCada jugador tira 2 dados..."}
               />
-              <div className="flex-end gap-2 mt-2">
+              <div className="reglas-form-actions">
                 <button
                   type="button"
                   className="btn-primary"
                   onClick={handleProcessBulkText}
                   disabled={saving || !bulkText.trim()}
                 >
-                  <Check size={14} /> {saving ? 'Procesando...' : 'Dividir y Guardar Reglas'}
+                  <Check size={14} /> {saving ? 'Procesando...' : 'Dividir y guardar reglas'}
                 </button>
               </div>
             </div>
           ) : (
             /* FORMULARIO MANUAL ALTA / EDICIÓN */
-            <form onSubmit={handleSaveIndividual} className="retro-panel p-3 mb-4">
-              <h4>{editingId ? 'Editar Sección' : 'Nueva Sección de Regla'}</h4>
-              <div className="form-row-3">
-                <div className="form-group span-2">
-                  <label>Título de la Sección *</label>
+            <form onSubmit={handleSaveIndividual} className="retro-panel reglas-panel">
+              <h4>{editingId ? 'Editar sección' : 'Nueva sección de regla'}</h4>
+              <div className="reglas-form-row">
+                <div className="form-group">
+                  <label htmlFor="regla-titulo">Título de la sección *</label>
                   <input
+                    id="regla-titulo"
                     type="text"
                     className="form-input"
                     value={formTitulo}
@@ -305,8 +310,9 @@ export const ReglasModal = ({ isOpen, onClose, juego }) => {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Orden</label>
+                  <label htmlFor="regla-orden">Orden</label>
                   <input
+                    id="regla-orden"
                     type="number"
                     className="form-input"
                     min="1"
@@ -317,10 +323,10 @@ export const ReglasModal = ({ isOpen, onClose, juego }) => {
               </div>
 
               <div className="form-group">
-                <label>Cuerpo de Texto *</label>
+                <label htmlFor="regla-contenido">Cuerpo de texto *</label>
                 <textarea
-                  className="form-textarea"
-                  rows={3}
+                  id="regla-contenido"
+                  className="form-textarea reglas-textarea"
                   value={formContenido}
                   onChange={(e) => {
                     setFormContenido(e.target.value);
@@ -330,19 +336,19 @@ export const ReglasModal = ({ isOpen, onClose, juego }) => {
                 />
               </div>
 
-              <div className="flex-end gap-2 mt-2">
+              <div className="reglas-form-actions">
                 {editingId && (
-                  <button type="button" className="btn-secondary btn-sm" onClick={() => resetForm(reglas.length + 1)}>
-                    Cancelar Edición
+                  <button type="button" className="btn-secondary" onClick={() => resetForm(reglas.length + 1)}>
+                    Cancelar edición
                   </button>
                 )}
                 <button
                   type="submit"
-                  className="btn-primary btn-sm"
+                  className="btn-primary"
                   disabled={saving || !formContenido.trim()}
                 >
                   {editingId ? <Check size={14} /> : <Plus size={14} />}
-                  {saving ? 'Guardando...' : editingId ? 'Guardar Cambios' : 'Agregar Sección'}
+                  {saving ? 'Guardando...' : editingId ? 'Guardar cambios' : 'Agregar sección'}
                 </button>
               </div>
             </form>
@@ -350,62 +356,66 @@ export const ReglasModal = ({ isOpen, onClose, juego }) => {
 
           {/* MENSAJE DE ERROR */}
           {error && (
-            <div className="error-banner mb-3 p-2 border-red flex-align gap-2">
-              <AlertCircle size={16} color="red" />
-              <span className="error-text small-text">{error}</span>
+            <div className="reglas-error" role="alert">
+              <AlertCircle size={16} />
+              <span className="error-text">{error}</span>
             </div>
           )}
 
           {/* LISTADO DE SECCIONES ORDENADAS */}
           {loading ? (
-            <p>Cargando secciones de reglas...</p>
+            <p className="reglas-message" role="status">Cargando secciones de reglas...</p>
           ) : reglas.length === 0 ? (
-            <p className="empty-text text-center p-4">No hay secciones registradas para este juego.</p>
+            <p className="reglas-message">No hay secciones registradas para este juego.</p>
           ) : (
-            <div className="reglas-stack gap-2">
+            <div className="reglas-list">
               {reglas.map((regla, index) => (
-                <div key={regla.id} className="regla-card-item retro-panel p-2 flex-between">
-                  <div className="regla-content">
-                    <div className="flex-align gap-2">
-                      <span className="badge-orden">#{regla.orden}</span>
-                      <h4 className="m-0">{regla.titulo}</h4>
+                <div key={regla.id} className="retro-panel reglas-item">
+                  <div className="reglas-item-content">
+                    <div className="reglas-item-heading">
+                      <span className="reglas-orden">#{regla.orden}</span>
+                      <h4>{regla.titulo}</h4>
                     </div>
-                    <p className="regla-body-text mt-1 mb-0">{regla.contenido}</p>
+                    <p className="reglas-item-body">{regla.contenido}</p>
                   </div>
 
                   {/* CONTROLES DE EDICIÓN Y REORDENAMIENTO */}
-                  <div className="regla-actions flex-align gap-1">
+                  <div className="reglas-item-actions">
                     <button
                       type="button"
-                      className="btn-icon"
+                      className="reglas-icon-btn"
                       disabled={index === 0}
                       onClick={() => handleMover(index, -1)}
                       title="Subir posición"
+                      aria-label={`Subir ${regla.titulo}`}
                     >
                       <ArrowUp size={14} />
                     </button>
                     <button
                       type="button"
-                      className="btn-icon"
+                      className="reglas-icon-btn"
                       disabled={index === reglas.length - 1}
                       onClick={() => handleMover(index, 1)}
                       title="Bajar posición"
+                      aria-label={`Bajar ${regla.titulo}`}
                     >
                       <ArrowDown size={14} />
                     </button>
                     <button
                       type="button"
-                      className="btn-icon"
+                      className="reglas-icon-btn"
                       onClick={() => handleEditClick(regla)}
                       title="Editar"
+                      aria-label={`Editar ${regla.titulo}`}
                     >
                       <Edit2 size={14} />
                     </button>
                     <button
                       type="button"
-                      className="btn-icon btn-danger"
-                      onClick={() => handleEliminar(regla.id)}
+                      className="reglas-icon-btn danger"
+                      onClick={() => setReglaAEliminar(regla)}
                       title="Eliminar"
+                      aria-label={`Eliminar ${regla.titulo}`}
                     >
                       <Trash2 size={14} />
                     </button>
@@ -424,5 +434,19 @@ export const ReglasModal = ({ isOpen, onClose, juego }) => {
         </div>
       </div>
     </div>
+
+    {/* Fuera del fondo del modal de reglas: un clic en su fondo no cierra también las reglas */}
+    <ConfirmDeleteModal
+      isOpen={Boolean(reglaAEliminar)}
+      onClose={() => setReglaAEliminar(null)}
+      onConfirm={handleEliminar}
+      title="Eliminar sección"
+      message={
+        <>
+          ¿Seguro que querés eliminar la sección <strong>"{reglaAEliminar?.titulo}"</strong>?
+        </>
+      }
+    />
+    </>
   );
 };

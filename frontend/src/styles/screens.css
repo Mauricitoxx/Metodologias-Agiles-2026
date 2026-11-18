@@ -93,3 +93,4 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 @media(max-width:380px) { .avatar-choices button { width:48px; height:48px; font-size:24px; } }
 .header-user-avatar { flex-shrink:0; width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; border:2px solid var(--border-color); border-radius:var(--radius-full); background:var(--bg-card-secondary); box-shadow:var(--shadow-retro-sm); font-size:18px; line-height:1; }
 @media(max-width:380px) { .header-user-avatar { width:28px; height:28px; font-size:15px; } }
+.cover-remove { margin:-6px 0 16px; }

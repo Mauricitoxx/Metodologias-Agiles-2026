@@ -6,6 +6,8 @@ import { isValidUrl } from '../utils/validation';
 import { getGameVideoUrl } from '../utils/gameVideo';
 import { ReglasModal } from '../components/modals/ReglasModal';
 import { categoriaMangaComicService } from '../services/categoriaMangaComicService';
+import { categoriaService } from '../services/categoriaService';
+import { Select } from '../components/common/Select';
 
 const types = {
   boardgames: '🎲 Juego de Mesa',
@@ -79,6 +81,7 @@ export function EntityFormView() {
 
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [coverFailed, setCoverFailed] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -90,9 +93,11 @@ export function EntityFormView() {
     return () => window.removeEventListener('keydown', escape);
   }, [closeModal, isReglasModalOpen]);
 
-  // Cargar las categorías cuando el formulario corresponde a mangas y cómics.
+  // Juegos y mangas eligen entre las categorías existentes (cada uno tiene las suyas).
+  const usaCategorias = type === 'comics' || type === 'boardgames';
+
   useEffect(() => {
-    if (type !== 'comics') return;
+    if (type !== 'comics' && type !== 'boardgames') return;
 
     let cancelled = false;
 
@@ -100,7 +105,9 @@ export function EntityFormView() {
       setLoadingCategorias(true);
 
       try {
-        const response = await categoriaMangaComicService.listar();
+        const response = type === 'comics'
+          ? await categoriaMangaComicService.listar()
+          : await categoriaService.listar();
 
         if (!cancelled) {
           setCategorias(
@@ -210,6 +217,13 @@ export function EntityFormView() {
       return;
     }
 
+    const trimmedImage = form.image ? form.image.trim() : '';
+
+    if (type === 'boardgames' && trimmedImage && !isValidUrl(trimmedImage)) {
+      setError('La URL de la imagen debe ser una URL web válida');
+      return;
+    }
+
     if (
       type === 'comics' &&
       (
@@ -220,6 +234,11 @@ export function EntityFormView() {
       )
     ) {
       setError('Seleccioná el tipo de publicación y al menos un género.');
+      return;
+    }
+
+    if (type === 'boardgames' && (form.categorias_ids || []).length === 0) {
+      setError('Seleccioná al menos una categoría.');
       return;
     }
 
@@ -259,8 +278,14 @@ export function EntityFormView() {
       duracion_min: durParsed,
       price: Number(form.price || 0),
       videoUrl: trimmedVideoUrl,
-      ...(type === 'boardgames' ? { video_url: trimmedVideoUrl || null } : {}),
+      ...(type === 'boardgames' ? { video_url: trimmedVideoUrl || null, image: trimmedImage } : {}),
     };
+
+    if (type === 'boardgames') {
+      // La API de juegos recibe las categorías elegidas como `categoria_ids`
+      itemPayload.categoria_ids = form.categorias_ids.map(Number);
+      delete itemPayload.category;
+    }
 
     if (type === 'comics') {
       itemPayload.type = form.type;
@@ -461,7 +486,31 @@ export function EntityFormView() {
             </div>
           )}
 
-          {type === 'comics' ? (
+          {type === 'boardgames' ? (
+            <div className="form-group">
+              <label htmlFor="entity-categoria">CATEGORÍAS *</label>
+
+              {loadingCategorias ? (
+                <p>Cargando categorías...</p>
+              ) : categorias.length === 0 ? (
+                <p className="error-text">
+                  No hay categorías disponibles. Creá una desde la pestaña Juegos de mesa antes de continuar.
+                </p>
+              ) : (
+                <Select
+                  id="entity-categoria"
+                  multiple
+                  value={form.categorias_ids || []}
+                  onChange={ids => setForm(prev => ({ ...prev, categorias_ids: ids.map(Number) }))}
+                  options={categorias.map(categoria => ({ value: categoria.id, label: categoria.nombre }))}
+                  placeholder="Seleccioná una o más categorías"
+                  aria-label="Categorías del juego"
+                />
+              )}
+
+              <small>Podés seleccionar una o varias categorías.</small>
+            </div>
+          ) : usaCategorias ? (
             <div className="form-group">
               <label>GÉNEROS *</label>
 
@@ -590,9 +639,38 @@ export function EntityFormView() {
           <h3>
             <span className="step-number pink">3</span>
             {' '}CARÁTULA DE PORTADA
-            <small>Máx. 5 MB</small>
+            {type !== 'boardgames' && <small>Máx. 5 MB</small>}
           </h3>
 
+          {type === 'boardgames' ? (
+            // Juegos: URL web de la portada, como en actividades y productos
+            <div className="cover-upload">
+              <div className="cover-preview">
+                {isValidUrl(form.image) && !coverFailed
+                  ? <img src={form.image.trim()} alt="Vista previa de portada" onError={() => setCoverFailed(true)} />
+                  : <span aria-hidden="true">🎲</span>}
+              </div>
+              <div className="form-group activity-image-field">
+                <label htmlFor="entity-image">URL DE LA IMAGEN</label>
+                <input
+                  id="entity-image"
+                  name="image"
+                  type="url"
+                  placeholder="https://..."
+                  className="form-input"
+                  maxLength={500}
+                  value={form.image || ''}
+                  onChange={event => {
+                    setCoverFailed(false);
+                    change(event);
+                  }}
+                />
+                <span className="activity-form-hint">Opcional · Dejala vacía para mostrar el ícono.</span>
+                {coverFailed && <span className="activity-form-hint">No se pudo cargar la vista previa. Revisá la URL.</span>}
+              </div>
+            </div>
+          ) : (
+          <>
           <div
             className="cover-upload"
             onDragOver={event => event.preventDefault()}
@@ -618,6 +696,18 @@ export function EntityFormView() {
               />
             </label>
           </div>
+
+          {form.image && (
+            <button
+              type="button"
+              className="btn-secondary cover-remove"
+              onClick={() => setForm(prev => ({ ...prev, image: '' }))}
+            >
+              <Trash2 size={15} /> Quitar portada
+            </button>
+          )}
+          </>
+          )}
 
           {type !== 'comics' && (
             <div className="form-group">
@@ -650,7 +740,7 @@ export function EntityFormView() {
 
           <button
             className="btn-primary"
-            disabled={uploading || saving || (type === 'comics' && loadingCategorias)}
+            disabled={uploading || saving || (usaCategorias && loadingCategorias)}
             type="submit"
           >
             <Save size={16} />
