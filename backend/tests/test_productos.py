@@ -439,3 +439,64 @@ def test_bajar_el_precio_por_debajo_de_la_oferta_vigente(
     assert error["loc"] == ["body", "precio_oferta"]
     assert error["msg"] == "El precio de oferta debe ser menor al precio actual"
     assert client.get("/api/productos").json()[0]["precio"] == 8500.50
+
+
+# --- Imagen del producto (URL web, como en actividades) ---
+
+
+def test_producto_sin_imagen_por_defecto(client: TestClient, admin_headers: dict[str, str]):
+    assert crear_producto(client, admin_headers)["imagen"] is None
+
+
+def test_registrar_producto_con_imagen(client: TestClient, admin_headers: dict[str, str]):
+    url = "https://example.com/burger.png"
+
+    producto = crear_producto(client, admin_headers, imagen=url)
+
+    assert producto["imagen"] == url
+    assert client.get("/api/productos").json()[0]["imagen"] == url
+
+
+@pytest.mark.parametrize("imagen", ["foto de la burger", "ftp://example.com/a.png", "https://" + "a" * 500])
+def test_rechaza_imagen_que_no_es_url_web(
+    client: TestClient,
+    admin_headers: dict[str, str],
+    imagen: str,
+):
+    response = client.post(
+        "/api/productos",
+        json=producto_data(imagen=imagen),
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["loc"] == ["body", "imagen"]
+
+
+@pytest.mark.parametrize("vacia", [None, "", "   "])
+def test_quitar_imagen_al_modificar(
+    client: TestClient,
+    admin_headers: dict[str, str],
+    vacia,
+):
+    producto = crear_producto(client, admin_headers, imagen="https://example.com/a.png")
+
+    response = client.put(
+        f"/api/productos/{producto['id']}",
+        json=producto_data(imagen=vacia),
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["imagen"] is None
+
+
+def test_modificar_sin_enviar_imagen_la_conserva(
+    client: TestClient,
+    admin_headers: dict[str, str],
+):
+    producto = crear_producto(client, admin_headers, imagen="https://example.com/a.png")
+
+    response = client.put(f"/api/productos/{producto['id']}", json=producto_data(), headers=admin_headers)
+
+    assert response.json()["imagen"] == "https://example.com/a.png"

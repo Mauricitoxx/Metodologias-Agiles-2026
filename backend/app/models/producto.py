@@ -27,6 +27,8 @@ class Producto(Base):
     )
     # Numeric para no perder centavos al guardar precios decimales
     precio: Mapped[Decimal] = mapped_column(Numeric(10, 2))
+    # URL web de la foto del producto (opcional). Sin foto, la carta muestra un ícono
+    imagen: Mapped[str | None] = mapped_column(String(500), nullable=True)
     # Oferta opcional: si está cargada, la carta la muestra junto al precio original
     precio_oferta: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
     # Baja lógica: los inactivos no se muestran en la carta

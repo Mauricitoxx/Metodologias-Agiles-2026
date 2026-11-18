@@ -9,8 +9,12 @@ export const MENSAJE_OFERTA_MENOR_AL_PRECIO = 'El precio de oferta debe ser meno
 
 const tieneValor = (valor) => valor !== null && valor !== undefined && valor !== '';
 
-// $10.000 para mostrar en la carta y en las fichas
-export const formatPrecio = (valor) => (tieneValor(valor) ? `$${sinCentavos.format(Number(valor))}` : '');
+export const formatPrecio = (valor, { conservarCentavos = false } = {}) => {
+  if (!tieneValor(valor)) return '';
+  const numero = Number(valor);
+  const formateador = conservarCentavos && !Number.isInteger(numero) ? conCentavos : sinCentavos;
+  return `$${formateador.format(numero)}`;
+};
 
 // Valor inicial de un campo de precio: 10.000, o 8.500,50 si el producto tiene centavos
 export const precioParaInput = (valor) => {
