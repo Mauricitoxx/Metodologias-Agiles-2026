@@ -1,5 +1,5 @@
 from fastapi import HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -31,6 +31,24 @@ def obtener_regla_por_titulo(
             func.lower(Regla.titulo) == titulo_limpio,
         )
     ).first()
+
+
+def _hacer_lugar_para_orden(db: Session, juego_id: int, orden: int) -> None:
+    """Si el orden ya está ocupado, corre +1 esa regla y todas las siguientes del juego.
+
+    Se aplica en la misma transacción que el alta: si el alta falla, el corrimiento se revierte.
+    """
+    ocupado = db.scalar(
+        select(Regla.id).where(Regla.juego_id == juego_id, Regla.orden == orden).limit(1)
+    )
+    if ocupado is None:
+        return
+    db.execute(
+        update(Regla)
+        .where(Regla.juego_id == juego_id, Regla.orden >= orden)
+        .values(orden=Regla.orden + 1)
+        .execution_options(synchronize_session="fetch")
+    )
 
 
 def crear_regla(
@@ -71,6 +89,8 @@ def crear_regla(
 
     datos_dict["titulo"] = titulo.strip()
     datos_dict["contenido"] = contenido.strip()
+
+    _hacer_lugar_para_orden(db, datos_dict["juego_id"], datos_dict["orden"])
 
     regla = Regla(**datos_dict)
     db.add(regla)
