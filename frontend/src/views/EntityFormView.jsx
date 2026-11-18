@@ -7,6 +7,7 @@ import { getGameVideoUrl } from '../utils/gameVideo';
 import { ReglasModal } from '../components/modals/ReglasModal';
 import { categoriaMangaComicService } from '../services/categoriaMangaComicService';
 import { categoriaService } from '../services/categoriaService';
+import { Select } from '../components/common/Select';
 
 const types = {
   boardgames: '🎲 Juego de Mesa',
@@ -229,7 +230,7 @@ export function EntityFormView() {
     }
 
     if (type === 'boardgames' && (form.categorias_ids || []).length === 0) {
-      setError('Seleccioná una categoría.');
+      setError('Seleccioná al menos una categoría.');
       return;
     }
 
@@ -479,7 +480,7 @@ export function EntityFormView() {
 
           {type === 'boardgames' ? (
             <div className="form-group">
-              <label htmlFor="entity-categoria">CATEGORÍA *</label>
+              <label htmlFor="entity-categoria">CATEGORÍAS *</label>
 
               {loadingCategorias ? (
                 <p>Cargando categorías...</p>
@@ -488,22 +489,18 @@ export function EntityFormView() {
                   No hay categorías disponibles. Creá una desde la pestaña Juegos de mesa antes de continuar.
                 </p>
               ) : (
-                <select
+                <Select
                   id="entity-categoria"
-                  className="form-select"
-                  value={form.categorias_ids?.[0] ?? ''}
-                  onChange={event => {
-                    const id = event.target.value;
-                    setForm(prev => ({ ...prev, categorias_ids: id ? [Number(id)] : [] }));
-                  }}
-                  required
-                >
-                  <option value="">Seleccioná una categoría</option>
-                  {categorias.map(categoria => (
-                    <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>
-                  ))}
-                </select>
+                  multiple
+                  value={form.categorias_ids || []}
+                  onChange={ids => setForm(prev => ({ ...prev, categorias_ids: ids.map(Number) }))}
+                  options={categorias.map(categoria => ({ value: categoria.id, label: categoria.nombre }))}
+                  placeholder="Seleccioná una o más categorías"
+                  aria-label="Categorías del juego"
+                />
               )}
+
+              <small>Podés seleccionar una o varias categorías.</small>
             </div>
           ) : usaCategorias ? (
             <div className="form-group">
