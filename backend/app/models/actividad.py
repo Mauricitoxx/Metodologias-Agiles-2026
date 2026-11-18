@@ -65,7 +65,14 @@ class Actividad(Base):
 
     @property
     def inscriptos(self) -> int:
-        """Sign-ups of the current occurrence (queried each time, so it never goes stale)."""
+        """Sign-ups of the current occurrence (queried each time, so it never goes stale).
+
+        Listings preload every count in one query (`prefetch_signup_counts`); the preloaded value is
+        used only while the occurrence date it was counted for is still the current one.
+        """
+        prefetched = self.__dict__.get("_inscriptos_prefetch")
+        if prefetched is not None and prefetched[0] == self.fecha_hora:
+            return prefetched[1]
         session = object_session(self)
         if session is None:
             return 0
@@ -80,3 +87,21 @@ class Actividad(Base):
     def cupos_disponibles(self) -> int:
         # The admin may lower the quota below the sign-ups already taken
         return max(self.cupo - self.inscriptos, 0)
+
+
+def prefetch_signup_counts(session, activities: list[Actividad]) -> list[Actividad]:
+    """Counts the sign-ups of every activity in one grouped query, instead of one query each."""
+    if not activities:
+        return activities
+    rows = session.execute(
+        select(Inscripcion.actividad_id, Inscripcion.fecha_hora, func.count(Inscripcion.id))
+        .where(Inscripcion.actividad_id.in_([activity.id for activity in activities]))
+        .group_by(Inscripcion.actividad_id, Inscripcion.fecha_hora)
+    )
+    counts = {(activity_id, date): total for activity_id, date, total in rows}
+    for activity in activities:
+        activity._inscriptos_prefetch = (
+            activity.fecha_hora,
+            counts.get((activity.id, activity.fecha_hora), 0),
+        )
+    return activities

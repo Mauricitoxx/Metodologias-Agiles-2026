@@ -7,7 +7,13 @@ from sqlalchemy import Select, and_, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.models.actividad import Actividad, AlcanceCambio, EstadoActividad, FrecuenciaActividad
+from app.models.actividad import (
+    Actividad,
+    AlcanceCambio,
+    EstadoActividad,
+    FrecuenciaActividad,
+    prefetch_signup_counts,
+)
 from app.models.inscripcion import Inscripcion
 from app.models.tipo_actividad import TipoActividad
 from app.schemas.actividad import (
@@ -117,7 +123,7 @@ def list_activities(
         next_day = datetime.combine(date_to + timedelta(days=1), time.min)
         query = query.where(effective_date < next_day)
     sort = effective_date.asc() if order == "asc" else effective_date.desc()
-    return list(db.scalars(query.order_by(sort, Actividad.id)))
+    return prefetch_signup_counts(db, list(db.scalars(query.order_by(sort, Actividad.id))))
 
 
 def list_schedule(
@@ -133,7 +139,8 @@ def list_schedule(
     )
     # The end date needs the duration (date math differs per database), so it's filtered here.
     # Activities in progress are still shown.
-    return [activity for activity in db.scalars(query) if _end_date(activity) > now]
+    upcoming = [activity for activity in db.scalars(query) if _end_date(activity) > now]
+    return prefetch_signup_counts(db, upcoming)
 
 
 def get_activity(db: Session, activity_id: int) -> Actividad:
