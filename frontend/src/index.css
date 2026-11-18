@@ -4,3 +4,22 @@ html, body {
   padding: 0;
   width: 100%;
 }
+
+/* Web móvil: el fondo de la página siempre es el de la app, sin rebote al
+   pasarse de scroll (arriba del header / debajo del footer) y sin barra lateral. */
+html {
+  background-color: var(--bg-app);
+  overscroll-behavior: none;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+body {
+  overscroll-behavior: none;
+  overflow-x: clip;
+}
