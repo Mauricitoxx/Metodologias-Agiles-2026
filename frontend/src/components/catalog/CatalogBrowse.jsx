@@ -32,28 +32,30 @@ export function CatalogBrowse({
     <>
       <h1 className="public-sr-only">{title}</h1>
 
-      <form
-        className="public-catalog-search"
-        role="search"
-        onSubmit={(event) => event.preventDefault()}
-      >
-        <div>
-          <CatalogIcon name="7c478" />
-          <input
-            type="search"
-            aria-label={searchLabel}
-            placeholder={`${searchLabel}...`}
-            value={search}
-            onChange={(event) => onChange('buscar', event.target.value)}
-          />
-        </div>
+      <div className="public-catalog-sticky">
+        <form
+          className="public-catalog-search"
+          role="search"
+          onSubmit={(event) => event.preventDefault()}
+        >
+          <div>
+            <CatalogIcon name="7c478" />
+            <input
+              type="search"
+              aria-label={searchLabel}
+              placeholder={`${searchLabel}...`}
+              value={search}
+              onChange={(event) => onChange('buscar', event.target.value)}
+            />
+          </div>
 
-        <button className="public-catalog-primary" type="submit">
-          Buscar
-        </button>
-      </form>
+          <button className="public-catalog-primary" type="submit">
+            Buscar
+          </button>
+        </form>
 
-      <CatalogSections count={total} />
+        <CatalogSections count={total} />
+      </div>
 
       <div className="public-catalog-filters">
         {typeOptions.length > 0 && (

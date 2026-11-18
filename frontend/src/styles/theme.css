@@ -76,7 +76,7 @@
 
 body {
   font-family: var(--font-family);
-  background-color: #1e293b;
+  background-color: var(--bg-app);
   color: var(--text-main);
   min-height: 100vh;
   display: flex;
@@ -88,24 +88,19 @@ body {
 /* Mobile Frame Container centered like Stitch view */
 .app-container {
   width: 100%;
-  max-width: 440px;
   min-height: 100vh;
+  min-height: 100dvh;
   background-color: var(--bg-app);
   display: flex;
   flex-direction: column;
   position: relative;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-  border-left: 1px solid rgba(255, 255, 255, 0.05);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
   padding-bottom: 24px;
 }
 
+/* En pantallas anchas el contenido se centra, sin marco ni bordes:
+   los costados tienen el mismo color de fondo que la app. */
 @media (min-width: 768px) {
   .app-container {
-    margin: 20px auto;
-    min-height: calc(100vh - 40px);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    border: 2px solid var(--border-color);
+    max-width: 420px;
   }
 }
