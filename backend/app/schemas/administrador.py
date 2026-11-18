@@ -1,4 +1,19 @@
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from typing import Annotated
+
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, field_validator
+
+# Emojis que se pueden elegir como avatar del staff (el panel muestra la misma lista)
+AVATARES = ("🛡️", "🤖", "🎮", "👾", "🎲", "⚡")
+AVATAR_POR_DEFECTO = "🛡️"
+
+
+def validar_avatar(value: str) -> str:
+    if value not in AVATARES:
+        raise ValueError("Elegí uno de los avatares disponibles.")
+    return value
+
+
+Avatar = Annotated[str, AfterValidator(validar_avatar)]
 
 
 class AdministradorBase(BaseModel):
@@ -24,12 +39,14 @@ class AdministradorBase(BaseModel):
 
 class AdministradorCreate(AdministradorBase):
     password: str = Field(min_length=6, max_length=256)
+    avatar: Avatar = AVATAR_POR_DEFECTO
 
 
 class AdministradorUpdate(BaseModel):
     nombre: str | None = Field(default=None, min_length=1, max_length=100)
     email: str | None = Field(default=None, min_length=3, max_length=254)
     password: str | None = Field(default=None, min_length=6, max_length=256)
+    avatar: Avatar | None = None
 
     @field_validator("email")
     @classmethod
@@ -59,3 +76,4 @@ class AdministradorRead(BaseModel):
     nombre: str
     email: str
     activo: bool = True
+    avatar: str = AVATAR_POR_DEFECTO

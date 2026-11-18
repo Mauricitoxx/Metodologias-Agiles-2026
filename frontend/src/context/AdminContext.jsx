@@ -7,6 +7,7 @@ import { mangaComicService } from '../services/mangaComicService';
 import { staffService } from '../services/staffService';
 import { getGameVideoUrl } from '../utils/gameVideo';
 import { productoService, TIPOS_PRODUCTO } from '../services/productoService';
+import { DEFAULT_STAFF_AVATAR } from '../utils/staffAvatars';
 
 // Adapta un producto de la carta del backend al formato de las tarjetas del Buffet
 const mapProductoFromBackend = (producto) => ({
@@ -21,6 +22,18 @@ const mapProductoFromBackend = (producto) => ({
   offerPrice: producto.precio_oferta ?? null,
   status: producto.activo ? 'disponible' : 'baja',
   code: `#BF-${String(producto.id).padStart(3, '0')}`
+});
+
+// Adapta un administrador del backend al formato de las tarjetas de Staff
+const mapAdminFromBackend = (admin) => ({
+  id: admin.id,
+  name: admin.nombre,
+  nombre: admin.nombre,
+  email: admin.email,
+  activo: admin.activo,
+  avatar: admin.avatar || DEFAULT_STAFF_AVATAR,
+  status: admin.activo ? 'activo' : 'inactivo',
+  code: `#USR-${String(admin.id).padStart(3, '0')}`
 });
 
 export const AdminProvider = ({ children }) => {
@@ -180,6 +193,26 @@ export const AdminProvider = ({ children }) => {
     };
   }, [session]);
 
+  // Staff: los administradores reales del backend (/api/administradores)
+  const [staff, setStaff] = useState([]);
+  const [loadingStaff, setLoadingStaff] = useState(false);
+
+  const cargarStaff = useCallback(async () => {
+    setLoadingStaff(true);
+    try {
+      const admins = await staffService.list();
+      setStaff((Array.isArray(admins) ? admins : []).map(mapAdminFromBackend));
+    } catch (error) {
+      showToast(`No se pudo cargar el staff: ${error.message}`, 'error');
+    } finally {
+      setLoadingStaff(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (session) cargarStaff();
+  }, [session, cargarStaff]);
+
   // Persist local data on change (para otras entidades en LocalStorage)
   const persistData = (updater) => {
     try {
@@ -221,16 +254,36 @@ export const AdminProvider = ({ children }) => {
     return true;
   };
 
-  const currentUser = useMemo(() => {
-    const demo = data.admins?.find((a) => a.isCurrentUser) || data.admins?.[0];
-    return session ? { ...demo, name: session.nombre, email: session.email, role: 'Administrador' } : demo;
-  }, [data.admins, session]);
+  const currentUser = useMemo(
+    () => (session
+      ? {
+        id: session.id,
+        name: session.nombre,
+        email: session.email,
+        avatar: session.avatar || DEFAULT_STAFF_AVATAR
+      }
+      : null),
+    [session]
+  );
 
   // ==========================================
   // OPERACIONES CRUD (CONEXIÓN API / LOCAL)
   // ==========================================
 
   const addItem = async (entityType, itemData) => {
+    // Staff (API). Los errores se relanzan para que el formulario los muestre en línea
+    if (entityType === 'admins') {
+      const created = await staffService.create({
+        nombre: itemData.nombre,
+        email: itemData.email,
+        password: itemData.password,
+        avatar: itemData.avatar
+      });
+      await cargarStaff();
+      showToast(`Miembro "${created.nombre}" dado de alta`);
+      return created;
+    }
+
     // 1. Juegos de mesa (API)
     if (entityType === 'boardgames' || entityType === 'juegos') {
       try {
@@ -293,8 +346,7 @@ export const AdminProvider = ({ children }) => {
     // 3. Lógica para otras entidades (LocalStorage)
     const prefixMap = {
       cards: '#TCG-',
-      buffet: '#BF-',
-      admins: '#USR-'
+      buffet: '#BF-'
     };
 
     const count = (data[entityType]?.length || 0) + 1;
@@ -306,7 +358,7 @@ export const AdminProvider = ({ children }) => {
       code: itemData.code || newCode,
       createdAt: new Date().toLocaleDateString('en-CA'),
       loansCount: 0,
-      status: itemData.status || (entityType === 'admins' ? 'activo' : 'disponible')
+      status: itemData.status || 'disponible'
     };
 
     const saved = persistData((prev) => ({
@@ -320,6 +372,23 @@ export const AdminProvider = ({ children }) => {
   };
 
   const updateItem = async (entityType, updatedItem) => {
+    // Staff (API). Los errores se relanzan para que el formulario los muestre en línea
+    if (entityType === 'admins') {
+      const updated = await staffService.update(updatedItem.id, {
+        nombre: updatedItem.nombre,
+        email: updatedItem.email,
+        avatar: updatedItem.avatar,
+        ...(updatedItem.password ? { password: updatedItem.password } : {})
+      });
+      // Si es la cuenta propia, el encabezado muestra el nombre y el avatar nuevos sin recargar
+      setSession((prev) => (prev && prev.id === updated.id
+        ? { ...prev, nombre: updated.nombre, email: updated.email, avatar: updated.avatar }
+        : prev));
+      await cargarStaff();
+      showToast(`Miembro "${updated.nombre}" actualizado`);
+      return updated;
+    }
+
     // 1. Juegos de mesa (API)
     if (entityType === 'boardgames' || entityType === 'juegos') {
       try {
@@ -522,27 +591,27 @@ export const AdminProvider = ({ children }) => {
       }
     }
 
-    // 4. Protección para el único Superadministrador activo
+    // 4. Staff (API). El backend impide dar de baja al único administrador activo
     if (entityType === 'admins') {
-      const activeSuperadmins = data.admins?.filter(
-        (admin) => admin.role === 'Superadmin' && admin.status === 'activo'
-      ) || [];
-
-      if (
-        item.role === 'Superadmin' &&
-        item.status === 'activo' &&
-        activeSuperadmins.length <= 1
-      ) {
-        showToast('No puedes dar de baja al único Superadministrador activo.', 'error');
+      const isInactivo = item.status === 'inactivo';
+      try {
+        if (isInactivo) await staffService.activate(item.id);
+        else await staffService.deactivate(item.id);
+        await cargarStaff();
+        showToast(
+          isInactivo ? `Reactivado: ${item.name}` : `Dado de baja: ${item.name}`,
+          isInactivo ? 'success' : 'warning'
+        );
+        return true;
+      } catch (error) {
+        showToast(error.message, 'error');
         return false;
       }
     }
 
     // 5. Bajas para el resto de entidades (LocalStorage)
     const isBaja = item.status === 'baja' || item.status === 'inactivo';
-    const newStatus = isBaja
-      ? entityType === 'admins' ? 'activo' : 'disponible'
-      : entityType === 'admins' ? 'inactivo' : 'baja';
+    const newStatus = isBaja ? 'disponible' : 'baja';
 
     const saved = persistData((prev) => ({
       ...prev,
@@ -568,7 +637,7 @@ export const AdminProvider = ({ children }) => {
     setModalState({
       isOpen: true,
       mode: 'create',
-      entityType: entityType || (currentTab === 'staff' ? 'admins' : catalogSubTab),
+      entityType: entityType || catalogSubTab,
       item: null
     });
   };
@@ -632,6 +701,10 @@ export const AdminProvider = ({ children }) => {
         theme,
         toggleTheme,
         currentUser,
+        // Sin sesión no se expone el staff de la sesión anterior
+        staff: session ? staff : [],
+        loadingStaff,
+        cargarStaff,
         notification,
         showToast,
         addItem,

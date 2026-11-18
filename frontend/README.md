@@ -35,7 +35,7 @@ Opcionalmente copiá `.env.example` a `.env`:
 
 “¿Te olvidaste la contraseña?” indica contactar al equipo: todavía no hay recuperación automática por correo.
 
-Las entidades y miembros de staff siguen guardándose en `localStorage` de este navegador. El staff de demostración no crea cuentas del backend. No se almacenan contraseñas de staff; la clave temporal es una vista previa para una futura integración.
+Las entidades que todavía no tienen backend (por ejemplo, los juegos de cartas) siguen guardándose en `localStorage` de este navegador. El staff ya no: usa la API de administradores (ver más abajo).
 
 El panel central (`/admin`) solo ofrece dos accesos: Inventario y Staff. Inventario (`/admin/inventario`) agrupa las pestañas Juegos de mesa, Mangas & Cómics, Carta y Actividades, y abre en Actividades.
 
@@ -53,7 +53,12 @@ El formulario también tiene la sección **Imagen**, igual que en actividades: u
 
 El cronograma público (`/eventos`, botón Eventos de la barra inferior del cliente) consume `GET /api/activities/schedule`: muestra las próximas actividades agrupadas por día, con búsqueda por nombre y filtro por tipo. Las canceladas y postergadas aparecen con su aviso (fecha original y motivo) y las que están en curso se marcan como tales. Cada evento muestra una barra con los lugares restantes y el botón Inscribirme, que abre un formulario de nombre, correo y edad (`POST /api/activities/schedule/{id}/registrations`); no deja inscribirse si no hay cupo o la edad es menor a la mínima. El botón de información lleva al detalle. Sin cuenta, el token de la inscripción se guarda en el navegador (`utils/eventSignUps.js`): la tarjeta pasa a "Estás inscripto" con el botón Cancelar inscripción. La confirmación también muestra un enlace `/eventos/inscripcion/:token` para cancelar desde cualquier dispositivo. `/eventos/:id` muestra el detalle con `GET /api/activities/schedule/{id}`; una actividad inactivada desde el panel deja de estar disponible.
 
-Staff permite alta, edición, selección de avatar y rol, búsqueda de activos, baja y reactivación. Se conserva al menos un Superadministrador activo.
+Staff (`/admin/staff`, `views/AdminUsersView.jsx`) usa la API de administradores (`services/staffService.js` → `/api/administradores`): cada miembro es una cuenta real que puede iniciar sesión.
+
+- **Alta:** nombre y correo. Se genera una clave temporal (`utils/tempPassword.js`, con `crypto.getRandomValues`) que se muestra al guardar para copiarla y entregarla; después no se vuelve a ver.
+- **Edición:** nombre y correo. Opcionalmente, *Restablecer la contraseña* genera y guarda una clave temporal nueva.
+- **Baja y reactivación:** al darlo de baja no puede iniciar sesión y sus sesiones abiertas dejan de valer. El backend impide dar de baja al único administrador activo, y la tarjeta propia no muestra el botón de baja.
+- **Avatar:** cada miembro elige un emoji (`utils/staffAvatars.js`; tiene que coincidir con `AVATARES` del backend, lo verifica `tests/staffAvatars.test.mjs`). El encabezado muestra el nombre y el avatar del usuario logueado, y se actualiza al editar la cuenta propia. No hay roles: el backend no los tiene.
 
 La autenticación ya usa servidor y base de datos. Los demás módulos aún requieren integración con la API, autorización de roles, envío de credenciales y recuperación automática de contraseña. Los futuros endpoints de gestión deben usar la dependencia `get_current_admin` del backend.
 

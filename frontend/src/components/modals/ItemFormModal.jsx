@@ -81,8 +81,6 @@ const getInitialFormData = (initialItem, mode, entityType) => {
       email: '',
       role: 'Gestor de Inventario',
       status: 'activo',
-      avatar:
-        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
     },
   };
 

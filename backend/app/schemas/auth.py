@@ -20,6 +20,7 @@ class AdministradorRead(BaseModel):
     id: int
     nombre: str
     email: str
+    avatar: str = "🛡️"
 
 
 class LoginResponse(BaseModel):

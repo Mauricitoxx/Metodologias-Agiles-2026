@@ -31,6 +31,7 @@ def crear_administrador(db: Session, datos: AdministradorCreate) -> Administrado
         email=datos.email,
         password_hash=hash_password(datos.password),
         activo=True,
+        avatar=datos.avatar,
     )
     db.add(admin)
     db.commit()
@@ -53,6 +54,9 @@ def actualizar_administrador(db: Session, admin_id: int, datos: AdministradorUpd
 
     if datos.password is not None:
         admin.password_hash = hash_password(datos.password)
+
+    if datos.avatar is not None:
+        admin.avatar = datos.avatar
 
     db.commit()
     db.refresh(admin)

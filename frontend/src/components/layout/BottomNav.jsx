@@ -3,7 +3,7 @@ import { Dices, ShieldCheck } from 'lucide-react';
 import { useAdmin } from '../../context/useAdmin';
 
 export const BottomNav = () => {
-  const { currentTab, setCurrentTab, data } = useAdmin();
+  const { currentTab, setCurrentTab, data, staff } = useAdmin();
 
   const navItems = [
     {
@@ -16,7 +16,7 @@ export const BottomNav = () => {
       id: 'staff',
       label: 'Staff',
       icon: ShieldCheck,
-      count: data.admins?.length || 0
+      count: staff.length
     }
   ];
 

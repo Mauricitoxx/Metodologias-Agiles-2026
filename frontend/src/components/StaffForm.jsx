@@ -1,79 +1,107 @@
 import { useState } from 'react';
-import { RefreshCw, ShieldCheck, Copy, Check } from 'lucide-react';
+import { RefreshCw, ShieldCheck, Copy, Check, KeyRound } from 'lucide-react';
 import { useAdmin } from '../context/useAdmin';
+import { generateTempPassword } from '../utils/tempPassword';
+import { STAFF_AVATARS, DEFAULT_STAFF_AVATAR } from '../utils/staffAvatars';
 
-const avatars = ['🤖', '🎮', '👾', '🎲', '🛡️', '⚡'];
-
-export function StaffForm({ initialItem, onDone }) {
-  const { data, addItem, updateItem } = useAdmin();
-  const [form, setForm] = useState({
-    name: initialItem?.name || initialItem?.nombre || '',
-    nickname: initialItem?.nickname || '',
-    email: initialItem?.email || '',
-    role: initialItem?.role || 'Administrador',
-    status: initialItem?.status || 'activo',
-    avatarEmoji: initialItem?.avatarEmoji || '🛡️',
-    ...initialItem,
-  });
-
-  const generateTempPassword = () => `Frikio2026-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-
-  const [password, setPassword] = useState(generateTempPassword);
+function TemporaryKey({ password, onRegenerate, hint }) {
   const [copied, setCopied] = useState(false);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const handleCopyPassword = async () => {
+  const copy = async () => {
     try {
       await navigator.clipboard.writeText(password);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback
+      // Sin permiso de portapapeles: la clave sigue visible para copiarla a mano
     }
   };
+
+  return (
+    <section className="retro-panel temporary-key">
+      <label htmlFor="staff-key" className="section-small-label">
+        CLAVE TEMPORAL
+      </label>
+      <div className="key-row">
+        <input
+          className="form-input staff-key-input"
+          id="staff-key"
+          value={password}
+          readOnly
+          onFocus={(event) => event.target.select()}
+        />
+        <button
+          type="button"
+          className="search-btn-blue"
+          aria-label="Copiar clave temporal"
+          title="Copiar contraseña"
+          onClick={copy}
+        >
+          {copied ? <Check size={16} color="#10b981" /> : <Copy size={16} />}
+        </button>
+        {onRegenerate && (
+          <button
+            type="button"
+            className="search-btn-blue"
+            aria-label="Generar otra clave temporal"
+            title="Generar nueva clave"
+            onClick={onRegenerate}
+          >
+            <RefreshCw size={16} />
+          </button>
+        )}
+      </div>
+      <small>{copied ? '✅ ¡Contraseña copiada al portapapeles!' : hint}</small>
+    </section>
+  );
+}
+
+export function StaffForm({ initialItem, onDone }) {
+  const { staff, addItem, updateItem } = useAdmin();
+  const editing = Boolean(initialItem);
+
+  const [name, setName] = useState(initialItem?.name || '');
+  const [email, setEmail] = useState(initialItem?.email || '');
+  const [avatar, setAvatar] = useState(initialItem?.avatar || DEFAULT_STAFF_AVATAR);
+  const [password, setPassword] = useState(generateTempPassword);
+  // Al editar, la contraseña solo cambia si se pide restablecerla
+  const [resetPassword, setResetPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  // Después de guardar se muestra la clave para entregarla: no se puede volver a consultar
+  const [saved, setSaved] = useState(null);
 
   async function submit(event) {
     event.preventDefault();
     setError('');
 
-    const emailTrimmed = form.email.trim().toLowerCase();
-    const nameTrimmed = form.name.trim();
+    const emailTrimmed = email.trim().toLowerCase();
+    const nameTrimmed = name.trim();
 
-    if (!nameTrimmed) {
-      return setError('Por favor ingresá un nombre válido.');
-    }
+    if (!nameTrimmed) return setError('Por favor ingresá un nombre válido.');
+    if (!emailTrimmed) return setError('Por favor ingresá un correo válido.');
 
-    if (!emailTrimmed) {
-      return setError('Por favor ingresá un correo válido.');
-    }
-
-    if (
-      (data.admins || []).some(
-        (item) => item.email.toLowerCase() === emailTrimmed && item.id !== form.id
-      )
-    ) {
+    if (staff.some((item) => item.email.toLowerCase() === emailTrimmed && item.id !== initialItem?.id)) {
       return setError('Ya hay un miembro de staff registrado con ese correo.');
     }
 
+    const sendsPassword = !editing || resetPassword;
     setLoading(true);
 
     try {
       const payload = {
-        ...form,
-        name: nameTrimmed,
+        id: initialItem?.id,
         nombre: nameTrimmed,
         email: emailTrimmed,
-        password: password,
+        avatar,
+        ...(sendsPassword ? { password } : {}),
       };
 
-      const saved = initialItem
-        ? await updateItem('admins', payload)
-        : await addItem('admins', payload);
+      if (editing) await updateItem('admins', payload);
+      else await addItem('admins', payload);
 
-      if (saved) {
-        onDone();
-      }
+      if (sendsPassword) setSaved({ name: nameTrimmed, email: emailTrimmed, password });
+      else onDone();
     } catch (err) {
       setError(err.message || 'Ocurrió un error al guardar.');
     } finally {
@@ -81,22 +109,49 @@ export function StaffForm({ initialItem, onDone }) {
     }
   }
 
+  if (saved) {
+    return (
+      <div className="staff-form">
+        <section className="retro-panel staff-saved">
+          <h3>
+            <ShieldCheck size={18} /> {editing ? 'CONTRASEÑA RESTABLECIDA' : 'MIEMBRO REGISTRADO'}
+          </h3>
+          <p>
+            <strong>{saved.name}</strong> ya puede iniciar sesión con <strong>{saved.email}</strong> y esta clave
+            temporal.
+          </p>
+        </section>
+        <TemporaryKey
+          password={saved.password}
+          hint="🔑 Copiala y entregásela ahora: por seguridad no se vuelve a mostrar."
+        />
+        <div className="staff-submit-row">
+          <button className="primary-cta-yellow-btn" type="button" onClick={onDone}>
+            <Check size={18} /> LISTO
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <form className="staff-form" onSubmit={submit}>
       <fieldset className="retro-panel">
         <legend className="profile-legend">▣ IDENTIDAD DE STAFF</legend>
-        <label className="section-small-label">AVATAR DE STAFF</label>
-        <div className="avatar-choices">
-          {avatars.map((avatar) => (
+
+        <span className="section-small-label" id="staff-avatar-label">AVATAR DE STAFF</span>
+        <div className="avatar-choices" role="radiogroup" aria-labelledby="staff-avatar-label">
+          {STAFF_AVATARS.map((option) => (
             <button
               type="button"
-              key={avatar}
-              aria-label={`Avatar ${avatar}`}
-              aria-pressed={form.avatarEmoji === avatar}
-              className={form.avatarEmoji === avatar ? 'selected' : ''}
-              onClick={() => setForm((prev) => ({ ...prev, avatarEmoji: avatar }))}
+              key={option}
+              role="radio"
+              aria-checked={avatar === option}
+              aria-label={`Avatar ${option}`}
+              className={avatar === option ? 'selected' : ''}
+              onClick={() => setAvatar(option)}
             >
-              {avatar}
+              {option}
             </button>
           ))}
         </div>
@@ -107,10 +162,11 @@ export function StaffForm({ initialItem, onDone }) {
             id="staff-name"
             className="form-input"
             type="text"
-            value={form.name || form.nombre || ''}
+            value={name}
             required
+            maxLength={100}
             placeholder="Ej: Kira Vance"
-            onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value, nombre: e.target.value }))}
+            onChange={(e) => setName(e.target.value)}
           />
         </div>
 
@@ -120,10 +176,11 @@ export function StaffForm({ initialItem, onDone }) {
             id="staff-email"
             className="form-input"
             type="email"
-            value={form.email || ''}
+            value={email}
             required
+            maxLength={254}
             placeholder="Ej: kira.v@frikioteca.com"
-            onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+            onChange={(e) => setEmail(e.target.value)}
           />
         </div>
 
@@ -139,58 +196,39 @@ export function StaffForm({ initialItem, onDone }) {
         </div>
       </fieldset>
 
-      {!initialItem && (
-        <section className="retro-panel temporary-key">
-          <label htmlFor="staff-key" className="section-small-label">
-            CLAVE TEMPORAL GENERADA
-          </label>
-          <div className="key-row">
-            <input
-              className="form-input"
-              id="staff-key"
-              value={password}
-              readOnly
-              style={{ fontWeight: 'bold', letterSpacing: '1px' }}
-            />
-            <button
-              type="button"
-              className="search-btn-blue"
-              aria-label="Copiar clave temporal"
-              title="Copiar contraseña"
-              onClick={handleCopyPassword}
-            >
-              {copied ? <Check size={16} color="#10b981" /> : <Copy size={16} />}
-            </button>
-            <button
-              type="button"
-              className="search-btn-blue"
-              aria-label="Generar otra clave temporal"
-              title="Generar nueva clave"
-              onClick={() => setPassword(generateTempPassword())}
-            >
-              <RefreshCw size={16} />
-            </button>
-          </div>
-          <small>
-            {copied ? '✅ ¡Contraseña copiada al portapapeles!' : '🔑 Esta clave se registrará en la base de datos para que el usuario pueda iniciar sesión.'}
-          </small>
-        </section>
+      {editing && (
+        <label className="staff-reset-toggle">
+          <input
+            type="checkbox"
+            checked={resetPassword}
+            onChange={(event) => setResetPassword(event.target.checked)}
+          />
+          <KeyRound size={15} /> Restablecer la contraseña con una clave temporal nueva
+        </label>
+      )}
+
+      {(!editing || resetPassword) && (
+        <TemporaryKey
+          password={password}
+          onRegenerate={() => setPassword(generateTempPassword())}
+          hint="🔑 Al guardar, esta será la contraseña para iniciar sesión."
+        />
       )}
 
       {error && (
-        <p className="error-text" role="alert" style={{ color: '#ef4444', fontWeight: 600 }}>
+        <p className="error-text staff-form-error" role="alert">
           {error}
         </p>
       )}
 
       <div className="staff-submit-row">
-        {initialItem && (
+        {editing && (
           <button type="button" className="btn-secondary" onClick={onDone} disabled={loading}>
             Cancelar
           </button>
         )}
         <button className="primary-cta-yellow-btn" type="submit" disabled={loading}>
-          <ShieldCheck size={18} /> {loading ? 'PROCESANDO...' : initialItem ? 'GUARDAR CAMBIOS' : 'REGISTRAR STAFF'}
+          <ShieldCheck size={18} /> {loading ? 'PROCESANDO...' : editing ? 'GUARDAR CAMBIOS' : 'REGISTRAR STAFF'}
         </button>
       </div>
     </form>
