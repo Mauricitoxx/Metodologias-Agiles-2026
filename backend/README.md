@@ -397,7 +397,7 @@ Commitear el modelo, esquema, servicio, ruta, test, **la migración** y los dos 
 ### Juegos: imagen de portada
 
 - `imagen` es opcional en `POST /api/juegos` y `PUT /api/juegos/{id}`, y se devuelve en el listado y el detalle (el catálogo público la muestra; sin imagen se ve un ícono).
-- Acepta una data URL PNG, JPG o WebP de hasta 2 MB (es lo que envía el formulario del panel, que ya redimensiona la foto a 600 px) o una URL web de hasta 500 caracteres. Si no, responde 422 en el campo `imagen`.
+- Es una URL web (`http` o `https`) de hasta 500 caracteres, igual que en actividades y productos. Si no lo es, responde 422 con *"Debe ingresar una URL web válida"* en el campo `imagen`.
 - En el `PUT`, si no se envía se conserva; vacía o `null` la quita.
 - Tests: `tests/test_juegos_imagen.py`.
 
